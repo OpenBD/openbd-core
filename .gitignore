@@ -4,7 +4,6 @@
 
 *.pydevproject
 .metadata
-bin/
 webapp/WEB-INF/classes
 webapp/WEB-INF/bluedragon/work
 tmp/
