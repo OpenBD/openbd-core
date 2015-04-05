@@ -1,10 +1,12 @@
-OpenBD is the worlds first truly open source and free GPL Java CFML runtime.
+OpenBD is the worlds first truly open source and free GPLv3.0 Java CFML runtime.   OpenBD has a long legacy, first created in 2000, it is still going strong with active additions and fixes.
 
 ### Official Website
 
+The official website for OpenBD is located:
+
 http://openbd.org/
 
-OpenBD and CFML Manual:  http://openbd.org/manual/
+Here you will find the manual for both OpenBD and the CFML tags.   You can obtain the nightly build as well as the established releases http://openbd.org/downloads/
 
 ### Running OpenBD
 
@@ -22,12 +24,12 @@ An active Google Groups list can be found: https://groups.google.com/forum/#!for
 
 ### Building OpenBD
 
-You will require the following to be able to build OpenBD from source:
+You will require the following tools to be able to build OpenBD from source:
 
 * Java Developers Kit Virtual Machine 8
 * Apache Ant (http://ant.apache.org/)
 
-Optional, OpenBD source drop includes an Eclipse project to enable building and debugging under the Eclipse IDE (http://www.eclipse.org/). 
+Optional, OpenBD source drop includes an Eclipse project to enable building and debugging under the Eclipse IDE (http://www.eclipse.org/).   All files required to build the core OpenBD JAR/WAR is contained within this GitHub project.
 
 All the necessary scripts and resources are in the ./build/ folder.   The build.xml will build the core WAR file, the OpenBlueDragon.jar file as well as popping in the manual if you desire.
 
