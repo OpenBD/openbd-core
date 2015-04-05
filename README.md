@@ -1,5 +1,3 @@
-# openbd-core
-
 OpenBD is the worlds first truly open source and free GPL Java CFML runtime.
 
 ### Official Website
