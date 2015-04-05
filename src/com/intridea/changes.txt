@@ -1,0 +1,11 @@
+November 2008
+
+The following changes where made to this GPLv3 library
+
++ Disabled the Logger
++ Disabled the Amazon connection caching, since it only
+  cached for a single user, the first one!
+
+
+All modified files are within the OpenBlueDragon CVS
+repository and are available under the GPL license.

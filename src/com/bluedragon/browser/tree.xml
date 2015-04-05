@@ -1,0 +1,4 @@
+<tree name="rootTree" line="false" angle="true"
+      expand="expand(this, item)"
+      action="action(this, item)">
+</tree>

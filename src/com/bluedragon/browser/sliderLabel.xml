@@ -1,0 +1,4 @@
+<panel columns="1" gap="4" top="4" left="4" bottom="4" right="4">
+<label weightx="1" name="rootLabel" text="Label" alignment="center"/>
+<slider name="rootSlider" halign="center" action="action(this)" minimum="0" maximum="100" value="0" orientation="horizontal"/>
+</panel>

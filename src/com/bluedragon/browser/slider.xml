@@ -1,0 +1,1 @@
+<slider name="rootSlider" action="action(this)" minimum="0" maximum="100" value="0" orientation="horizontal"/>

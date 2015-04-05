@@ -1,0 +1,1202 @@
+options {
+  STATIC = false;
+  LOOKAHEAD = 1;
+  FORCE_LA_CHECK=true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = true;
+}
+
+PARSER_BEGIN(selectSQLParser)
+
+package com.naryx.tagfusion.cfm.queryofqueries;
+
+import java.util.*;
+
+
+public class selectSQLParser {
+	private int expNo = 1;
+	
+}
+
+PARSER_END(selectSQLParser)
+
+
+SKIP : /* WHITE SPACE */
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+
+TOKEN : /* RESERVED WORDS AND LITERALS */
+{
+  < SELECT : "select" >
+| < FROM : "from" >
+| < WHERE : "where" >
+| < ORDER : "order" >
+| < BY : "by" >
+| < GROUP : "group" >
+| < HAVING : "having" >
+| < NOT : "not" >
+| < IS : "is" >
+| < TRUE : "true" >
+| < FALSE : "false" >
+| < AS : "as" >
+| < OR : "or" >
+| < AND : "and" >
+| < AVG : "avg" >
+| < SUM : "sum" >
+| < MIN : "min" >
+| < MAX : "max" >
+| < COUNT : "count" >
+| < DISTINCT : "distinct" >
+| < BETWEEN : "between" >
+| < LIKE : "like" >
+| < ALL : "all" >
+| < ASC : "asc" >
+| < DESC : "desc" >
+| < UNKNOWN : "unknown" >
+| < NULL : "null" >
+| < IN : "in" >
+| < UNION : "union" >
+| < ABSOLUTE: "absolute">
+| < ACTION: "action">
+| < ADD: "add">
+| < ALLOCATE: "allocate">
+| < ALTER: "alter">
+| < ANY: "any">
+| < ARE: "are">
+| < ASSERTION: "assertion">
+| < AT: "at">
+| < AUTHORIZATION: "authorization">
+| < BEGIN: "begin">
+| < BIT: "bit">
+| < BIT_LENGTH: "bit_length">
+| < BOTH: "both">
+| < CASCADE: "cascade">
+| < CASCADED: "cascaded">
+| < CASE: "case">
+| < CAST: "cast">
+| < CATALOG: "catalog">
+| < CHAR: "char">
+| < CHARACTER: "character">
+| < CHARACTER_LENGTH: "character_length">
+| < CHAR_LENGTH: "char_length">
+| < CHECK: "check">
+| < CLOSE: "close" >
+| < COALESCE: "coalesce">
+| < COLLATE: "collate">
+| < COLLATION: "collation">
+| < COLUMN: "column">
+| < COMMIT: "commit">
+| < CONNECT: "connect">
+| < CONNECTION: "connection" >
+| < CONSTRAINT: "constraint" >
+| < CONSTRAINTS: "constraints" >
+| < CONTINUE: "continue" >
+| < CONVERT: "convert">
+| < CORRESPONDING: "corresponding">
+| < CREATE: "create">
+| < CROSS: "cross">
+| < CURRENT: "current">
+| < CURRENT_DATE: "current_date">
+| < CURRENT_TIME: "current_time">
+| < CURRENT_TIMESTAMP: "current_timestamp">
+| < CURRENT_USER: "current_user">
+| < CURSOR: "cursor">
+| < DATE: "date">
+| < DAY: "day">
+| < DEALLOCATE: "deallocate">
+| < DEC: "dec">
+| < DECIMAL: "decimal">
+| < DECLARE: "declare">
+| < DEFAULT_RESERVED: "default">
+| < DEFERRABLE: "deferrable">
+| < DEFERRED: "deferred">
+| < DELETE: "delete">
+| < DESCRIBE: "describe">
+| < DESCRIPTOR: "descriptor">
+| < DIAGNOSTICS: "diagnostics">
+| < DISCONNECT: "disconnect">
+| < DOMAIN: "domain">
+| < DOUBLE: "double">
+| < DROP: "drop">
+| < ELSE: "else">
+| < END: "end">
+| < ENDEXEC: "end-exec">
+| < ESCAPE: "escape">
+| < EXCEPT: "except">
+| < EXCEPTION: "exception">
+| < EXEC: "exec">
+| < EXECUTE: "execute">
+| < EXISTS: "exists">
+| < EXTERNAL: "external">
+| < EXTRACT: "extract"> 
+| < FETCH: "fetch">
+| < FIRST: "first">
+| < FLOAT: "float">
+| < FOR: "for">
+| < FOREIGN: "foreign">
+| < FOUND: "found"> 
+| < FULL: "full">
+| < GET: "get">
+| < GLOBAL: "global">
+| < GO: "go">
+| < GOTO: "goto">
+| < GRANT: "grant"> 
+| < HOUR: "hour">
+| < IDENTITY: "identity">
+| < IMMEDIATE: "immediate">
+| < INDICATOR: "indicator">
+| < INITIALLY: "initially">
+| < INNER: "inner">
+| < INPUT: "input">
+| < INSENSITIVE: "insensitive">
+| < INSERT: "insert">
+| < INT: "int">
+| < INTEGER: "integer">
+| < INTERSECT: "intersect">
+| < INTERVAL: "interval">
+| < INTO: "into">
+| < ISOLATION: "isolation">
+| < JOIN: "join">
+| < KEY: "key">
+| < LANGUAGE: "language">
+| < LAST: "last">
+| < LEADING: "leading">
+| < LEFT: "left">
+| < LEVEL: "level">
+| < LOCAL: "local">
+| < LOWER: "lower">
+| < MATCH: "match">
+| < MINUTE: "minute">
+| < MODULE: "module">
+| < MONTH: "month">
+| < NAMES: "names">
+| < NATIONAL: "national">
+| < NATURAL: "natural">
+| < NCHAR: "nchar">
+| < NEXT: "next">
+| < NO: "no">
+| < NULLIF: "nullif">
+| < NUMERIC: "numeric">
+| < OCTET_LENGTH: "octet_length">
+| < OF: "of">
+| < ON: "on">
+| < ONLY: "only">
+| < OPEN: "open">
+| < OPTION: "option">
+| < OUTER: "outer">
+| < OUTPUT: "output">
+| < OVERLAPS: "overlaps">
+| < PAD: "pad">
+| < PARTIAL: "partial">
+| < POSITION: "position">
+| < PRECISION: "precision">
+| < PREPARE: "prepare">
+| < PRESERVE: "preserve">
+| < PRIMARY: "primary">
+| < PRIOR: "prior">
+| < PRIVILEGES: "privileges">
+| < PROCEDURE: "procedure">
+| < PUBLIC: "public">
+| < READ: "read">
+| < REAL: "real">
+| < REFERENCES: "references">
+| < RELATIVE: "relative">
+| < RESTRICT: "restrict">
+| < REVOKE: "revoke">
+| < RIGHT: "right">
+| < ROLLBACK: "rollback">
+| < ROWS: "rows">
+| < SCHEMA: "schema">
+| < SCROLL: "scroll">
+| < SECOND: "second">
+| < SECTION: "section">
+// | < SESSION: "session"> remove as reserved word - see bug #1594
+| < SESSION_USER: "session_user">
+| < SET: "set">
+// | < SIZE: "size"> removed as reserved word - see bug #1892
+| < SMALLINT: "smallint">
+| < SOME: "some">
+| < SPACE: "space">
+| < SQL: "sql">
+| < SQLCODE: "sqlcode">
+| < SQLERROR: "sqlerror">
+| < SQLSTATE: "sqlstate">
+| < SUBSTRING: "substring">
+| < SYSTEM_USER: "system_user">
+| < TABLE: "table">
+| < TEMPORARY: "temporary">
+| < THEN: "then">
+| < TIME: "time">
+| < TIMESTAMP: "timestamp">
+| < TIMEZONE_HOUR: "timezone_hour">
+| < TIMEZONE_MINUTE: "timezone_minute">
+| < TO: "to">
+| < TRAILING: "trailing">
+| < TRANSACTION: "transaction">
+| < TRANSLATE: "translate">
+| < TRANSLATION: "translation">
+| < TRIM: "trim">
+
+| < UNIQUE: "unique">
+| < UPDATE: "update">
+| < UPPER: "upper">
+| < USAGE: "usage">
+| < USER: "user">
+| < USING: "using">
+| < VALUE: "value">
+| < VALUES: "values">
+| < VARCHAR: "varchar">
+| < VARYING: "varying">
+| < VIEW: "view">
+| < WHEN: "when">
+| < WHENEVER: "whenever">
+| < WITH: "with">
+| < WORK: "work">
+| < WRITE: "write">
+| < YEAR: "year">
+| < ZONE: "zone"> 
+}
+
+TOKEN : /* LITERALS */
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL>
+  >
+|
+  < #DECIMAL_LITERAL: ["0"-"9"] (["0"-"9"])* >
+|
+  < FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)?
+      | "." (["0"-"9"])+ (<EXPONENT>)?
+      | (["0"-"9"])+ (<EXPONENT>)?
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < STRING_LITERAL:
+        /* "\""
+        (   (~["\"","\n","\r"])
+        | <ESCAPE_SEQA>
+        )*
+        "\""
+      | */
+			"'"
+        (   (~["'","\n","\r"])
+        | <ESCAPE_SEQA>
+        )*
+        "'"
+  >
+|
+  < #ESCAPE_SEQA:
+  	"''" >
+	
+|
+
+  < BOOLEAN_LITERAL:
+        "true"
+      |
+        "false"
+  >
+}
+
+
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff",
+       "_",
+       "$"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}
+
+TOKEN : /* SEPARATORS */
+{
+  < OPENPAREN: "(" >
+| < CLOSEPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < COLON: ":" >
+| < COMMA: "," >
+| < QUESTION: "?" >
+}
+
+TOKEN : /* OPERATORS */
+{
+  < EQ: "=" >
+| < ASTERISK: "*" >
+| < LTE: "<=" >
+| < GTE: ">=" >
+| < GT: ">" >
+| < LT: "<" >
+| < NEQ: "<>" >
+| < NEQ2: "!=" >
+| < DOT: "." >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < SLASH: "/" >
+| < BSLASH: "\\" >
+| < POWER: "^" >
+
+}
+
+
+/*****************************************
+ * THE QOQ LANGUAGE GRAMMAR STARTS HERE *
+ *****************************************/
+
+/*
+ * Program structuring syntax follows.
+ * _prepared is the number of permitted paramExpressions [?'s] in the SELECT statement
+ */
+selectStatement Program( int _maxParams ) :
+{
+	selectStatement s;
+	List colsReferenced = new ArrayList();
+	List aliases = new ArrayList();
+	int index = 0;
+	qoqParamInfo _paramInfo = new qoqParamInfo( _maxParams );
+}
+{
+  s=orderByExpression( colsReferenced, aliases, _paramInfo ) ( <SEMICOLON> )?
+  <EOF>
+	{ 
+		s.setReferencedColumns( colsReferenced );	
+		s.setAliases( aliases );
+		return s; 
+	}
+}
+
+
+selectStatement orderByExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	selectStatement e;
+  Token t1,t2;
+	List obl;
+}
+{
+  e = unionExpression( _colsReferenced, _aliases, _paramInfo ) 
+	( t1="order" t2="by" obl=orderByList( /*_colsReferenced*/ ) 
+		{ 
+			e.setOrderByList( obl ); 
+		} 
+	)?
+	
+	{
+	  return e; 
+	}
+}
+
+selectStatement unionExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	selectStatement e, e2;
+  Token t1;
+	boolean all = false;
+}
+{
+  e = groupByExpression( _colsReferenced, _aliases, _paramInfo ) 
+	( t1="union" ( <ALL> { all = true; } )? e2 = groupByExpression( _colsReferenced, _aliases, _paramInfo ) 
+		{ 
+			e = new unionStatement( e, e2, all );
+			all = false;
+		}
+	)* 
+	
+	{
+		return e;
+	}
+}
+
+
+selectStatement groupByExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	selectStatement e;
+	condition c;
+	List grpByList;
+	List refdCols = new ArrayList();
+}
+{
+  e = whereExpression( _colsReferenced, _aliases, _paramInfo ) 
+	( <GROUP> <BY> grpByList = groupByList( _colsReferenced, _aliases, _paramInfo ) 
+		{ 
+			e.setGroupByList( grpByList );
+			if ( !e.validateGroupBy() ){
+				throw new ParseException( "Invalid select column. All columns in the select must be specified in the group by clause." ); 
+			}
+			
+		} 
+	)? 
+	(
+		<HAVING> c=conditionExpression( refdCols, _aliases, _paramInfo )
+		{
+			e.setHavingCondition( c );
+			if ( !e.validateHaving( refdCols ) )
+				throw new ParseException( "Invalid HAVING clause. All columns referenced in the HAVING clause must be specified in the group by clause." );
+			_colsReferenced.addAll( refdCols ); 
+		}
+	)?
+	{
+		return e;
+	}
+}
+
+
+selectStatement whereExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	selectStatement e;
+	condition c;
+  Token t1, t2, t3;
+}
+{
+  e = fromExpression( _colsReferenced, _aliases, _paramInfo ) 
+	( t1=<WHERE> c = conditionExpression( _colsReferenced, _aliases, _paramInfo ) 
+		{ 
+			e.setWhereCondition( c ); //e= new whereStatement( e, e2 );  
+		} 
+	)? 
+
+	{
+		return e;
+	}
+}
+
+
+
+selectStatement fromExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	selectStatement e;
+	List v;
+  Token t1;
+}
+{
+  e = selectExpression( _colsReferenced, _aliases, _paramInfo ) t1=<FROM> v = fromList() 
+	{
+		e.setFromList( v );
+		return e;  
+	}
+}
+
+selectStatement selectExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	selectStatement e, e2;
+}
+{
+	( "(" e=selectExpression( _colsReferenced, _aliases, _paramInfo ) ")" | e=selectSpec( _colsReferenced, _aliases, _paramInfo ) )
+	{
+		return e;
+	}
+}
+
+selectStatement selectSpec( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	selectStatement e;
+	List v;
+  Token t1, t2;
+	boolean distinct = false;
+	boolean all = false;
+}
+{
+  t1 = <SELECT> ( <ALL> | <DISTINCT> { distinct = true; } )? v = selectList( _colsReferenced, _aliases, _paramInfo )   
+	{
+		return new selectStatement( v, distinct );
+	}
+	
+}
+
+
+List selectList( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	Token t1, t2;
+	selectColumn sc;
+	List selects = new ArrayList();
+}
+{
+	sc = selectColumn( _colsReferenced, _aliases, _paramInfo ) { selects.add( sc ); }
+  ( <COMMA> sc = selectColumn( _colsReferenced, _aliases, _paramInfo ) { selects.add( sc ); } )*
+	{ 
+		return selects; 
+	}
+}
+
+selectColumn selectColumn( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	Token t1;
+	Token t2 = null;
+	String alias = null;
+	expression exp;
+	selectColumn sc = null;
+}
+{
+	(
+		LOOKAHEAD(7)( t1=<ASTERISK> { return new selectColumn(); } )
+		| 
+		LOOKAHEAD(7)( 
+		
+			t1=identifier() <DOT> t2=<ASTERISK> 
+			{	
+				sc=new selectColumn( t1.image.toLowerCase(), t2.image.toLowerCase() );
+				_colsReferenced.add( t1.image.toLowerCase() + "." + t2.image.toLowerCase() );
+			} 
+			( alias = alias() { sc.setAlias( alias ); _aliases.add( alias.toLowerCase() ); } )? 
+		)
+		| 
+		LOOKAHEAD(7)( 
+			exp = expression( _colsReferenced, _aliases, _paramInfo ) ( alias = alias() )? 
+			{
+				if ( exp instanceof columnRef ){
+					columnRef col = (columnRef) exp;
+					if ( col.tableNamed ){
+						sc=new selectColumn( col.table, col.colName );
+					}else{
+						sc=new selectColumn( col.colName );
+					}
+					
+					if ( alias != null ){ sc.setAlias( alias ); _aliases.add( alias.toLowerCase() ); };
+					
+				}else{
+					sc = new selectColumn( exp );
+					if ( alias == null ){
+				  	sc.setAlias( "column_" + ( expNo - 1 ) );
+						expNo++;
+					}else{
+				  	sc.setAlias( alias );
+				  	_aliases.add( alias.toLowerCase() );
+					}
+				}
+			}
+		)
+		| 
+		LOOKAHEAD(7) 
+		( 
+			 t1=identifier() ( <DOT> t2=identifier() )? 
+			{ 
+				if ( t2 != null ){
+					sc=new selectColumn( t1.image.toLowerCase(), t2.image.toLowerCase() );
+					_colsReferenced.add( t1.image.toLowerCase() + "." + t2.image.toLowerCase() );
+				}else{
+					sc=new selectColumn( t1.image.toLowerCase() );
+					_colsReferenced.add( t1.image.toLowerCase() );
+				}
+			}			
+			( alias = alias() { sc.setAlias( alias ); _aliases.add( alias.toLowerCase() );
+			} )?
+		)
+	)
+	{ return sc; }
+}
+
+String alias() :
+{
+	Token t1;
+}
+{
+  ( <AS> )? t1=identifier()
+	
+	{
+		return t1.image;
+	}
+}
+
+
+expression expression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	Token t1;
+	expression e;
+}
+{
+	 LOOKAHEAD(2) e = numeric_expression( _colsReferenced, _aliases, _paramInfo ) { return e; }
+	| LOOKAHEAD(3) e = stringExpression( _colsReferenced, _aliases, _paramInfo ) { return e; }
+	| LOOKAHEAD(3) t1 = <QUESTION> { int index = _paramInfo.getNextIndex(); 
+										if ( index >= _paramInfo.getMaxParams() )
+										  throw new ParseException( "Invalid"  );
+										else
+										  return new paramExpression( index );
+									}
+	| LOOKAHEAD(3) t1 = <STRING_LITERAL> { return new stringExpression( t1.image ); }
+	| LOOKAHEAD(2) "(" t1 = <STRING_LITERAL> ")" { return new stringExpression( t1.image ); }
+	| LOOKAHEAD(3) e = stringFunctionExpression( _colsReferenced, _aliases, _paramInfo ){ return e; }
+}
+
+
+expression numeric_expression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+  expression e1, e2;
+	byte op = 0;
+}
+{
+	  e1 = numeric_term( _colsReferenced, _aliases, _paramInfo ) 
+		( 
+	  LOOKAHEAD(2)
+		( 
+			<PLUS> { op = numericExpression.PLUS; } 
+			| <MINUS> { op = numericExpression.MINUS; } 
+		) 
+		(
+		 e2=numeric_expression( _colsReferenced, _aliases, _paramInfo ) { e1 = new numericExpression( e1, e2, op ); }
+		 | e2=stringExpression( _colsReferenced, _aliases, _paramInfo ) { e1 = new stringConcatExpression( e1, e2 ); }
+		)
+		)?
+	{
+		return e1;
+	}
+}
+
+
+expression numeric_term( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	expression e1, e2;
+	byte op = 0;
+}
+{
+	e1 = numeric_factor( _colsReferenced, _aliases, _paramInfo ) 
+	( 
+		( <ASTERISK> { op = numericTerm.ASTERISK; }
+			| <SLASH> { op = numericTerm.SLASH; }
+		) 
+		e2 = numeric_term( _colsReferenced, _aliases, _paramInfo ) { e1 = new numericTerm( e1, e2, op ); } 
+	)?
+	
+	{
+		return e1;
+	}
+}
+
+
+expression numeric_factor( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	expression e;
+}
+{
+	( e = numeric_primary( _colsReferenced, _aliases, _paramInfo )
+		| <PLUS> e = numeric_primary( _colsReferenced, _aliases, _paramInfo ) { e = new numericFactor( e, numericFactor.PLUS ); } 
+		| <MINUS> e = numeric_primary( _colsReferenced, _aliases, _paramInfo ) { e = new numericFactor( e, numericFactor.MINUS ); }
+	)
+	{
+		return e;
+	}
+}
+
+
+expression numeric_primary( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	expression e;
+	Token t1;
+}
+{
+	(
+		t1 = <INTEGER_LITERAL> { e = new integerExpression( t1.image ); } 
+		| t1 = <FLOATING_POINT_LITERAL> { e = new floatExpression( t1.image ); }
+		| e = aggregate_func() 
+		| LOOKAHEAD(6) e = column_ref( _colsReferenced, _aliases, _paramInfo )
+		| "(" e = numeric_expression( _colsReferenced, _aliases, _paramInfo ) ")" 
+	)
+	{
+		return e;
+	}
+}
+
+expression aggregate_func() :
+{
+	expression e;
+	boolean all = false;
+	boolean distinct = false;
+	List dummyRefdCols = new ArrayList(); // this data not needed just collected anyways
+	qoqParamInfo dummyParamInfo = new qoqParamInfo();
+}
+{
+	LOOKAHEAD( 4 ) <COUNT> "(" <ASTERISK> ")" { return new countFunction(); }
+	| LOOKAHEAD( 4 ) <COUNT> "(" <DISTINCT> e = numeric_expression( dummyRefdCols, dummyRefdCols, dummyParamInfo ) ")" { return new countDistinctFunction( e ); }
+	| LOOKAHEAD( 4 ) <COUNT> "(" ( <ALL> )? e = numeric_expression( dummyRefdCols, dummyRefdCols, dummyParamInfo ) ")" { return new countFunction( e ); }
+	| <AVG> "(" ( <ALL> { all =true; } | <DISTINCT> { distinct = true; } )? e = numeric_expression( dummyRefdCols, dummyRefdCols, dummyParamInfo ) ")" { return new avgFunction( e, all, distinct ); } 
+	| <SUM> "(" ( <ALL> { all =true; } | <DISTINCT> { distinct = true; } )? e = numeric_expression( dummyRefdCols, dummyRefdCols, dummyParamInfo ) ")" { return new sumFunction( e, all, distinct ); }
+	| <MIN> "(" ( <ALL> { all =true; } | <DISTINCT> { distinct = true; } )? e = numeric_expression( dummyRefdCols, dummyRefdCols, dummyParamInfo ) ")" { return new minFunction( e, all, distinct ); }
+	| <MAX> "(" ( <ALL> { all =true; } | <DISTINCT> { distinct = true; } )? e = numeric_expression( dummyRefdCols, dummyRefdCols, dummyParamInfo ) ")" { return new maxFunction( e, all, distinct ); }
+	
+}
+
+
+expression column_ref( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+	Token t1 = null, t2 = null;
+	columnRef c;
+}
+{
+	t1 = identifier() ( <DOT> t2 = identifier() )? 
+	{ 
+		if ( t2 != null ){
+			c = new columnRef( t1.image.toLowerCase(), t2.image.toLowerCase() );
+			_colsReferenced.add( t1.image.toLowerCase() + "." + t2.image.toLowerCase() );
+		}else{
+			c = new columnRef( t1.image.toLowerCase() );
+			_colsReferenced.add( t1.image.toLowerCase() );
+		}
+	
+		return c;
+	}
+}
+
+List fromList() :
+{
+	Token t1, t2;
+	List v = new ArrayList();
+	String fromItem;
+}
+{
+	fromItem = fromListItem() { v.add( fromItem ); } 
+	( <COMMA> fromItem = fromListItem() { v.add( fromItem ); } )*
+	{
+		return v;
+	}
+}
+
+String fromListItem():
+{
+  Token t1, t2;
+  StringBuffer sb = new StringBuffer();
+}
+{
+	t1 = identifier() { sb.append( t1.image.toLowerCase() ); }
+	( <DOT> t2 = identifier() { sb.append( "." ); sb.append( t2.image.toLowerCase() ); } )*
+  {
+    return sb.toString();
+  }
+}
+
+
+List orderByList():
+{
+	orderByCol c1;
+	List obList = new ArrayList();
+}
+{
+	c1 = orderByColumn() { obList.add( c1 ); } 
+	( <COMMA> c1 = orderByColumn() { obList.add( c1 ); } )*
+	{
+		return obList;
+	}
+}
+
+
+orderByCol orderByColumn():
+{
+	Token t1;
+	Token t2 = null;
+	boolean asc = true; // default order by type
+	orderByCol col = null;
+}
+{
+	(
+		t1 = identifier() ( <DOT> t2 = identifier() )? ( <ASC> | <DESC> { asc = false; } )? 
+		{
+			col = new orderByCol( t1.image + ( t2 == null ? "" : "." + t2.image ), asc ); 
+		}
+	|
+		t1 = <INTEGER_LITERAL> ( <ASC> | <DESC> { asc = false; } )? 
+		{ 
+			col = new orderByCol( Integer.parseInt( t1.image ), asc ); 
+		}
+	)
+	{
+		return col;
+	}
+}
+
+Token identifier():
+{
+  Token t1;
+}
+{
+	(
+		"[" ( t1=reservedWord() | t1 = <IDENTIFIER> ) "]"
+		|
+		t1 = <IDENTIFIER>
+	)		
+	{
+		return t1; 
+	}
+}
+
+List groupByList( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	expression e;
+	List v = new ArrayList();
+}
+{
+	e = column_ref( _colsReferenced, _aliases, _paramInfo ) { v.add( e ); } ( <COMMA> e = column_ref( _colsReferenced, _aliases, _paramInfo ) { v.add( e ); } )*
+	{
+		return v;
+	}
+}
+
+
+condition conditionExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	condition c1, c2;
+}
+{
+	c1 = conditionTerm( _colsReferenced, _aliases, _paramInfo )
+	( 
+		<OR> c2 = conditionExpression( _colsReferenced, _aliases, _paramInfo ) 
+		{
+			c1 = new orCondition( c1, c2 );
+		}
+	)?
+	{
+		return c1;
+	}
+}
+
+
+condition conditionTerm( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	condition c1, c2;
+}
+{
+	c1 = conditionFactor( _colsReferenced, _aliases, _paramInfo )
+	( 
+		<AND> c2 = conditionTerm( _colsReferenced, _aliases, _paramInfo ) 
+		{	
+			c1 = new andCondition( c1, c2 );
+		}
+	)?
+	{
+		return c1;
+	}
+}
+
+
+condition conditionFactor( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	condition c;
+	boolean not = false;
+}
+{
+	( <NOT> { not = true; } )? c = conditionTest( _colsReferenced, _aliases, _paramInfo ) 
+	{
+		if ( not ){
+			c = new notCondition( c );
+		}
+		return c;
+	}
+}
+
+
+condition conditionTest( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	condition c;
+	boolean not = false;
+	Token t1;
+}
+{
+	c = conditionPrimary( _colsReferenced, _aliases, _paramInfo )
+	( 
+		<IS> ( <NOT> { not = true; } )? ( t1 = <TRUE> | t1 = <FALSE> | t1 = <UNKNOWN> ) 
+		{
+			c = new testCondition( c, t1, not );
+		}
+	
+	)?
+	{	
+		return c;
+	}
+}
+
+
+condition conditionPrimary( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	condition c;
+}
+{
+	( 
+		LOOKAHEAD(6) c = simpleCondition( _colsReferenced, _aliases, _paramInfo )
+		| LOOKAHEAD(1) <OPENPAREN> c = conditionExpression( _colsReferenced, _aliases, _paramInfo ) <CLOSEPAREN>
+	)
+	{ 
+		return c; 
+	}
+}
+
+
+condition simpleCondition( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	condition c;
+	expression e;
+	boolean not = false;
+}
+{
+	( 
+		LOOKAHEAD(6) c = likeCondition( _colsReferenced, _aliases, _paramInfo )
+	| (
+			e = expression( _colsReferenced, _aliases, _paramInfo )
+			(
+				c = comparisonCondition( e, _colsReferenced, _aliases, _paramInfo )
+				| c = nullCondition( e, _paramInfo )
+				| ( <NOT> { not = true; } )? (
+						c = betweenCondition( e, not, _colsReferenced, _aliases, _paramInfo )
+						| c = inCondition( e, not, _colsReferenced, _aliases, _paramInfo )
+					)
+			)
+		)
+	)
+	
+	{ return c; }
+}
+
+
+condition nullCondition( expression e, qoqParamInfo _paramInfo ):
+{
+	boolean not = false;
+}
+{
+	<IS> ( <NOT> { not = true; } )? <NULL>
+	{
+		return new nullCondition( e, not );
+	}
+}
+
+
+condition comparisonCondition( expression e1, List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	Token t1;
+	expression e2;
+}
+{
+	(
+		t1 = <LTE> 
+		| t1 = <GTE> 
+		| t1 = <NEQ>
+		| t1 = <NEQ2>
+		| t1 = <EQ> 
+		| t1 = <LT> 
+		| t1 = <GT>
+	)
+	e2 = expression( _colsReferenced, _aliases, _paramInfo )
+	{
+		return new comparisonCondition( e1, e2, t1 );
+	}
+}
+
+
+condition betweenCondition( expression e1, boolean not, List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	expression e2, e3;
+}
+{
+	<BETWEEN> e2 = expression( _colsReferenced, _aliases, _paramInfo ) <AND> e3 = expression( _colsReferenced, _aliases, _paramInfo ) 
+	{ return new betweenCondition( e1, e2, e3, not ); }
+}
+
+
+condition inCondition( expression e1, boolean not, List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	List exps;
+}
+{
+	<IN> <OPENPAREN> exps = expressionList( _colsReferenced, _aliases, _paramInfo ) <CLOSEPAREN>
+	{
+		return new inCondition( e1, exps, not );
+	}
+}
+
+
+condition likeCondition( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	expression s1, s2;
+	boolean not = false;
+	char escapeChar = (char)-1;
+	Token t2, t3;
+}
+{
+	s1 = stringExpression( _colsReferenced, _aliases, _paramInfo ) ( <NOT> { not = true; } )? <LIKE> s2 = stringExpression( _colsReferenced, _aliases, _paramInfo ) 
+			( t2=<ESCAPE> t3=<STRING_LITERAL> 
+				{
+					if ( t3.image.length() != 3 ){
+						throw new ParseException( "Invalid"  );
+					}
+					escapeChar = t3.image.charAt(1);
+				}	
+			)?  
+	
+	{
+		return new likeCondition( s1, s2, not, escapeChar );
+	}
+}
+
+expression stringConcatExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	Token t1;
+	expression e=null;
+}
+{
+	(
+	LOOKAHEAD(6)
+	t1 = <QUESTION> { int index = _paramInfo.getNextIndex(); 
+										if ( index >= _paramInfo.getMaxParams() )
+										  throw new ParseException( "Invalid"  );
+										else
+										  return new paramExpression( index );
+									}
+	|	t1 = <STRING_LITERAL> { e = new stringExpression( t1.image ); }
+	| <OPENPAREN> e = stringExpression( _colsReferenced, _aliases, _paramInfo ) <CLOSEPAREN> 
+	| e = column_ref( _colsReferenced, _aliases, _paramInfo )
+	| LOOKAHEAD(3) e = stringFunctionExpression( _colsReferenced,_aliases,  _paramInfo ){ return e; }
+	
+	)
+	{
+		return e;
+	}
+}
+
+expression stringExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ) :
+{
+  expression e1, e2;
+}
+{
+	  e1 = stringConcatExpression( _colsReferenced, _aliases, _paramInfo ) 
+		( 
+	  	LOOKAHEAD(2)
+			( 
+				<PLUS>  
+			) 
+			e2=stringExpression( _colsReferenced, _aliases, _paramInfo ) { e1 = new stringConcatExpression( e1, e2 ); }  
+		)?
+	{
+		return e1;
+	}
+}
+
+
+expression stringFunctionExpression( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+  Token t1;
+  expression e;
+  expression resultexp;
+}
+{
+	( 
+	  t1 = <UPPER> <OPENPAREN> e = stringExpression( _colsReferenced, _aliases, _paramInfo ) <CLOSEPAREN> { resultexp = new upperExpression( e ); }
+	  | t1 = <LOWER> <OPENPAREN> e = stringExpression( _colsReferenced, _aliases, _paramInfo ) <CLOSEPAREN> { resultexp = new lowerExpression( e ); }
+  )
+
+  {
+    return resultexp;
+  }
+}
+List expressionList( List _colsReferenced, List _aliases, qoqParamInfo _paramInfo ):
+{
+	expression e1;
+	List exps = new ArrayList();
+}
+{
+	e1 = expression( _colsReferenced, _aliases, _paramInfo ) { exps.add( e1 ); }
+	(
+		<COMMA> e1 = expression( _colsReferenced, _aliases, _paramInfo ) { exps.add( e1 ); }
+	)*
+	{
+		return exps;
+	}
+}
+
+Token reservedWord():
+{
+	Token t1;
+}
+{ 
+	(
+		t1 = <ABSOLUTE> |	t1 = <ACTION> | t1 = <ADD> | t1 = <ALL> | t1 = <ALLOCATE>
+		| t1 = <ALTER> | t1 = <AND> | t1 = <ANY> | t1 = <ARE> |t1 = <AS> 
+		| t1 = <ASC> | t1 = <ASSERTION> | t1 = <AT> | t1 = <AUTHORIZATION> | t1 = <AVG>
+		| t1 = <BEGIN> | t1 = <BETWEEN> | t1 = <BIT> | t1 = <BIT_LENGTH> | t1 = <BOTH>
+		| t1 = <BY> | t1 = <CASCADE> | t1 = <CASCADED> | t1 = <CASE> | t1 = <CAST>
+		| t1 = <CATALOG> | t1 = <CHAR> | t1 = <CHARACTER> | t1 = <CHARACTER_LENGTH> | t1 = <CHAR_LENGTH>
+		| t1 = <CHECK> | t1 = <CLOSE> | t1 = <COALESCE> | t1 = <COLLATE> | t1 = <COLLATION>
+		| t1 = <COLUMN> | t1 = <COMMIT> | t1 = <CONNECT> | t1 = <CONNECTION> | t1 = <CONSTRAINT>
+		| t1 = <CONSTRAINTS> | t1 = <CONTINUE> | t1 = <CONVERT> | t1 = <CORRESPONDING> | t1 = <COUNT>
+		| t1 = <CREATE> | t1 = <CROSS> | t1 = <CURRENT> | t1 = <CURRENT_DATE> | t1 = <CURRENT_TIME>
+		| t1 = <CURRENT_TIMESTAMP> | t1 = <CURRENT_USER> | t1 = <CURSOR> | t1 = <DATE> | t1 = <DAY>
+		| t1 = <DEALLOCATE> | t1 = <DEC> | t1 = <DECIMAL> | t1 = <DECLARE> | t1 = <DEFAULT_RESERVED>
+		| t1 = <DEFERRABLE> | t1 = <DEFERRED> | t1 = <DELETE> | t1 = <DESC> | t1 = <DESCRIBE>
+		| t1 = <DESCRIPTOR> | t1 = <DIAGNOSTICS> | t1 = <DISCONNECT> | t1 = <DISTINCT> | t1 = <DOMAIN>
+		| t1 = <DOUBLE> | t1 = <DROP> | t1 = <ELSE> | t1 = <END> | t1 = <ENDEXEC>
+		| t1 = <ESCAPE> | t1 = <EXCEPT> | t1 = <EXCEPTION> | t1 = <EXEC> | t1 = <EXECUTE>
+		| t1 = <EXISTS> | t1 = <EXTERNAL> | t1 = <EXTRACT> | t1 = <FALSE> | t1 = <FETCH>
+		| t1 = <FIRST> | t1 = <FLOAT> | t1 = <FOR> | t1 = <FOREIGN> | t1 = <FOUND>
+		| t1 = <FROM> | t1 = <FULL> | t1 = <GET> | t1 = <GLOBAL> | t1 = <GO>
+		| t1 = <GOTO> | t1 = <GRANT> | t1 = <GROUP> | t1 = <HAVING> | t1 = <HOUR>
+		| t1 = <IDENTITY> | t1 = <IMMEDIATE> | t1 = <IN> | t1 = <INDICATOR> | t1 = <INITIALLY>
+		| t1 = <INNER> | t1 = <INPUT> | t1 = <INSENSITIVE> | t1 = <INSERT> | t1 = <INT>
+		| t1 = <INTEGER> | t1 = <INTERSECT> | t1 = <INTERVAL> | t1 = <INTO> | t1 = <IS>
+		| t1 = <ISOLATION> | t1 = <JOIN> | t1 = <KEY> | t1 = <LANGUAGE> | t1 = <LAST>
+		| t1 = <LEADING> | t1 = <LEFT> | t1 = <LEVEL> | t1 = <LIKE> | t1 = <LOCAL>
+		| t1 = <LOWER> | t1 = <MATCH> | t1 = <MAX> | t1 = <MIN> | t1 = <MINUTE>
+		| t1 = <MODULE> | t1 = <MONTH> | t1 = <NAMES> | t1 = <NATIONAL> | t1 = <NATURAL>
+		| t1 = <NCHAR> | t1 = <NEXT> | t1 = <NO> | t1 = <NOT> | t1 = <NULL>
+		| t1 = <NULLIF> | t1 = <NUMERIC> | t1 = <OCTET_LENGTH> | t1 = <OF> | t1 = <ON>
+		| t1 = <ONLY> | t1 = <OPEN> | t1 = <OPTION> | t1 = <OR> | t1 = <ORDER>
+		| t1 = <OUTER> | t1 = <OUTPUT> | t1 = <OVERLAPS> | t1 = <PAD> | t1 = <PARTIAL>
+		| t1 = <POSITION> | t1 = <PRECISION> | t1 = <PREPARE> | t1 = <PRESERVE> | t1 = <PRIMARY>
+		| t1 = <PRIOR> | t1 = <PRIVILEGES> | t1 = <PROCEDURE> | t1 = <PUBLIC> | t1 = <READ>
+		| t1 = <REAL> | t1 = <REFERENCES> | t1 = <RELATIVE> | t1 = <RESTRICT> | t1 = <REVOKE>
+		| t1 = <RIGHT> | t1 = <ROLLBACK> | t1 = <ROWS> | t1 = <SCHEMA> | t1 = <SCROLL>
+		| t1 = <SECOND> | t1 = <SECTION> | t1 = <SELECT> | t1 = <SESSION_USER>
+		| t1 = <SET> | t1 = <SMALLINT> | t1 = <SOME> | t1 = <SPACE>
+		| t1 = <SQL> | t1 = <SQLCODE> | t1 = <SQLERROR> | t1 = <SQLSTATE> | t1 = <SUBSTRING>
+		| t1 = <SUM> | t1 = <SYSTEM_USER> | t1 = <TABLE> | t1 = <TEMPORARY> | t1 = <THEN>
+		| t1 = <TIME> | t1 = <TIMESTAMP> | t1 = <TIMEZONE_HOUR> | t1 = <TIMEZONE_MINUTE> | t1 = <TO>
+		| t1 = <TRAILING> | t1 = <TRANSACTION> | t1 = <TRANSLATE> | t1 = <TRANSLATION> | t1 = <TRIM>
+		| t1 = <TRUE> | t1 = <UNION> | t1 = <UNIQUE> | t1 = <UNKNOWN> | t1 = <UPDATE>
+		| t1 = <UPPER> | t1 = <USAGE> | t1 = <USER> | t1 = <USING> | t1 = <VALUE>
+		| t1 = <VALUES> | t1 = <VARCHAR> | t1 = <VARYING> | t1 = <VIEW> | t1 = <WHEN>
+		| t1 = <WHENEVER> | t1 = <WHERE> | t1 = <WITH> | t1 = <WORK> | t1 = <WRITE>
+		| t1 = <YEAR> | t1 = <ZONE>
+	)
+	{
+	  return t1;
+	}
+
+}
+

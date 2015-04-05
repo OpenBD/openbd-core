@@ -1,0 +1,28 @@
+   ___                   ____  ____  
+  / _ \ _ __   ___ _ __ | __ )|  _ \ 
+ | | | | '_ \ / _ \ '_ \|  _ \| | | |
+ | |_| | |_) |  __/ | | | |_) | |_| |
+  \___/| .__/ \___|_| |_|____/|____/ 
+       |_| $Id: Rhino_Changes.txt 1747 2011-10-25 15:46:01Z alan $
+
+ Rhino 1.7R3 	2011-05-09 	New in Rhino 1.7R3
+ https://developer.mozilla.org/en/Rhino_downloads_archive
+ 
+ OpenBD embeds a custom build of the Mozilla Rhino Engine.
+ 
+ To avoid clashing with any existing Javascript engine, it has been 
+ positioned under the "org.m0zilla" package and is part of the core
+ OpenBD src base, licensed as part of the GPL.
+ 
+ Changes:
+ 
+ + org.m0zilla.javascript.InterpretedFunction ----------------------------
+   - Changed class to public
+   - added new method:
+     
+     public InterpreterData[]	getNestedFunctions(){
+       return this.idata.itsNestedFunctions;
+     }
+
+ + org.m0zilla.javascript.InterpreterData --------------------------------
+   - Changed class to public

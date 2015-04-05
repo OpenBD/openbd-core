@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<title>Page not found</title>
+<style>
+html { font-size: 100%; overflow-y: scroll; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+body { margin: 0; font-size: 13px; line-height: 1.231; font-family: 'helvetica neue', helvetica, arial, sans-serif; color: #444; }
+h1 { font-size: 3em; margin: 1em 0; }
+a img { border: none; }
+#wrapper { width: 75%; /*overflow: auto;*/ margin: 0 auto; margin-top: 5%; padding: .5em 3em 3em 3em; border: 5px solid #f9f9f9; 
+		-webkit-box-shadow: 0 1px 5px #444; -moz-box-shadow: 0 1px 5px #444; box-shadow: 0 1px 5px #444;
+		-webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; } 
+img { float: right; margin: 2em 0 2em 2em; }
+.table_wrap {  overflow: auto; } /* contain the table and make it scroll horizontally */
+</style>
+<body>
+<div id="wrapper">
+	<a href="http://openbd.org/" target="blank" title="OpenBD J2EE Open Source CFML Engine">
+		<img src="data:image/png;base64,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" alt="openBD.org" />
+	</a>
+	<h2>404 Page not found</h2>
+	<p>%REQUEST_URI%</p>
+	<p style="font-size:75%">Time @ Server: <strong>%TIME%</strong></p>
+	<div class="table_wrap">%DETAIL%</div>
+</div>
+
+</body>
+</html>

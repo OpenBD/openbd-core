@@ -1,0 +1,54 @@
+UNIX
+
+Requires different version of "cfx.h" as supplied by Macromedia CFMX.  Differences are restricted to
+macro variable definitions and include files, therefore a single file was constructed with
+compilation preprocessing (using "#ifdef __unix__").  This same technique is used throughout the
+C++ CFX support code and relies on the use of the GNU C++ compiler (gcc/g++).
+
+
+
+Solaris
+-------
+Development and testing done on Solaris 9 SPARC platform.  Need to test on Solaris 8 with installation
+of gcc 3.x (gcc 2.x installation does not include required "libstdc++.so", etc).
+
+required:
+	Solaris /usr/ccs package (code development tools such as, "as" and "ld"; "ld" required).
+	gcc 3.2.3
+	libstdc++.so, runtime and library linking
+
+C++ CFX dynamic library must be linked using "libstdc++.so", as follows:
+		ld -dy -G -o CFX_TestTag.so CFX_TestTag.o -L/usr/local/lib -lstdc++
+	ELSE,
+		CFML Runtime Error
+		Error = CFXNativeLib could not load native tag module:
+			/usr/local/NewAtlanta/BlueDragon_Server_JX_3.1/customtags/CFX_TestTag.so.,
+		Diagnostics = ld.so.1: /usr/local/NewAtlanta/BlueDragon_Server_JX_3.1/jre/bin/java:
+			fatal: relocation error:
+			file /usr/local/NewAtlanta/BlueDragon_Server_JX_3.1/customtags/CFX_TestTag.so:
+			symbol __cxa_begin_catch: referenced symbol not found
+		Request /index.cfm
+		File Trace /usr/local/NewAtlanta/BlueDragon_Server_JX_3.1/wwwroot/index.cfm
+		Type Application
+		Tag Context CFCFX: Line=19; Column=1
+		Detail CFCFX: cfx_testtag
+
+
+include /usr/local/lib in LD_LIBRARY_PATH
+	ELSE,
+		CFML Runtime Error
+		General Runtime Error
+		Request /index.cfm
+		File Trace /usr/local/NewAtlanta/BlueDragon_Server_JX_3.1/wwwroot/index.cfm
+		Type Application
+		Tag Context CFCFX: Line=19; Column=1
+		Detail UnsatisfiedLinkError invoking CFXNativeLib method
+
+
+Cannot use any CF/CFMX pre-built demo binaries!!
+	Results in 
+    	CFXNativeLib loaded "/usr/local/NewAtlanta/BlueDragon_Server_JX_3.1/customtags/directory.so"
+    	An unexpected exception has been detected in native code outside the VM.
+    	Unexpected Signal : 11 occurred at PC=0xFF2B2F4C
+    	Function=strlen+0x1C
+    	Library=/usr/lib/libc.so.1

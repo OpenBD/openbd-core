@@ -1,0 +1,9 @@
+; CFX_TestTag.def : Declares the module parameters for the DLL.
+
+LIBRARY      "CFX_TestTag"
+DESCRIPTION  'CFX_TestTag Windows Dynamic Link Library'
+
+EXPORTS
+    ; All tag request procedures should be listed below
+	
+	ProcessTagRequest	@1

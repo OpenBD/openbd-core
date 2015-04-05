@@ -1,0 +1,17 @@
+package %PACKAGE%;
+
+import org.alanwilliamson.lang.java.inline.*;
+import com.naryx.tagfusion.cfm.parser.script.*;
+import com.naryx.tagfusion.cfm.engine.*;
+import java.io.*;
+import java.net.*;
+import java.math.*;
+import java.util.*;
+%IMPORT%
+
+public class %CLASSNAME% extends JavaBase implements JavaBlock, Serializable {
+	private static final long serialVersionUID = 1L;
+	
+
+	%JAVASNIPPET%
+}

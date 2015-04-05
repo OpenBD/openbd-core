@@ -1,0 +1,16 @@
+CSV Manipulation
+  http://opencsv.sourceforge.net/
+  
+Code Drop taken from the 2005 release and has been added to the core
+source tree of OpenBlueDragon.
+
+Primary Reason:
+  To provide the ReadCSV() function
+   
+
+Original License (Apache 2.0) is maintained for the "au.com.bytecode" package.
+
+
+Changes Made by OpenBlueDragon:
+
+  - Removed unused classes
