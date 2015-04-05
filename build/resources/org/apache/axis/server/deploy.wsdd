@@ -1,0 +1,10 @@
+<deployment xmlns="http://xml.apache.org/axis/wsdd/"
+            xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+ <globalConfiguration>
+  <requestFlow>
+    <handler type="java:com.naryx.tagfusion.cfm.xml.ws.cfcHandler"/>
+  </requestFlow>
+ </globalConfiguration>
+ <beanMapping languageSpecificType="java:com.naryx.tagfusion.cfm.xml.ws.encoding.ser.QueryBean" qname="ns1:QueryBean" xmlns:ns1="http://ser.encoding.ws.xml.cfm.tagfusion.naryx.com"/>
+</deployment>
+

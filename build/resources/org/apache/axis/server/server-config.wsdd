@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+ <globalConfiguration>
+  <parameter name="adminPassword" value="admin"/>
+  <parameter name="sendMultiRefs" value="true"/>
+  <parameter name="sendXsiTypes" value="true"/>
+  <parameter name="sendXMLDeclaration" value="true"/>
+  <parameter name="axis.sendMinimizedElements" value="true"/>
+  <requestFlow>
+   <handler name="CFCHandler" type="java:com.naryx.tagfusion.cfm.xml.ws.cfcHandler"/>
+  </requestFlow>
+ </globalConfiguration>
+ <handler name="LocalResponder" type="java:org.apache.axis.transport.local.LocalResponder"/>
+ <handler name="URLMapper" type="java:org.apache.axis.handlers.http.URLMapper"/>
+ <handler name="RPCDispatcher" type="java:org.apache.axis.providers.java.RPCProvider"/>
+ <handler name="Authenticate" type="java:org.apache.axis.handlers.SimpleAuthenticationHandler"/>
+ <handler name="MsgDispatcher" type="java:org.apache.axis.providers.java.MsgProvider"/>
+ <transport name="http">
+  <requestFlow>
+   <handler type="URLMapper"/>
+   <handler type="java:org.apache.axis.handlers.http.HTTPAuthHandler"/>
+  </requestFlow>
+ </transport>
+ <typeMapping encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" serializer="org.apache.axis.encoding.ser.MapItemSerializerFactory" deserializer="org.apache.axis.encoding.ser.MapItemDeserializerFactory" type="java:org.apache.axis.encoding.ser.MapItem" qname="ns1:mapItem" xmlns:ns1="http://xml.apache.org/xml-soap"/>
+ <beanMapping languageSpecificType="java:com.naryx.tagfusion.cfm.xml.ws.encoding.ser.QueryBean" qname="ns2:QueryBean" xmlns:ns2="http://wstypes.newatlanta.com"/>
+ <beanMapping languageSpecificType="java:com.naryx.tagfusion.cfm.xml.ws.encoding.ser.StructMap" qname="ns2:StructMap" xmlns:ns2="http://wstypes.newatlanta.com"/>
+ <beanMapping languageSpecificType="java:com.naryx.tagfusion.cfm.xml.ws.encoding.ser.StructMapItem" qname="ns2:StructMapItem" xmlns:ns2="http://wstypes.newatlanta.com"/>
+</deployment>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="defaultClientConfig"
+            xmlns="http://xml.apache.org/axis/wsdd/"
+            xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+ <transport name="http" pivot="java:org.apache.axis.transport.http.HTTPSender"/>
+ <transport name="local" pivot="java:org.apache.axis.transport.local.LocalSender"/>
+ <transport name="java" pivot="java:org.apache.axis.transport.java.JavaSender"/>
+ <typeMapping encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" serializer="org.apache.axis.encoding.ser.MapItemSerializerFactory" deserializer="org.apache.axis.encoding.ser.MapItemDeserializerFactory" type="java:org.apache.axis.encoding.ser.MapItem" qname="ns1:mapItem" xmlns:ns1="http://xml.apache.org/xml-soap"/>
+ <beanMapping languageSpecificType="java:com.naryx.tagfusion.cfm.xml.ws.encoding.ser.QueryBean" qname="ns2:QueryBean" xmlns:ns2="http://wstypes.newatlanta.com"/>
+ <beanMapping languageSpecificType="java:com.naryx.tagfusion.cfm.xml.ws.encoding.ser.StructMap" qname="ns2:StructMap" xmlns:ns2="http://wstypes.newatlanta.com"/>
+ <beanMapping languageSpecificType="java:com.naryx.tagfusion.cfm.xml.ws.encoding.ser.StructMapItem" qname="ns2:StructMapItem" xmlns:ns2="http://wstypes.newatlanta.com"/>
+</deployment>

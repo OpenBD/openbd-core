@@ -3,19 +3,25 @@
 #################
 
 *.pydevproject
-.project
 .metadata
 bin/
+webapp/WEB-INF/classes
+webapp/WEB-INF/bluedragon/work
 tmp/
 *.tmp
 *.bak
+*.bak*
 *.swp
 *~.nib
 local.properties
-.classpath
 .settings/
 .loadpath
 *.class
+
+# Build
+build/war/
+build/classes/
+
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

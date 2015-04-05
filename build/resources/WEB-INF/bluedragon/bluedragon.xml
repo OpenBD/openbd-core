@@ -1,23 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <server>
   <system>
-    <assert>false</assert>
-    <runtimelogging>true</runtimelogging>
-    <legacyformvalidation>false</legacyformvalidation>
-    <debug>true</debug>
-    <journal>password1234</journal>
     <component-cfc>/WEB-INF/bluedragon/component.cfc</component-cfc>
+    <strictarraypassbyreference>false</strictarraypassbyreference>
     <whitespacecomp>false</whitespacecomp>
     <nativelibdir>/WEB-INF/bin</nativelibdir>
     <missingtemplatehandler></missingtemplatehandler>
-    <lastfile>C:\_data\github\openbd-core\webapp\WEB-INF\bluedragon\bluedragon.xml.bak.1</lastfile>
-    <journalignoreuri>/journal</journalignoreuri>
     <errorhandler></errorhandler>
-    <buffersize>0</buffersize>
     <password>admin</password>
-    <cfoutputshorthand>true</cfoutputshorthand>
-    <lastupdated>05/Apr/2015 14:46.27</lastupdated>
+    <tempdirectory>/WEB-INF/bluedragon/work/temp</tempdirectory>
+    <buffersize>0</buffersize>
+    <lastupdated>25/Jul/2013 23:40.38</lastupdated>
     <defaultcharset>utf-8</defaultcharset>
+    <cfoutputshorthand>true</cfoutputshorthand>
+    <legacyformvalidation>false</legacyformvalidation>
   </system>
   <file>
     <maxfiles>1000</maxfiles>
@@ -26,49 +22,24 @@
   <javacustomtags>
     <classes>/WEB-INF/classes</classes>
   </javacustomtags>
+  <nativecustomtags>
+  </nativecustomtags>
   <fonts>
     <dirs>C:\Windows\Fonts</dirs>
   </fonts>
   <cfquery>
     <cache>true</cache>
   </cfquery>
-  <debugoutput>
-    <enabled>false</enabled>
-    <executiontimes>
-      <show>true</show>
-      <highlight>250</highlight>
-    </executiontimes>
-    <exceptions>
-      <show>true</show>
-    </exceptions>
-    <database>
-      <show>true</show>
-    </database>
-    <ipaddresses></ipaddresses>
-    <variables>
-      <url>true</url>
-      <form>true</form>
-      <cookie>true</cookie>
-      <cgi>true</cgi>
-      <client>true</client>
-      <server>true</server>
-      <request>true</request>
-      <application>true</application>
-      <session>true</session>
-      <show>false</show>
-      <variables>true</variables>
-    </variables>
-  </debugoutput>
   <cfapplication>
     <enabled>true</enabled>
     <clientstorage>cookie</clientstorage>
     <sessiontimeout>#CreateTimeSpan(0,0,20,0)#</sessiontimeout>
     <applicationtimeout>#CreateTimeSpan(2,0,0,0)#</applicationtimeout>
-    <j2eesession>true</j2eesession>
+    <j2eesession>false</j2eesession>
   </cfapplication>
   <cfmail>
+    <interval>240</interval>
     <smtpserver>127.0.0.1</smtpserver>
-    <threads>1</threads>
     <charset>UTF-8</charset>
     <smtpport>25</smtpport>
   </cfmail>

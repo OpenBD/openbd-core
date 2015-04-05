@@ -1,0 +1,381 @@
+<!--
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
+ *
+ *  This file is part of OpenBD CFML Server Engine.
+ *  
+ *  OpenBD is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  Free Software Foundation,version 3.
+ *  
+ *  OpenBD is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU General Public License
+ *  along with OpenBD.  If not, see http://www.gnu.org/licenses/
+ *  
+ *  Additional permission under GNU GPL version 3 section 7
+ *  
+ *  If you modify this Program, or any covered work, by linking or combining 
+ *  it with any of the JARS listed in the README.txt (or a modified version of 
+ *  (that library), containing parts covered by the terms of that JAR, the 
+ *  licensors of this Program grant you additional permission to convey the 
+ *  resulting work. 
+ *  
+ *  http://openbd.org/
+ *  https://github.com/OpenBD/openbd-core/blob/master/LICENSE
+-->
+
+<!--
+	Optional Requirement:
+	  user.properties with javacchome property set to full path
+	  to javacc 2.1 installation
+-->
+
+<project name="OpenBD" default="compile" basedir="..">
+
+	<property name="antfiles.dir" value="./build" />
+	<property file="${antfiles.dir}/user.properties" />
+	
+	<property name="remote.zip.manual" value="https://github.com/OpenBD/openbd-manual/archive/master.zip" />
+
+	<!-- set global properties for this build -->
+	<property name="build" value="./build/classes/" />
+	<property name="warbuild" value="./build/war/" />
+	<property name="dist" value="./build/targets/" />
+	
+	<property name="src" value="./src/" />
+	<property name="docs" value="./javadoc" />
+	<property name="jarpath" value="./build/lib/" />
+	<property name="webinf.jarpath" value="./webapp/WEB-INF/lib/" />
+	<property name="resources.dir" value="./build/resources" />
+
+	<!-- names for distributed jars -->
+	<property name="bluedragonjar" value="OpenBlueDragon.jar" />
+	<property name="appletjar" value="bluedragonapplets.jar" />
+	<property name="cfadapterjar" value="ColdFusionAdapter.jar" />
+
+	<path id="project.class.path">
+		<pathelement location="${build}" />
+
+		<pathelement location="${jarpath}activation.jar" />
+		<pathelement location="${jarpath}commons-dbcp-1.1.jar" />
+		<pathelement location="${webinf.jarpath}commons-pool.jar" />
+		<pathelement location="${jarpath}jaws.jar" />
+		<pathelement location="${jarpath}mail.jar" />
+		<pathelement location="${jarpath}servlet-api-2.4.jar" />
+
+		<!-- Use of the next 3 JARs is part of the fix for OpenBD Bug #196 -->
+		<pathelement location="${webinf.jarpath}ws-commons-util-1.0.2.jar" />
+		<pathelement location="${webinf.jarpath}xmlrpc-client-3.1.2.jar" />
+		<pathelement location="${webinf.jarpath}xmlrpc-common-3.1.2.jar" />
+
+		<pathelement location="${webinf.jarpath}webservices.jar" />
+		<pathelement location="${webinf.jarpath}commons-collections-3.2.1.jar" />
+		<pathelement location="${webinf.jarpath}commons-discovery.jar" />
+		<pathelement location="${webinf.jarpath}commons-io-1.4.jar" />
+
+		<pathelement location="${webinf.jarpath}httpclient-4.3.6.jar" />
+		<pathelement location="${webinf.jarpath}httpclient-cache-4.3.6.jar" />
+		<pathelement location="${webinf.jarpath}httpcore-4.3.3.jar" />
+		<pathelement location="${webinf.jarpath}httpmime-4.3.6.jar" />
+		<pathelement location="${webinf.jarpath}jakarta-oro-2.0.8.jar" />
+		<pathelement location="${webinf.jarpath}javolution.jar" />
+		<pathelement location="${webinf.jarpath}jaxrpc.jar" />
+		<pathelement location="${webinf.jarpath}jcommon-1.0.0.jar" />
+		<pathelement location="${webinf.jarpath}jfreechart-1.0.1.jar" />
+
+		<!-- Lucene -->
+		<pathelement location="${webinf.jarpath}lucene-core-5.0.0.jar" />
+		<pathelement location="${webinf.jarpath}lucene-analyzers-common-5.0.0.jar" />
+		<pathelement location="${webinf.jarpath}lucene-highlighter-5.0.0.jar" />
+		<pathelement location="${webinf.jarpath}lucene-queryparser-5.0.0.jar" />
+
+		<pathelement location="${webinf.jarpath}saaj.jar" />
+		<pathelement location="${webinf.jarpath}wsdl4j.jar" />
+		<pathelement location="${webinf.jarpath}xalan.jar" />
+		<pathelement location="${webinf.jarpath}serializer.jar" />
+
+		<pathelement location="${webinf.jarpath}QuickServer.jar" />
+		<pathelement location="${webinf.jarpath}mailet_1_0.jar" />
+
+
+		<pathelement location="${webinf.jarpath}commons-vfs-2.0-SNAPSHOT.jar" />
+		<pathelement location="${webinf.jarpath}commons-fileupload-1.2.1.jar" />
+		<pathelement location="${webinf.jarpath}commons-lang-2.4.jar" />
+		<pathelement location="${webinf.jarpath}commons-codec-1.4.jar" />
+
+		<pathelement location="${webinf.jarpath}jericho-html-3.1.jar" />
+		<pathelement location="${webinf.jarpath}jtidy-r938.jar" />
+
+		<pathelement location="${webinf.jarpath}rome-1.0RC1.jar" />
+		<pathelement location="${webinf.jarpath}yuicompressor-2.4.6.jar" />
+
+		<pathelement location="${webinf.jarpath}core-renderer.jar" />
+		<pathelement location="${webinf.jarpath}iText-2.0.8.jar" />
+
+		<pathelement location="${webinf.jarpath}xom-1.1.jar" />
+
+		<pathelement location="${webinf.jarpath}antlr-runtime-3.1.3.jar" />
+
+		<pathelement location="${webinf.jarpath}dnsjava-2.1.0.jar" />
+		<pathelement location="${webinf.jarpath}jsoup-1.6.2.jar" />
+
+		<!-- Plugin Login -->
+		<pathelement location="${webinf.jarpath}commons-beanutils-1.8.3.jar" />
+		<pathelement location="${webinf.jarpath}shiro-core-1.1.0.jar" />
+
+		<!-- mongo plugin -->
+		<pathelement location="${webinf.jarpath}mongo-java-driver-2.12.0.jar" />
+
+		<!-- aw20 Org -->
+		<pathelement location="${webinf.jarpath}aw20org.jar" />
+
+		<!-- SalesForce Plugin -->
+		<pathelement location="${webinf.jarpath}salesforce-partner.jar" />
+		<pathelement location="${webinf.jarpath}wsc-22a.jar" />
+
+		<!-- Memcached driver -->
+		<pathelement location="${webinf.jarpath}spymemcached-2.8.1.jar" />
+
+		<!-- Apache Tika [which includes a lot of addition jars] -->
+		<pathelement location="${webinf.jarpath}tika-app-1.4.jar" />
+
+		<!-- For FTP -->
+		<pathelement location="${webinf.jarpath}commons-net-3.1.jar" />
+
+		<!-- For Markdown -->
+		<pathelement location="${webinf.jarpath}markdown4j-2.2.jar" />
+
+		<!-- For Amazon -->
+		<pathelement location="${webinf.jarpath}aws-java-sdk-1.9.14-openbd.jar" />
+		<pathelement location="${webinf.jarpath}jackson-annotations-2.3.0.jar" />
+		<pathelement location="${webinf.jarpath}jackson-databind-2.3.2.jar" />
+
+	</path>
+
+
+	<target name="init" description="Initialisation">
+		<tstamp />
+		<mkdir dir="${build}" />
+		<mkdir dir="${dist}" />
+		<mkdir dir="${docs}" />
+	</target>
+
+	<target name="clean">
+		<delete dir="${build}" />
+		<delete dir="${warbuild}" />
+		<delete dir="${dist}" />
+	</target>
+
+
+	<!-- ================================================ -->
+	<!-- COMPILING                                        -->
+	<!-- ================================================ -->
+
+	<target name="compile" depends="clean,init">
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="${src}" destdir="${build}" debug="off" nowarn="on" classpathref="project.class.path">
+			<compilerarg line="-encoding utf-8" />
+		</javac>
+	</target>
+
+	<!-- ================================================ -->
+	<!-- JAR FILE CREATION                                -->
+	<!-- ================================================ -->
+
+	<target name="jar" description="Builds the bluedragon jar" depends="compile">
+
+		<property name="includeresources" value="javax/servlet/resources/web-app_2_2.dtd,javax/servlet/resources/web-app_2_3.dtd,META-INF/services/com.naryx.tagfusion.search.DocumentHandler,META-INF/services/com.naryx.tagfusion.search.IndexBuilderFactory,META-INF/services/com.naryx.tagfusion.search.SearcherFactory" />
+
+		<echo message="Creating OpenBlueDragon.jar file : ${bluedragonjar}" />
+
+		<!-- create the openbluedragon.properties file from the existing up, updating the builddate -->
+		<tstamp>
+			<format property="builddate" pattern="yyyy-MM-dd HH:mm:ss zzz" timezone="GMT" />
+		</tstamp>
+		<loadproperties srcFile="${antfiles.dir}/openbd.properties" />
+		<echo message="Building version: ${version}" />
+		<echo file="${antfiles.dir}/openbd.properties" message="version=${version}${line.separator}state=${state}${line.separator}releasedate=${releasedate}${line.separator}builddate=${builddate}${line.separator}" append="no" />
+
+		<delete file="${dist}${bluedragonjar}" />
+
+		<!-- Create the distribution directory -->
+		<manifest file="bluedragonmanifest.mf">
+			<attribute name="build-name" value="Open BlueDragon" />
+		</manifest>
+
+		<jar jarfile="${dist}${bluedragonjar}" manifest="bluedragonmanifest.mf" filesonly="true" compress="true">
+			<fileset dir="${build}" excludes="com/bluedragon/browser/**,com/naryx/tagfusion/cfx/HelloColdFusion.class,coldfusion/**/*.class" />
+			<fileset dir="${resources.dir}" includes="${includeresources}" />
+			<fileset dir="${antfiles.dir}" includes="openbd.properties" />
+			<fileset dir="${src}" includes="**/*.js" />
+			<fileset dir="${src}" includes="**/*.txt" />
+			<fileset dir="${src}" includes="**/*.properties" />
+		</jar>
+
+		<delete file="bluedragonmanifest.mf" />
+		<echo message="Completed jar creation." />
+	</target>
+
+	<target name="cfxjar" depends="compile" description="Builds the cfx jar">
+		<delete file="${dist}cfx.jar" />
+		<jar jarfile="${dist}cfx.jar" basedir="${build}" filesonly="true" includes="com/allaire/**" compress="true" />
+	</target>
+
+	<target name="formcontrolsjar" depends="compile" description="Builds the form controls jar">
+		<delete file="${dist}${appletjar}" />
+
+		<copy todir="${build}com/bluedragon/browser" verbose="false">
+			<fileset dir="${src}/com/bluedragon/browser/" includes="*.xml" />
+			<fileset dir="${src}/com/bluedragon/browser/" includes="*.gif" />
+		</copy>
+
+		<jar jarfile="${dist}${appletjar}" basedir="${build}" filesonly="true" includes="com/bluedragon/browser/*.xml,com/bluedragon/browser/*.gif,com/bluedragon/browser/*.class,com/bluedragon/browser/thinlet/*.class,com/nary/net/Base64.class,com/nary/util/stringtokenizer.class,com/nary/util/StringWriter.class" compress="true" />
+	</target>
+
+	<target name="cfadapterjar" depends="compile" description="Builds the Coldfusion adapter jar">
+		<delete file="${dist}${cfadapterjar}" />
+
+		<jar jarfile="${dist}${cfadapterjar}" basedir="${build}" filesonly="true" includes="coldfusion/**/*.class" compress="true" />
+	</target>
+
+	<!-- ================================================ -->
+	<!-- JAVACC targets                                   -->
+	<!-- qoq, expression and cfscript engine targets      -->
+	<!-- ================================================ -->
+
+	<target name="javacccfscript">
+		<!-- Produce the java classes for the cfscript .jj file -->
+		<javacc target="${src}/com/naryx/tagfusion/cfm/script/cfParser.jj" javacchome="${javacchome}" outputdirectory="${src}/com/naryx/tagfusion/cfm/script" ignorecase="true" />
+		<echo message="Remember to replace 'enum' references with 'enumer'" />
+	</target>
+
+	<target name="javaccexpressionengine">
+		<!-- Produce the java classes for the cfscript .jj file -->
+		<javacc target="${src}/com/naryx/tagfusion/expression/compile/expressionParser.jj" javacchome="${javacchome}" outputdirectory="${src}/com/naryx/tagfusion/expression/compile" ignorecase="true" />
+		<echo message="Remember to replace 'enum' references with 'enumer'" />
+	</target>
+
+	<target name="javaccqoq">
+		<!-- Produce the java classes for the cfscript .jj file -->
+		<javacc target="${src}/com/naryx/tagfusion/cfm/queryofqueries/selectsql.jj" javacchome="${javacchome}" outputdirectory="${src}/com/naryx/tagfusion/cfm/queryofqueries" ignorecase="true" />
+		<echo message="Remember to replace 'enum' references with 'enumer'" />
+	</target>
+
+	<!-- ================================================ -->
+	<!-- War deployment                                   -->
+	<!-- ================================================ -->
+
+	<target name="war" depends="jar,formcontrolsjar,cfadapterjar">
+
+		<delete dir="${warbuild}" />
+		<mkdir dir="${warbuild}" />
+		
+		<mkdir dir="${warbuild}/WEB-INF/" />
+		
+		<!-- documents -->
+		<copy todir="${warbuild}/WEB-INF/">
+			<fileset dir=".">
+				<include name="COPYING.txt" />
+				<include name="README.txt" />
+				<include name="ReleaseNotes.txt" />
+			</fileset>
+		</copy>
+
+		<!-- webapp/bluedragon subdirectories -->
+		<mkdir dir="${warbuild}/bluedragon/jars" />
+		<copy file="${dist}/bluedragonapplets.jar" todir="${warbuild}/bluedragon/jars" />
+		<delete file="${dist}/bluedragonapplets.jar" />
+		
+		<mkdir dir="${warbuild}/bluedragon/scripts" />
+		<copy file="./webapp/bluedragon/scripts/cfform.js" todir="${warbuild}/bluedragon/scripts" />
+		<copy file="./webapp/bluedragon/scripts/mask.js" todir="${warbuild}/bluedragon/scripts" />
+		<copy file="./webapp/bluedragon/scripts/wddx.js" todir="${warbuild}/bluedragon/scripts" />
+
+		<!-- copy cfm pages -->
+		<copy file="${resources.dir}/index.cfm" todir="${warbuild}" />
+
+		<!-- WEB-INF/bin -->
+		<mkdir dir="${warbuild}/WEB-INF/bin" />
+		<copy todir=".${warbuild}/WEB-INF/bin">
+			<fileset dir="./webapp/WEB-INF/bin">
+				<include name="*.dll" />
+				<include name="*.so" />
+			</fileset>
+		</copy>
+
+		<!-- WEB-INF/bin/x64 -->
+		<mkdir dir="${warbuild}/WEB-INF/bin/x64" />
+		<copy todir="${warbuild}/WEB-INF/bin/x64">
+			<fileset dir="./webapp/WEB-INF/bin/x64">
+				<include name="*.dll" />
+				<include name="*.so" />
+			</fileset>
+		</copy>
+
+		<!-- WEB-INF/lib -->
+		<mkdir dir="${warbuild}/WEB-INF/lib" />
+		<copy file="${dist}/${bluedragonjar}" todir="${warbuild}/WEB-INF/lib" />
+		<copy file="${dist}/${cfadapterjar}" todir="${warbuild}/WEB-INF/lib" />
+		<copy todir="${warbuild}/WEB-INF/lib">
+			<fileset dir="./webapp/WEB-INF/lib">
+				<include name="*.jar" />
+			</fileset>
+		</copy>
+		<delete file="${dist}/${cfadapterjar}" />
+
+
+		<!-- WEB-INF/webresources -->
+		<mkdir dir="${warbuild}/WEB-INF/webresources" />
+		<copy todir="${warbuild}/WEB-INF/webresources">
+			<fileset dir="./webapp/WEB-INF/webresources" />
+		</copy>
+
+		<!-- WEB-INF -->
+		<copy todir="${warbuild}/WEB-INF">
+			<fileset dir="./webapp/WEB-INF">
+				<include name="*.wsdd" />
+				<include name="web.xml" />
+			</fileset>
+		</copy>
+		
+		<copy todir="${warbuild}/WEB-INF">
+			<fileset dir="${resources.dir}/WEB-INF"></fileset>
+		</copy>
+
+		<!-- build WAR file -->
+		<zip destfile="${dist}openbd.war" basedir="${warbuild}" />
+
+	</target>
+
+	
+	<target name="war-with-manual" depends="war">
+
+		<delete file="${dist}manual.zip" />
+		<get src="${remote.zip.manual}" dest="${dist}manual.zip"/>
+		
+		<unzip src="${dist}manual.zip" dest="${warbuild}" />
+		<move todir="${warbuild}/manual/">
+			<fileset dir="${warbuild}/openbd-manual-master"/>
+		</move>
+		<delete dir="${warbuild}/openbd-manual-master" />
+
+		<delete file="${dist}manual.zip" />
+		
+		<copy file="${resources.dir}/index-manual.cfm" tofile="${warbuild}/index.cfm" overwrite="true" />
+		
+		<zip destfile="${dist}openbd.war" basedir="${warbuild}" />
+	</target>
+
+	
+	<!-- ================================================ -->
+	<!-- Javadoc generation                               -->
+	<!-- ================================================ -->
+
+	<target name="docs" depends="init">
+		<javadoc sourcepath="${src}" packagenames="*" destdir="${docs}" author="true" version="true" use="true" windowtitle="${ant.project.name} API" />
+	</target>
+
+</project>

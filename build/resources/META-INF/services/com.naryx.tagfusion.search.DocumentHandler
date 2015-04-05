@@ -1,0 +1,1 @@
+com.naryx.tagfusion.search.lucene.PlainTextDocumentHandler,com.naryx.tagfusion.search.lucene.HTMLTextDocumentHandler,com.naryx.tagfusion.search.lucene.PDFDocumentHandler,com.naryx.tagfusion.search.lucene.WordDocumentHandler
