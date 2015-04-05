@@ -5,7 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
-
+- fixed #1: mongoURI consistency
 - moved source to GitHub
 - fixed startup bug with the cron plugin if no directory specified
 - fixed JEE Session Management Null Pointer when App Server refusing to create 

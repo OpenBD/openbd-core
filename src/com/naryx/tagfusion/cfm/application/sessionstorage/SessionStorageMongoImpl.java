@@ -1,7 +1,7 @@
 /* 
- *  Copyright (C) 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
- *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
+ *  This file is part of OpenBD CFML Server Engine.
  *  
  *  OpenBD is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,10 +22,9 @@
  *  (that library), containing parts covered by the terms of that JAR, the 
  *  licensors of this Program grant you additional permission to convey the 
  *  resulting work. 
- *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  $Id: SessionStorageMongoImpl.java 2459 2014-12-16 10:18:40Z alan $
+ *  https://github.com/OpenBD/openbd-core/blob/master/LICENSE
  */
 package com.naryx.tagfusion.cfm.application.sessionstorage;
 
@@ -41,6 +40,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.naryx.tagfusion.cfm.application.cfApplicationData;
 import com.naryx.tagfusion.cfm.application.cfSessionData;
 import com.naryx.tagfusion.cfm.application.sessionUtility;
@@ -64,40 +64,51 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 	public SessionStorageMongoImpl(String appName, String _connectionUri) throws Exception {
 		super(appName);
 		
-		// Parse the URL
-		String user = null, pass = null, db = "openbd";
-
-		// Are they using a user/pass
-		String connectionUri	= _connectionUri.substring( _connectionUri.indexOf("//")+2 );
-		if ( connectionUri.indexOf("@") != -1 ){
-			int c1 = connectionUri.indexOf("@");
-			user	= connectionUri.substring( 0, c1 );
-			
-			int c2	= connectionUri.indexOf(":", c1 + 1 );
-			if ( c2 == -1 )
-				throw new Exception("invalid connection uri: " + _connectionUri );
-			
-			pass	= connectionUri.substring( c1 + 1, c2 );
-			connectionUri	= connectionUri.substring( c2+1 );
-		}
 		
-		// is there a database at the end
-		int c1	= connectionUri.indexOf("/");
-		if ( c1 != -1 ){
-			db	=	connectionUri.substring( c1 + 1 );
-			connectionUri	= connectionUri.substring(0,c1);
+		if ( _connectionUri.startsWith("mongodb://") ){
+			
+			MongoClientURI clientURI = new MongoClientURI(_connectionUri);
+			mongo	= new MongoClient( clientURI );
+			mdb		= mongo.getDB( clientURI.getDatabase() );
+
+		}else{
+		
+			// Parse the URL
+			String user = null, pass = null, db = "openbd";
+	
+			// Are they using a user/pass
+			String connectionUri	= _connectionUri.substring( _connectionUri.indexOf("//")+2 );
+			if ( connectionUri.indexOf("@") != -1 ){
+				int c1 = connectionUri.indexOf("@");
+				user	= connectionUri.substring( 0, c1 );
+				
+				int c2	= connectionUri.indexOf(":", c1 + 1 );
+				if ( c2 == -1 )
+					throw new Exception("invalid connection uri: " + _connectionUri );
+				
+				pass	= connectionUri.substring( c1 + 1, c2 );
+				connectionUri	= connectionUri.substring( c2+1 );
+			}
+			
+			// is there a database at the end
+			int c1	= connectionUri.indexOf("/");
+			if ( c1 != -1 ){
+				db	=	connectionUri.substring( c1 + 1 );
+				connectionUri	= connectionUri.substring(0,c1);
+			}
+	
+			mongo	= MongoDSN.newClient( connectionUri, user, pass, db );
+			
+			mdb	= mongo.getDB( db );
 		}
 
-		mongo	= MongoDSN.newClient( connectionUri, user, pass, db );
 		
-		mdb	= mongo.getDB( db );
-
 		// Create the collection
 		col	= mdb.getCollection( "sessions" );
 		setIndexes();
 		cfEngine.log( appName + "; SessionStorageMongo: Created " + _connectionUri );
 	}
-
+	
 	
 	private void setIndexes(){
 		if ( !indexes ){
