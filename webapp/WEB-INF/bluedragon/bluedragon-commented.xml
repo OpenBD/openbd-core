@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server>
+  <system>
+  	<!-- buffersize: controls the size of the BlueDragon internal buffer used to store the
+  		 rendered CFML page before handing the response to the J2EE server to be sent to the
+  		 browser. After the response is given to the J2EE server, it's not possible to modify
+  		 the response body using the CFHTMLHEAD or CFFORM tags; however, it may still be possible
+  		 to set headers and cookies, to or modify the response content type. That is, giving the
+  		 response to the J2EE server is not the same as flushing the response to the browser. 
+
+		 Using the smallest possible value for buffersize can significantly increase the performance
+		 of your web application because it eliminates the overhead needed to copy the response from
+		 BlueDragon's internal buffer to the J2EE server response buffers. 
+
+		 This configuration setting can be overridden dynamically using the CFFLUSH tag.
+		 
+		 Set buffersize to 0 to have BlueDragon buffer the entire response (this is the default).
+  	 -->
+    <buffersize>0</buffersize>
+
+	<!-- assert: Enables the CFASSERT tag and Assert() function. When disabled, the CFASSERT tag
+		 and Assert() function are not executed and do not produce any output.
+		 
+		 Accepts values "true/false"; the default is "false".
+	-->
+    <assert>true</assert>
+    
+    <!-- missingtemplatehandler: specifies the CFML template to be used to process "file-not-found"
+    	 errors in place of the BlueDragon default file-not-found error page.
+    	 
+    	 May be specified as a full physical path or a relative path from the web application root
+    	 directory. When specifying full physical paths on Linux/UNIX, prepend a "$" to the path
+    	 to distinguish these from relative paths; paths starting with "/" are interpreted as
+    	 relative paths.
+   	-->
+    <missingtemplatehandler>/missingTemplateHandler.cfm</missingtemplatehandler>
+    
+    <!-- tempdirectory: specifies the location of BlueDragon temporary directory. If not specified,
+    	 defaults to "work/temp", with the location of BlueDragon's "work" directory specified in
+    	 web.xml via the BLUEDRAGON_WORKING_DIRECTORY servlet init parameter.
+    	  
+    	 May be specified as a full physical path or a relative path from the web application root
+    	 directory. When specifying full physical paths on Linux/UNIX, prepend a "$" to the path
+    	 to distinguish these from relative paths; paths starting with "/" are interpreted as
+    	 relative paths.
+   	-->
+    <tempdirectory>/WEB-INF/work/temp</tempdirectory>
+    
+    <!-- runtimelogging: if "true", BlueDragon will create a log file containing extended error
+    	 information whenever an error occurs. The error log file will be created regardless of
+    	 whether the error is handled by a user-defined error handler. The information displayed
+    	 in the error log file will include CFDUMP output of the variable scopes selected in the
+    	 "debugoutput" section of this file (see below).
+    
+    	 Accepts values "true/false"; the default is "true".
+    -->
+    <runtimelogging>true</runtimelogging>
+    
+    <!-- defaultcharset: the default character set used by BlueDragon for reading incoming request
+    	 data (URL and Form data), and is the default character set specified by BlueDragon in the
+    	 outgoing response header. The default is "UTF-8".
+    -->
+    <defaultcharset>UTF-8</defaultcharset>
+    
+    <!-- component-cfc: the location of the "component.cfc" file that is the superclass of all CFCs.
+    	 Must be specified.
+    	 
+    	 May be specified as a full physical path or a relative path from the web application root
+    	 directory. When specifying full physical paths on Linux/UNIX, prepend a "$" to the path
+    	 to distinguish these from relative paths; paths starting with "/" are interpreted as
+    	 relative paths.
+    -->
+    <component-cfc>/WEB-INF/bluedragon/component.cfc</component-cfc>
+    
+    <!-- scriptsrc: the default path to the directory containing the JavaScript files used by CFFORM.
+    	 Must be specified as a relative path from the web application root directory.
+    -->
+    <scriptsrc>/bluedragon/scripts/</scriptsrc>
+
+	<!-- debug: also known as "Extended Error Reporting", if "false", the BlueDragon built-in error page
+		 only displays a descriptive message when reporting errors. If "true", then in addition to the
+		 descriptive error message, the BlueDragon built-in error page will display the following information: 
+
+			- the URI of the request 
+			- the physical path to the template that caused the error 
+			- detailed error information, including a snippet of the source code that produced the error 
+			- CFDUMP output of all CFML variable scopes selected in the "debugoutput" section of this
+			  document (see below)
+			  
+		 Setting this to "true" will provide useful information during development and testing. For security
+		 reasons, this setting should be disabled on production systems.
+		 
+		 Accepts values "true/false"; the default is "true".
+	-->
+    <debug>true</debug>
+    
+    <!-- scriptprotect: set to "true" to enable protection of variables from cross-site scripting attacks.
+    
+    	 Accepts values "true/false"; the default is "false".
+    -->
+    <scriptprotect>true</scriptprotect>
+    
+    <!-- nativelibdir: specifies the location of native libraries required by BlueDragon.
+    -->
+    <nativelibdir>/WEB-INF/bin</nativelibdir>
+    
+    <!-- errorhandler: specify the CFML template to be used to process runtime errors in
+    	 place of the BlueDragon default runtime error page.
+    	 
+    	 May be specified as a full physical path or a relative path from the web application root
+    	 directory. When specifying full physical paths on Linux/UNIX, prepend a "$" to the path
+    	 to distinguish these from relative paths; paths starting with "/" are interpreted as
+    	 relative paths.
+    -->
+    <errorhandler>/defaultErrorHandler.cfm</errorhandler>
+
+	<!-- whitespacecomp: if "true", BlueDragon compresses all runs of whitespace characters into a
+		 single whitespace character when generating HTML output from CFML pages.
+		 
+		 Accepts values "true/false"; the default is "false".
+	-->
+    <whitespacecomp>false</whitespacecomp>
+  </system>
+  
+  <!-- cfmappings: specify CFML mappings within individual "mapping" subelements.
+  
+  	   The "name" attribute of the "mapping" element must match the "name" subelement of the "mapping"
+  	   element. This is equivalent to the "logical path" as defined via the BlueDragon admin console. 
+  	   
+  	   The "directory" element specifies the physical path; it may be specified as a full physical
+  	   path or a relative path from the web application root directory. When specifying full physical
+  	   paths on Linux/UNIX, prepend a "$" to the path to distinguish these from relative paths; paths
+  	   starting with "/" are interpreted as relative paths.
+  -->
+  <cfmappings>
+    <mapping name="/test">
+      <directory>C:\test</directory>
+      <name>/test</name>
+    </mapping>
+    <mapping name="/machii">
+      <directory>/WEB-INF/MachII</directory>
+      <name>/machii</name>
+    </mapping>
+  </cfmappings>
+  
+  <!-- file: configuration of the BlueDragon file cache.
+  
+  	   The "maxfiles" subelement specifies the maximum number of files (CFML templates, CFC files,
+  	   and custom tag files) to be stored in the file cache. When the file cache becomes full, files
+  	   are removed from the cache using a least-recently used (LRU) algorithm to make room for newer
+  	   files.
+  	   
+  	   If "trustcache" is set to "true", BlueDragon does not check the file system for newer versions
+  	   of CFML or CFC source files after they're loaded into the file cache, which can have a modest
+  	   performance benefit. If "trustcache" is set to "false", BlueDragon replaces the cached file with
+  	   the newer file system version, if a newer version exists.
+  -->
+  <file>
+    <maxfiles>1000</maxfiles>
+    <trustcache>true</trustcache>
+  </file>
+  
+  <!-- javacustomtags: configuration of Java CFX tags -->
+  <javacustomtags>
+    <classes>/WEB-INF/classes</classes>
+    <mapping name="cfx_javabluedragonhello">
+      <name>cfx_javabluedragonhello</name>
+      <displayname>CFX_JavaBlueDragonHello</displayname>
+      <description>A simple Java CFX tag example</description>
+      <class>com.newatlanta.BlueDragonHello</class>
+    </mapping>
+  </javacustomtags>
+  
+  <!-- nativecustomtags: configuration of C++ CFX tags -->
+  <nativecustomtags>
+    <mapping name="cfx_nativebluedragonhello">
+      <function>ProcessTagRequest</function>
+      <keeploaded>true</keeploaded>
+      <name>cfx_nativebluedragonhello</name>
+      <module>/WEB-INF/customtags/BlueDragonHello.dll</module>
+      <displayname>CFX_NativeBlueDragonHello</displayname>
+      <description>A simple C++ CFX tag example</description>
+    </mapping>
+  </nativecustomtags>
+  
+  
+  <cfchart>
+    <cachesize>100</cachesize>
+    <storage>file</storage>
+  </cfchart>
+  
+  <cfquery>
+    <!-- The query cache stores result sets that are cached when using the CFQUERY attributes CACHEDWITHIN
+    	 and CACHEDAFTER, and CACHEDUNTILCHANGE. The "cachecount" element specifies the maximimum number of
+    	 queries that will be stored in the cache. When the query cache becomes full, queries are removed from
+    	 the cache using a least-recently used (LRU) algorithm to make room for newer queries. 
+	-->
+  	<cachecount>1000</cachecount>
+  	
+  	<!-- validate: if "true", validation queries are used to verify the state of database connections before
+  		 they're used (to render a CFQUERY tag, for example).
+  		 
+  		 Accepts values "true/false"; the default is "true".
+  	-->
+  	<validate>true</validate>
+  	
+  	<!-- autoconfig-odbc: if "true" on Windows, will attempt to automatically configure ODBC datasources in
+  	     this configuration file when BlueDragon initializes. Note that the username and password values are
+  	     never automatically configured, but must be entered manually.
+  	
+  		 Accepts values "true/false"; the default is "true".
+  	-->
+  	<autoconfig-odbc>true</autoconfig-odbc>
+  	
+  	<!-- Following is a sample datasource for MySQL. The "name" attribute for the "datasource" element, and
+  		 the "name" subelement must have same value; this is the name of the datasource to be specified
+  		 within CFQUERY and other database tags.
+  	
+  		 Within the "hoststring" element, edit "localhost" to be the domain name or IP address of the server
+  		 on which the MySQL database is running; edit "myDatabaseName" to be the name of the MySQL database
+  		 to which this datasource will connect.
+  	-->
+    <datasource name="mysql">
+      <password></password>
+      <connectionretries>0</connectionretries>
+      <sqlupdate>true</sqlupdate>
+      <sqldelete>true</sqldelete>
+      <username></username>
+      <drivername>org.gjt.mm.mysql.Driver</drivername>
+      <sqlstoredprocedures>true</sqlstoredprocedures>
+      <perrequestconnections>true</perrequestconnections>
+      <sqlinsert>true</sqlinsert>
+      <sqlselect>true</sqlselect>
+      <connectiontimeout>120</connectiontimeout>
+      <databasename>myDatabaseName</databasename>
+      <initstring></initstring>
+      <logintimeout>120</logintimeout>
+      <hoststring>jdbc:mysql://localhost:3306/myDatabaseName?useUnicode=true</hoststring>
+      <maxconnections>24</maxconnections>
+      <name>mysql</name>
+    </datasource>
+ 
+   	<!-- Following is a sample datasource for Microsoft SQL Server. The "name" attribute for the
+   		 "datasource" element, and the "name" subelement must have same value; this is the name of the
+   		 datasource to be specified within CFQUERY and other database tags.
+  	
+  		 Within the "hoststring" element, edit "localhost" to be the domain name or IP address of the server
+  		 on which the SQL Server database is running; edit "myDatabaseName" to be the name of the SQL Server
+  		 database to which this datasource will connect.
+  	-->   
+    <datasource name="sqlserver">
+      <password></password>
+      <connectionretries>0</connectionretries>
+      <sqlupdate>true</sqlupdate>
+      <sqldelete>true</sqldelete>
+      <username></username>
+      <drivername>com.microsoft.sqlserver.jdbc.SQLServerDriver</drivername>
+      <sqlstoredprocedures>true</sqlstoredprocedures>
+      <perrequestconnections>false</perrequestconnections>
+      <sqlinsert>true</sqlinsert>
+      <sqlselect>true</sqlselect>
+      <connectiontimeout>120</connectiontimeout>
+      <databasename>myDatabaseName</databasename>
+      <initstring></initstring>
+      <logintimeout>120</logintimeout>
+      <hoststring>jdbc:sqlserver://localhost:1433;databaseName=myDatabaseName</hoststring>
+      <maxconnections>24</maxconnections>
+      <name>sqlserver</name>
+    </datasource>
+  </cfquery>
+  
+  <debugoutput>
+    <enabled>true</enabled>
+    <executiontimes>
+      <show>true</show>
+      <highlight>250</highlight>
+    </executiontimes>
+    <exceptions>
+      <show>true</show>
+    </exceptions>
+    <tracepoints>
+      <show>true</show>
+    </tracepoints>
+    <database>
+      <show>true</show>
+    </database>
+    <ipaddresses>127.0.0.1,192.168.200.16</ipaddresses>
+    <variables>
+      <url>true</url>
+      <form>true</form>
+      <cookie>true</cookie>
+      <cgi>true</cgi>
+      <client>true</client>
+      <server>true</server>
+      <request>true</request>
+      <application>true</application>
+      <session>true</session>
+      <show>true</show>
+      <variables>true</variables>
+    </variables>
+    <timer>
+      <show>true</show>
+    </timer>
+  </debugoutput>
+  
+  <cfapplication>
+    <j2eesession>true</j2eesession>
+    <applicationtimeout>#CreateTimeSpan(2,0,0,0)#</applicationtimeout>
+    <clientpurgeenabled>true</clientpurgeenabled>
+    <sessiontimeout>#CreateTimeSpan(0,0,20,0)#</sessiontimeout>
+    <cf5clientdata>false</cf5clientdata>
+    <clientexpiry>90</clientexpiry>
+    <enabled>true</enabled>
+    <clientstorage>cookie</clientstorage>
+    <clientGlobalUpdatesDisabled>true</clientGlobalUpdatesDisabled>
+  </cfapplication>
+  
+  <cfmail>
+    <smtpserver>127.0.0.1,backup.smtp.com</smtpserver>
+    <threads>1</threads>
+    <timeout>60</timeout>
+    <charset>UTF-8</charset>
+    <smtpport>25</smtpport>
+  </cfmail>
+  
+  <cfmlcustomtags>
+    <mapping name="cf">
+      <directory>/WEB-INF/customtags;C:\custom\tag\path</directory>
+      <name>cf</name>
+    </mapping>
+  </cfmlcustomtags>
+</server>
