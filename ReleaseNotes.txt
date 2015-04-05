@@ -1,9 +1,12 @@
 OpenBD Release Notes
 __________________________________
 
-$Date: 2015-04-05 09:50:07 -0400 (Sun, 05 Apr 2015) $
+http://openbd.org/
+https://github.com/OpenBD/openbd-core
 __________________________________
 
+
+- moved source to GitHub
 - fixed startup bug with the cron plugin if no directory specified
 - fixed JEE Session Management Null Pointer when App Server refusing to create 
 - fixed #534: cfzip extract appending to file instead of overwriting

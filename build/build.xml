@@ -279,7 +279,6 @@
 		<copy todir="${warbuild}/WEB-INF/">
 			<fileset dir=".">
 				<include name="COPYING.txt" />
-				<include name="README.txt" />
 				<include name="ReleaseNotes.txt" />
 			</fileset>
 		</copy>
