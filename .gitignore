@@ -6,6 +6,7 @@
 .metadata
 webapp/WEB-INF/classes
 webapp/WEB-INF/bluedragon/work
+webapp/donotcheckin
 tmp/
 *.tmp
 *.bak
@@ -21,6 +22,8 @@ local.properties
 build/war/
 build/classes/
 build/targets/
+
+
 
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
