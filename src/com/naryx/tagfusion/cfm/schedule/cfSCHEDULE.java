@@ -84,7 +84,7 @@ public class cfSCHEDULE extends cfTag implements Serializable {
 			createAttInfo("RESOLVEURL", "Whether relative urls in the published result file should be resolved to absolute urls", "NO", false), 
 			createAttInfo("STARTDATE", "The date the task will run from", "", false),
 			createAttInfo("STARTTIME", "The time the task will run from", "", false), 
-			createAttInfo("URL", "The URL that will be requirest", "", false), 
+			createAttInfo("URL", "The URL that will be requested", "", false), 
 			createAttInfo("USERNAME", "Username, if url requires authentication", "", false),
 		};
 	}
@@ -183,7 +183,7 @@ public class cfSCHEDULE extends cfTag implements Serializable {
 					task.setInterval(-1);
 
 					if (!containsAttribute(attributes,"STARTTIME"))
-						throw newRunTimeException("You need to specify a STARTTIME when the INTERVAL=ONCE");
+						throw newRunTimeException("You need to specify a STARTTIME when the is not INTERVAL=ONCE");
 
 					// Use the startDate when retrieving the startTime to avoid problems with tasks
 					// scheduled to start at 2am. If we don't do this then when we add a task on days
