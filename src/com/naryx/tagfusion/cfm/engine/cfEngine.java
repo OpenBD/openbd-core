@@ -121,7 +121,8 @@ public class cfEngine extends Object implements cfEngineMBean {
 									bStrictArrayPassByReference = false,
 									bMainFormUrlCase = false,
 									bDebugerOutputEnabled = false,
-									bCFoutputShorthand = false;
+									bCFoutputShorthand = false,
+									bRemoteOpenBDXML = false;
 
 	private Vector<engineListener> engineListeners;
 	private ResourceBundle runtimeMessages;
@@ -331,7 +332,8 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 	private File getOpenBDXmlFile( String bluedragonXmlParm ) throws IOException {
 		if ( bluedragonXmlParm.startsWith( "http://" ) || bluedragonXmlParm.startsWith( "https://" ) ){
-			File locationXMLFile = File.createTempFile( "openbd", ".xml" );
+			bRemoteOpenBDXML 			= true;
+			File locationXMLFile 	= File.createTempFile( "openbd", ".xml" );
 
 			System.out.println( "Loading Remote bluedragon.xml from: " + bluedragonXmlParm );
 			String remoteXML = HttpGet.doGet( bluedragonXmlParm ).getBodyAsString();
@@ -797,6 +799,12 @@ public class cfEngine extends Object implements cfEngineMBean {
 	}
 
 	public synchronized static void writeXmlFile(xmlCFML newXmlCFML, boolean notifyListeners) throws cfmRunTimeException {
+		
+		if ( thisInstance.bRemoteOpenBDXML ){
+			log("Attempted to update a remote bluedragon.xml; operation failed");
+			return;
+		}
+		
 		File xmlFileName = getXmlFileName();
 
 		if ((xmlFileName != null) && (xmlFileName.canWrite())) {
