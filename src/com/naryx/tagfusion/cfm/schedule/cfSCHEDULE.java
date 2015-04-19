@@ -64,7 +64,7 @@ public class cfSCHEDULE extends cfTag implements Serializable {
 	public java.util.Map[] getAttInfo() {
 		return new java.util.Map[] { 
 			createAttInfo("ATTRIBUTECOLLECTION", "A structure containing the tag attributes", 	"", false ),
-			createAttInfo("ACTION", "DELETE|PAUSE|RESUME|RUN|UPDATE", "", true), 
+			createAttInfo("ACTION", "DELETE|PAUSE|RESUME|RUN|UPDATE|LISTALL", "", true), 
 			createAttInfo("ACTION=PAUSE", "If you specify a TASK then that task will be paused, otherwise the whole scheduler will be paused", "", false), 
 			createAttInfo("ACTION=RESUME", "If you specify a TASK then that task will be resumed, otherwise the whole scheduler will resume", "", false), 
 			createAttInfo("TASK", "The name of the task", "", false), 
@@ -86,6 +86,7 @@ public class cfSCHEDULE extends cfTag implements Serializable {
 			createAttInfo("STARTTIME", "The time the task will run from", "", false), 
 			createAttInfo("URL", "The URL that will be requested", "", false), 
 			createAttInfo("USERNAME", "Username, if url requires authentication", "", false),
+			createAttInfo("RESULT", "if action=listall then this is the variable to return the data in", "", false),
 		};
 	}
 
