@@ -6,6 +6,8 @@
 .metadata
 webapp/WEB-INF/classes
 webapp/WEB-INF/bluedragon/work
+webapp/bluedragon/administrator
+webapp/bluedragon/adminapi
 webapp/donotcheckin
 tmp/
 *.tmp
