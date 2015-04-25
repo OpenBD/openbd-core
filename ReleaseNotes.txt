@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- fixed #4: GetMetaData doesn't return function information for script only components
 - fixed #1: mongoURI consistency
 - moved source to GitHub
 - fixed startup bug with the cron plugin if no directory specified

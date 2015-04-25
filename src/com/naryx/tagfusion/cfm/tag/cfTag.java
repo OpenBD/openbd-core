@@ -986,7 +986,7 @@ public class cfTag implements java.io.Serializable {
 	/*
 	 * MetaData Routines
 	 */
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return createInfo( "unknown", "no documentation available" );
 	}
 

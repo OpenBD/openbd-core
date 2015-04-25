@@ -136,7 +136,7 @@ public class userDefinedFunction extends functionBase implements java.io.Seriali
 		this.javaBlock = javaBlock;
 		this.javaMethod = method;
 		access = ACCESS_PUBLIC;
-		formals = new ArrayList<CFFunctionParameter>();
+		formals = new ArrayList<CFFunctionParameter>(2);
 	}
 
 	/*

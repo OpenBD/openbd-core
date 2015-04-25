@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,7 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  $Id: getMetaData.java 2103 2012-05-21 23:56:45Z alan $
  */
 
 package com.naryx.tagfusion.expression.function;
@@ -59,7 +58,7 @@ public class getMetaData extends functionBase {
 		return new String[] { "object" };
 	}
 
-	public java.util.Map getInfo() {
+	public java.util.Map<String,String> getInfo() {
 		return makeInfo("engine", "Returns back meta information depending on the object passed in", ReturnType.STRUCTURE);
 	}
 

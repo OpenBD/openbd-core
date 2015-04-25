@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2012 TagServlet Ltd
+ *  Copyright (C) 2012-2015 TagServlet Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,7 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  $Id: ComponentScriptFactory.java 2220 2012-07-30 01:11:52Z alan $
  */
 package com.naryx.tagfusion.cfm.engine;
 
@@ -133,6 +132,8 @@ public class ComponentScriptFactory {
 				componentFile.addUDF(cfscript, udf);
 				cfcomponent.addFunctionMetaData( udf.getMetaData() );
 			}
+			
+			cfcomponent.tagLoadingComplete();
 			
 			return componentFile;
 			

@@ -671,9 +671,9 @@ public class cfComponentData extends cfComponentDataBase implements Serializable
 
 			if (method instanceof cfcMethodData && ((cfcMethodData) method).hasNamedArguments()) {
 				cfArgStructData argData = ((cfcMethodData) method).getNamedArguments();
-				Iterator it = argData.keySet().iterator();
+				Iterator<String> it = argData.keySet().iterator();
 				while (it.hasNext()) {
-					String key = (String) it.next();
+					String key = it.next();
 					missingMethodNameArguments.setData(key, argData.getData(key));
 				}
 			} else {
@@ -692,8 +692,7 @@ public class cfComponentData extends cfComponentDataBase implements Serializable
 		cfFUNCTION function = udf.getParentFunction();
 
 		// push component information onto the session's component stack
-		enterComponent(session, function); // TODO: what if CFSCRIPT-based UDF?
-																				// function == null?
+		enterComponent(session, function);
 
 		// call the method's UDF
 		if (method instanceof cfcMethodData && ((cfcMethodData) method).hasNamedArguments() && !method.isOnMethodMissing()) {
