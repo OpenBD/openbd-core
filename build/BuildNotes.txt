@@ -1,0 +1,73 @@
+OpenBD
+  Java J2EE/GoogleAppEngine CFML Runtime Engine
+    (c) Copyright 2000 - 2015 tagServlet Ltd
+    http://www.openbd.org/
+
+
+Jackson JSON Parsing library 
+
+Download:
+	http://jackson.codehaus.org/
+	
+  $Id: README.txt 1621 2011-07-14 03:26:46Z alan $
+  Relates to 1.8.3 July 2011 Build
+
+
+A special build of Jackson is made for the OpenBD project to support the additional
+YES|NO combinations for the boolean support that CFML has.   This is included the main
+src tree of OpenBD due to the changes below
+
+Instructions:
+
+1. https://github.com/FasterXML/jackson-core/tree/2.3  ZIP file
+2. Add it to the SRC of the OpenBD
+
+Jackson-core is licensed under: http://www.apache.org/licenses/LICENSE-2.0
+
+
+2 files have been updated to support this.
+
+-----------------------------------------------------------------------------
+
+com.fasterxml.jackson.core.json.ReaderBasedParser.java Lines#336:
+
+public JsonToken nextToken()
+        throws IOException, JsonParseException{ 
+        :
+        :
+	      //---------------------------------------------------
+	      // OpenBD Addition to support the YES / NO
+	      //---------------------------------------------------
+	      case 'Y':
+	      case 'y':
+	        _matchToken("YES",1);
+	        t = JsonToken.VALUE_TRUE;
+	        break;
+	      case 'N':
+      		_matchToken("NO",1);
+	        t = JsonToken.VALUE_FALSE;
+	        break;
+	      //---------------------------------------------------
+
+
+Made _matchToken() check for lowercase version just incase
+
+protected void _matchToken(String matchStr, int i) throws IOException
+	if (_inputBuffer[_inputPtr] != matchStr.charAt(i) && Character.toLowerCase( _inputBuffer[_inputPtr] ) != Character.toLowerCase( matchStr.charAt(i) ) ) {
+
+
+
+ This is the for the parser to recognize the Y/N tokens for this one.
+ 
+----------------------------------------------------------------------------
+ 
+com.fasterxml.jackson.core.JsonToken.java Lines#18
+ 
+  	  //---------------------------------------------------
+	  // OpenBD Addition to support the YES / NO
+	  //---------------------------------------------------
+	  VALUE_YES("YES", JsonTokenId.ID_TRUE),
+	  VALUE_NO("NO", JsonTokenId.ID_FALSE),
+	  //---------------------------------------------------
+
+ This is the ENUM types for the new boolean types
