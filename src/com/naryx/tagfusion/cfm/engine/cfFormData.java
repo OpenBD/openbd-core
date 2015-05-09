@@ -111,7 +111,7 @@ public class cfFormData extends cfUrlData implements java.io.Serializable{
     System.arraycopy( incomingRequest,0,reqCopy,0,len);
     RequestUtil.parseParameters( formParms, reqCopy, encoding ); 
     
-    Iterator iter = formParms.keySet().iterator();
+    Iterator<?> iter = formParms.keySet().iterator();
     while ( iter.hasNext() ){
       String key = (String)iter.next();
       String[] valArray = (String[])formParms.get( key );

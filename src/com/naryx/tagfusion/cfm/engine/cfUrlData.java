@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2000 - 2013 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *
@@ -25,7 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *
  *  http://openbd.org/
- *  $Id: cfUrlData.java 2374 2013-06-10 22:14:24Z alan $
  */
 
 package com.naryx.tagfusion.cfm.engine;
@@ -70,6 +69,10 @@ public class cfUrlData extends cfStructData implements Serializable {
 		return false;
 	}
 
+	public void overrideData(String key, cfStringData value) {
+		super.setData(key, value);
+	}
+	
 	public void setData(String key, cfData value) {
 
 		// -- This method is overriden to look for the __cfform__xxx variables from a <CFFORM>/<CFTREE> tag

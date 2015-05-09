@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Improved script protection for the CGI/URL/FORM scopes
 - fixed historical support for JSON: YES|NO for boolean handling
 - fixed #4: GetMetaData doesn't return function information for script only components
 - fixed #1: mongoURI consistency

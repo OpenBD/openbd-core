@@ -177,7 +177,7 @@ public class cfCookieData extends cfStructData implements java.io.Serializable {
 	}
 
 	// used by Script Protect functionality
-	public void updateCookie(String _key, String _data) {
+	public void overrideData(String _key, String _data) {
 		cookieWrapper cW = (cookieWrapper) super.getData(_key);
 		if (cW != null) {
 			cW.cookie.setValue(_data);
