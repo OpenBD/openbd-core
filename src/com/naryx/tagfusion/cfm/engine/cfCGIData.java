@@ -249,7 +249,7 @@ public class cfCGIData extends cfStructData implements java.io.Serializable {
 				case 11:
 
 					String v = cfUrlData.getQueryString(_session);
-					if ( bScriptProtect )
+					if ( bScriptProtect && v != null )
 						v = v.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
 					
 					return new cfStringData(v);
