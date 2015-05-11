@@ -233,7 +233,7 @@ public class cfCGIData extends cfStructData implements java.io.Serializable {
 				case 9:
 					
 					String value = REQ.getRequestURI();
-					if ( bScriptProtect )
+					if ( bScriptProtect & value != null )
 						value = value.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
 					
 					return new cfStringData(value);
@@ -281,7 +281,7 @@ public class cfCGIData extends cfStructData implements java.io.Serializable {
 		String oldHdr = customHeaderMapping.get(_key);
 		if (oldHdr != null) {	
 			String v = REQ.getHeader(oldHdr);
-			if ( bScriptProtect )
+			if ( bScriptProtect && v != null )
 				v = v.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
 			
 			return new cfStringData(v);
