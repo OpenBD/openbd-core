@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.nary.io.FileUtils;
 import com.nary.util.FastMap;
+import com.naryx.tagfusion.cfm.application.ScriptProtect;
 
 public class cfCGIData extends cfStructData implements java.io.Serializable {
 
@@ -234,8 +235,8 @@ public class cfCGIData extends cfStructData implements java.io.Serializable {
 					
 					String value = REQ.getRequestURI();
 					if ( bScriptProtect & value != null )
-						value = value.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
-					
+						value = ScriptProtect.sanitize( value );
+						
 					return new cfStringData(value);
 
 				case 10:
@@ -250,7 +251,7 @@ public class cfCGIData extends cfStructData implements java.io.Serializable {
 
 					String v = cfUrlData.getQueryString(_session);
 					if ( bScriptProtect && v != null )
-						v = v.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
+						v = ScriptProtect.sanitize( v );
 					
 					return new cfStringData(v);
 
@@ -282,7 +283,7 @@ public class cfCGIData extends cfStructData implements java.io.Serializable {
 		if (oldHdr != null) {	
 			String v = REQ.getHeader(oldHdr);
 			if ( bScriptProtect && v != null )
-				v = v.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
+				v = ScriptProtect.sanitize( v );
 			
 			return new cfStringData(v);
 		}
@@ -296,7 +297,8 @@ public class cfCGIData extends cfStructData implements java.io.Serializable {
 		if (hdr != null) {
 			String v = hdr;
 			if ( bScriptProtect )
-				v = v.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
+				v = ScriptProtect.sanitize( v );
+
 			
 			return new cfStringData(v);
 		}

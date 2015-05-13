@@ -22,9 +22,9 @@
  *  (that library), containing parts covered by the terms of that JAR, the 
  *  licensors of this Program grant you additional permission to convey the 
  *  resulting work. 
- *  README.txt @ http://www.openbluedragon.org/license/README.txt
+ *  README.txt @ http://openbd.org/license/README.txt
  *  
- *  http://openbd.org/ *  $Id: cfApplicationData.java 2331 2013-02-25 20:07:43Z alan $
+ *  http://openbd.org/ 
  */
 
 package com.naryx.tagfusion.cfm.application;
@@ -436,11 +436,10 @@ public class cfApplicationData extends cfStructExpireData implements java.io.Ser
 				if (valueData.getDataType() == cfData.CFSTRINGDATA) {
 					String value = ((cfStringData) valueData).getString();
 					int origLen = value.length();
-					value = value.replaceAll("<(\\s*)(object|embed|script|applet|meta)", "<$1InvalidTag");
+					value = ScriptProtect.sanitize( value );
 					
 					// only replace the existing cfData if it's changed - note this works because any replaced string will grow the existing string length
 					if (value.length() != origLen) {
-
 						if (_scope == variableStore.COOKIE_SCOPE) {
 							((cfCookieData) scopeData).overrideData(nextKey, value);
 						} else if (_scope == variableStore.FORM_SCOPE) {
