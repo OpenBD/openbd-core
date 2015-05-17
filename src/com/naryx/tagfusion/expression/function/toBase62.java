@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2008 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -24,7 +24,7 @@
  *  resulting work. 
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
- *  http://www.openbluedragon.org/
+ *  http://openbd.org/
  */
 
 package com.naryx.tagfusion.expression.function;
@@ -73,7 +73,7 @@ public class toBase62 extends functionBase {
 
 	private static String encode(long n) {
 		if (n <= 0)
-			return "0";
+			n = n * -1;
 
 		StringBuilder s = new StringBuilder(8);
 		int base = base62Alphabet.length();
@@ -81,6 +81,9 @@ public class toBase62 extends functionBase {
 
 		while (n != 0) {
 			mod = (int) n % base;
+			if ( mod < 0 )
+				mod = mod * -1;
+			
 			s.append( base62Alphabet.charAt(mod) );
 			n = n / base;
 		}
