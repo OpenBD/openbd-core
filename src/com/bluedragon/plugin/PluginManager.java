@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
@@ -73,16 +74,38 @@ public class PluginManager implements PluginManagerInterface, RequestListener {
 
 	private List<Plugin> listOfPlugins;
 	private List<RequestListener> listOfRequestListeners;
-	private HashSet<String>	filesSet;
+	private Set<String>	filesSet;
+	private boolean bOverrideCore = true;
 
 	public PluginManager(xmlCFML systemParameters) {
+		
 		thisInst = this;
 		listOfPlugins = new ArrayList<Plugin>();
 		listOfRequestListeners = new ArrayList<RequestListener>();
 		filesSet	= new HashSet<String>();
-		
-		log("PluginManager Auto Discovery (openbdplugin-XXXX.jar) ...");
 
+    // Load in the standard plugins
+		log("PlugInManager: Loading Standard Plugins" );
+    loadPlugIn("org.alanwilliamson.openbd.plugin.spreadsheet.SpreadSheetExtension", systemParameters);
+    loadPlugIn("org.alanwilliamson.openbd.plugin.cfsmtp.SmtpExtension", systemParameters);
+    loadPlugIn("org.aw20.plugin.login.LoginExtension", systemParameters);
+    loadPlugIn("org.alanwilliamson.openbd.plugin.crontab.CronExtension", systemParameters);
+    loadPlugIn("com.bluedragon.mongo.MongoExtension", systemParameters);
+    loadPlugIn("org.alanwilliamson.openbd.plugin.salesforce.SalesForceExtension", systemParameters);
+    loadPlugIn("com.bluedragon.vision.VisionExtension", systemParameters);
+    loadPlugIn("com.bluedragon.profiler.ProfilerExtension", systemParameters);
+
+    int standardCount = listOfPlugins.size();
+    log("PlugInManager: Standard Plugins=" + standardCount );
+		
+
+    // Look at the flag if we can override the function 
+		bOverrideCore = systemParameters.getBoolean("server.system.pluginoverride", true);
+    log("PluginManager: Auto Discovery [server.system.pluginoverride]=" + bOverrideCore );
+
+    
+    // Look at the dynamic
+    log("PluginManager: Auto Discovery (openbdplugin-XXXX.jar)");
 		try {
 			ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
 			URL[] urls = ((URLClassLoader)systemLoader).getURLs();
@@ -99,11 +122,11 @@ public class PluginManager implements PluginManagerInterface, RequestListener {
 			log( "PluginManager.Exception: " + e.getMessage() );
 		}
 
-		log("... found: " + listOfPlugins.size() + " plugins");
 		
 		String	jarList			= systemParameters.getString("server.system.pluginjarpath");
+		log("PluginManager: [server.system.pluginjarpath]=" + jarList );
+		
 		if ( jarList != null && jarList.length() > 0 ){
-			log("PluginManager Manual Loading ...");
 			
 			String[]	jars	= jarList.split(",");
 			for ( int x=0; x < jars.length; x++ ){
@@ -130,6 +153,7 @@ public class PluginManager implements PluginManagerInterface, RequestListener {
 			}
 		}
 		
+		log("PlugInManager: Custom Plugins=" + (listOfPlugins.size()-standardCount) );
 		
 		// We don't need this anymore
 		filesSet	= null;
@@ -250,7 +274,13 @@ public class PluginManager implements PluginManagerInterface, RequestListener {
 	}
 
 	public void registerFunction(String functionName, String functionClass) {
-		expressionEngine.addFunction(functionName, functionClass);
+		if ( bOverrideCore ){
+			if ( expressionEngine.isFunction(functionName) )
+				log("PluginManager: Core Function Replaced; Name=" + functionName + "; Class=" + functionClass );
+
+			expressionEngine.addFunction(functionName, functionClass);
+		}else if ( (!bOverrideCore && !expressionEngine.isFunction(functionName)) )
+			expressionEngine.addFunction(functionName, functionClass);
 	}
 
 	public void addEngineListener(engineListener _new) {

@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2009 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -24,20 +24,20 @@
  *  resulting work. 
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
- *  http://www.openbluedragon.org/
+ *  http://openbd.org/
  */
 
 package com.naryx.tagfusion.expression.function.ext;
 
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfData;
+import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStringData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
@@ -49,7 +49,7 @@ public class GetEngineTagCategories extends functionBase {
 	
 	public GetEngineTagCategories(){  min = 0;  max = 0; }
   
-	public java.util.Map getInfo(){
+	public Map<String,String> getInfo(){
 		return makeInfo(
 				"engine", 
 				"Returns back an array of all the tag categories", 
@@ -60,13 +60,13 @@ public class GetEngineTagCategories extends functionBase {
 		Set<String>	categorySet	= new HashSet<String>();
 		
 		// Collect up all the categories
-		Vector HT = com.naryx.tagfusion.cfm.engine.cfEngine.thisInstance.TagChecker.getSupportedTags();
-		Enumeration E = HT.elements();
-		while ( E.hasMoreElements() ){
-			String tagName	= (String)E.nextElement(); 
+		List<String> HT = cfEngine.thisInstance.TagChecker.getSupportedTags();
+		Iterator<String> it = HT.iterator();
+		while ( it.hasNext() ){
+			String tagName	= it.next(); 
 			cfTag tag = null;
 			try{
-				Class<?> C = Class.forName( com.naryx.tagfusion.cfm.engine.cfEngine.thisInstance.TagChecker.getClass( tagName ) ); 
+				Class<?> C = Class.forName( cfEngine.thisInstance.TagChecker.getClass( tagName ) ); 
 				tag = (cfTag)C.newInstance();
 				categorySet.add( (String)tag.getInfo().get("category") );
 			}catch (Exception e){}

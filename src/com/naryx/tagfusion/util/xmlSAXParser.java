@@ -97,7 +97,6 @@ public class xmlSAXParser extends DefaultHandler{
       currentTag = null;
       currentAttribute = null;
     } else if (qName.equalsIgnoreCase("attribute")) {
-      currentTag.addAttribute( currentAttribute );
       currentAttribute = null;
     } else if ( currentAttribute != null ){
       //--[ round off all the attribute stuff

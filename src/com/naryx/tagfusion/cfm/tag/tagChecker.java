@@ -33,9 +33,13 @@ package com.naryx.tagfusion.cfm.tag;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Vector;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.util.TagElement;
@@ -47,16 +51,16 @@ import com.naryx.tagfusion.xmlConfig.xmlCFML;
  */
 
 public class tagChecker extends Object {
-	private Hashtable<String, TagElement> tagElements;
+	private Map<String, TagElement> tagElements;
 
 	public tagChecker() throws Exception {
 
 		// Load in the main XML file
-		tagElements = new Hashtable<String, TagElement>();
+		tagElements = new HashMap<String, TagElement>();
 		registerTags();
 
 		// Load in the Custom Tags
-		cfEngine.log("tagChecker loaded: " + tagElements.size() + " tags");
+		cfEngine.log("Core Tags loaded: " + tagElements.size() );
 	}
 
 	public int getTotalTags(){
@@ -83,15 +87,14 @@ public class tagChecker extends Object {
 		return cfxHashtable.size();
 	}
 
-	public Vector<String> getSupportedTags() {
-		Vector<String> V = new Vector<String>();
+	public List<String> getSupportedTags() {
+		List<String> V = new ArrayList<String>( tagElements.size() );
 
-		Enumeration<TagElement> E = tagElements.elements();
-		TagElement TE;
-		while (E.hasMoreElements()) {
-			TE = E.nextElement();
+		Iterator<TagElement> it	= tagElements.values().iterator();
+		while ( it.hasNext() ) {
+			TagElement TE = it.next();
 			if (TE.getSupported())
-				V.addElement(TE.getName());
+				V.add(TE.getName());
 		}
 		return V;
 	}
@@ -150,9 +153,7 @@ public class tagChecker extends Object {
 		cfEngine.thisPlatform.initialiseTagSystem(configFile);
 		
 		com.naryx.tagfusion.cfm.application.cfAPPLICATION.init(configFile);
-
 		com.naryx.tagfusion.cfm.tag.ext.cfCACHECONTENT.init(configFile);
-
 		com.naryx.tagfusion.cfm.cfform.cfFORM.init(configFile);
 		com.naryx.tagfusion.cfm.tag.cfLOG.init(configFile);
     com.naryx.tagfusion.cfm.tag.cfSCRIPT.init(configFile);
@@ -162,8 +163,6 @@ public class tagChecker extends Object {
 	}
 
 	public void initialisePlugins(xmlCFML configFile) {
-		Enumeration<TagElement> E = tagElements.elements();
-
 		TagElement tagE;
 		Class<?> C;
 		Method methodList[];
@@ -171,8 +170,9 @@ public class tagChecker extends Object {
 		Object args[] = new Object[1];
 		args[0] = configFile;
 
-		while (E.hasMoreElements()) {
-			tagE = E.nextElement();
+		Iterator<TagElement> it	= tagElements.values().iterator();
+		while (it.hasNext()) {
+			tagE = it.next();
 
 			// If it's not supported or not a plugin then skip it
 			if (!tagE.getSupported() || !tagE.isPlugin())

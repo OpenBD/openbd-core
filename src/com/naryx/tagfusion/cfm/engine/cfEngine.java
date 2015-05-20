@@ -235,6 +235,9 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 			// TagChecker
 			TagChecker = new tagChecker();
+			
+			// Core Expression
+			expressionEngine.init();
 
 			//fileCache initialisation
 			cfmlFileCache.init(thisServletContext, getSystemParameters());
@@ -269,9 +272,7 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 		// Initialise any of the tags
 		try {
-	    // initialize operators and expressions
 			TagChecker.initialiseTags(getSystemParameters());
-	    log("expressionEngine loaded: " + expressionEngine.getTotalFunctions() + " functions");
 		} catch (Throwable t) {
 			t.printStackTrace();
 			thisInstance = null;

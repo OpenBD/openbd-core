@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2008 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -24,7 +24,7 @@
  *  resulting work. 
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
- *  http://www.openbluedragon.org/
+ *  http://openbd.org/
  */
 
 package com.naryx.tagfusion.expression.compile;
@@ -34,6 +34,7 @@ import java.util.Map;
 
 import com.nary.util.FastMap;
 import com.naryx.tagfusion.cfm.engine.catchDataFactory;
+import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.cfm.engine.registerTagsExpressions;
 import com.naryx.tagfusion.expression.function.functionBase;
@@ -41,16 +42,17 @@ import com.naryx.tagfusion.expression.function.functionBase;
 public class expressionEngine extends Object {
 
 	private static Map<String, String> functions = new FastMap<String, String>(600);
-
 	private static Map<String, functionBase> functionCache = new FastMap<String, functionBase>();
 
-	static {
+	public static void init(){
 		registerTagsExpressions.registerFunctions(functions);
 
 		Iterator<String> iter = functions.keySet().iterator();
 		while (iter.hasNext()) {
 			loadFunction(iter.next().toString());
 		}
+		
+		cfEngine.log( "Core Expressions loaded: " + functions.size() );
 	}
 
 	public static void addFunction(String function, String functionclass) {

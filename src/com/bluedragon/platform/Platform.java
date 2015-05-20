@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2013 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,14 +25,12 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  $Id: Platform.java 2327 2013-02-10 22:26:44Z alan $
  */
 
 package com.bluedragon.platform;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Hashtable;
 import java.util.Map;
 
 import javax.servlet.ServletConfig;
@@ -59,7 +57,7 @@ public interface Platform {
 	
 	public boolean	hasNetworkAccess();
 	
-	public void registerTags(Hashtable<String, TagElement> tagElements);
+	public void registerTags(Map<String, TagElement> tagElements);
 	public void registerFunctions( Map<String, String> functions );
 	public void initialiseTagSystem(xmlCFML configFile);
 	public void initialiseQuerySystem(xmlCFML configFile, Map<String, cfQueryImplInterface> queryImplementations);

@@ -34,7 +34,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -186,15 +185,6 @@ public class JavaPlatform implements Platform {
   	  cfEngine.thisInstance.TagChecker.replaceTag( "CFDOCUMENT", "com.naryx.tagfusion.cfm.document.cfDisabledDocumentTag" );
     }
 
-    // Load in the plugins
-    PluginManager.getPlugInManager().loadPlugIn("org.alanwilliamson.openbd.plugin.spreadsheet.SpreadSheetExtension", configFile);
-    PluginManager.getPlugInManager().loadPlugIn("org.alanwilliamson.openbd.plugin.cfsmtp.SmtpExtension", configFile);
-    PluginManager.getPlugInManager().loadPlugIn("org.aw20.plugin.login.LoginExtension", configFile);
-    PluginManager.getPlugInManager().loadPlugIn("org.alanwilliamson.openbd.plugin.crontab.CronExtension", configFile);
-    PluginManager.getPlugInManager().loadPlugIn("com.bluedragon.mongo.MongoExtension", configFile);
-    PluginManager.getPlugInManager().loadPlugIn("org.alanwilliamson.openbd.plugin.salesforce.SalesForceExtension", configFile);
-    PluginManager.getPlugInManager().loadPlugIn("com.bluedragon.vision.VisionExtension", configFile);
-    PluginManager.getPlugInManager().loadPlugIn("com.bluedragon.profiler.ProfilerExtension", configFile);
 	}
 
 	@Override
@@ -456,7 +446,7 @@ public class JavaPlatform implements Platform {
 	}
 
 	@Override
-	public void registerTags(Hashtable<String, TagElement> tagElements){
+	public void registerTags(Map<String, TagElement> tagElements){
 		tagElements.put("CFIMAGE", 			new TagElement("CFIMAGE", true, "com.naryx.tagfusion.cfm.tag.awt.cfIMAGE"));
 		tagElements.put("CFCAPTCHA", 		new TagElement("CFCAPTCHA", true, "com.naryx.tagfusion.cfm.tag.awt.cfCAPTCHA"));
 

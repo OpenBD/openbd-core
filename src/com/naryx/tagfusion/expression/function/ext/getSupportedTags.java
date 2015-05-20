@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2009 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -24,17 +24,18 @@
  *  resulting work. 
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
- *  http://www.openbluedragon.org/
+ *  http://openbd.org/
  */
 
 package com.naryx.tagfusion.expression.function.ext;
 
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
+import java.util.Map;
 
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfData;
+import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStringData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
@@ -43,62 +44,58 @@ import com.naryx.tagfusion.expression.function.functionBase;
 
 public class getSupportedTags extends functionBase {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  public getSupportedTags(){
-     min = 0; max = 1;
-  }
-  
-	public String[] getParamInfo(){
-		return new String[]{
-			"Category of tag to filter on"	
-		};
+	public getSupportedTags() {
+		min = 0;
+		max = 1;
 	}
-  
-	public java.util.Map getInfo(){
-		return makeInfo(
-				"engine", 
-				"Returns back all the core tags, optionally filtered on the given category", 
-				ReturnType.ARRAY );
-	}
-  
-  public cfData execute( cfSession _session, List<cfData> parameters )throws cfmRunTimeException{    
-		String category	= null;
-		if ( parameters.size() == 1 )
-			category	= parameters.get(0).getString().toLowerCase().trim();
 
-  	cfArrayData	arrData = cfArrayData.createArray( 1 );
-  	Vector HT = com.naryx.tagfusion.cfm.engine.cfEngine.thisInstance.TagChecker.getSupportedTags();
-		
-		if ( category == null || category.length() == 0 ){
-		
-			Enumeration E = HT.elements();
-			while ( E.hasMoreElements() ){
-				arrData.addElement( new cfStringData( ((String)E.nextElement()).toUpperCase() ) );			
+	public String[] getParamInfo() {
+		return new String[] { "Category of tag to filter on" };
+	}
+
+	public Map<String, String> getInfo() {
+		return makeInfo("engine", "Returns back all the core tags, optionally filtered on the given category", ReturnType.ARRAY);
+	}
+
+	public cfData execute(cfSession _session, List<cfData> parameters) throws cfmRunTimeException {
+		String category = null;
+		if (parameters.size() == 1)
+			category = parameters.get(0).getString().toLowerCase().trim();
+
+		cfArrayData arrData = cfArrayData.createArray(1);
+		List<String> HT = cfEngine.thisInstance.TagChecker.getSupportedTags();
+		Iterator<String> it = HT.iterator();
+
+		if (category == null || category.length() == 0) {
+
+			while (it.hasNext()) {
+				arrData.addElement(new cfStringData(it.next().toUpperCase()));
 			}
-			
+
 		} else {
-			
-			Enumeration E = HT.elements();
-			while ( E.hasMoreElements() ){
-				String tagName	= (String)E.nextElement(); 
-				
+
+			while (it.hasNext()) {
+				String tagName = it.next();
+
 				cfTag tag = null;
-				try{
-					Class<?> C = Class.forName( com.naryx.tagfusion.cfm.engine.cfEngine.thisInstance.TagChecker.getClass( tagName ) ); 
-					tag = (cfTag)C.newInstance();
-					
-					if ( tag.getInfo().get("category").equals(category) ){
-						arrData.addElement( new cfStringData( tagName ) );
+				try {
+					Class<?> C = Class.forName(cfEngine.thisInstance.TagChecker.getClass(tagName));
+					tag = (cfTag) C.newInstance();
+
+					if (tag.getInfo().get("category").equals(category)) {
+						arrData.addElement(new cfStringData(tagName));
 					}
 
-				}catch (Exception e){}
+				} catch (Exception e) {
+				}
 			}
-			
+
 		}
-		
-		//--[ Need to sort array
-		arrData.sortArray( "text", "asc" );
+
+		// Need to sort array
+		arrData.sortArray("text", "asc");
 		return arrData;
-  }
+	}
 }

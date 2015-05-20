@@ -286,7 +286,7 @@ public class functionBase extends expressionBase  {
 	 * Helper method for quickly creating the meta information
 	 */
 	protected	java.util.Map<String,String> makeInfo( String category, String summary, ReturnType returntype ){
-		java.util.HashMap<String,String> map = new java.util.HashMap<String,String>();
+		Map<String,String> map = new java.util.HashMap<String,String>();
 		
 		map.put("category", category.toLowerCase() );
 		map.put("summary", 	summary );
