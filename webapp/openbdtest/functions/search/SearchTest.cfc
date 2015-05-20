@@ -48,7 +48,7 @@
 		
 		// Clear up the collection
 		try{
-			CollectionDelete( collection );
+		//	CollectionDelete( collection );
 		}catch(any e){}
 		</cfscript>
 	</cffunction>
