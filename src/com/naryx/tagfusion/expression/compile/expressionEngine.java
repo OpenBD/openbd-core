@@ -57,6 +57,7 @@ public class expressionEngine extends Object {
 
 	public static void addFunction(String function, String functionclass) {
 		functions.put(function.toLowerCase(), functionclass);
+		functionCache.remove(function.toLowerCase());
 	}
 
 	public static Map<String, String> getFunctions() {
