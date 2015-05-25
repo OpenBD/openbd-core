@@ -124,6 +124,7 @@ public class JavaPlatform implements Platform {
 	public void registerScriptExtensions(){
   	cfSCRIPT.registerLanguage("java", 				"org.alanwilliamson.lang.java.cfSCRIPTJava" );
   	cfSCRIPT.registerLanguage("javascript", 	"org.alanwilliamson.lang.javascript.cfSCRIPTJavascript" );
+  	cfSCRIPT.registerLanguage("js", 					"com.bluedragon.nashorn.cfSCRIPTNashorn" );
 
   	try {
 			cfSCRIPTJava.javaClassFactory	= new JavaClassFactory();
