@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- added: CFCONTENT gets a 'remote' to stream Amazon S3 and HTTP URL's
 - PluginManager update; allow for plugin to optionally override core functions
 - fixed bug in Base62() function
 - Abstracted out the ScriptProtect regex
