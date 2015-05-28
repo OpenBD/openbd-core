@@ -59,6 +59,7 @@ import org.aw20.collections.FastStack;
 import com.nary.io.FileUtils;
 import com.nary.util.FastMap;
 import com.nary.util.string;
+import com.naryx.tagfusion.cfm.application.ScriptProtect;
 import com.naryx.tagfusion.cfm.application.cfAPPLICATION;
 import com.naryx.tagfusion.cfm.application.cfApplicationData;
 import com.naryx.tagfusion.cfm.file.cfFile;
@@ -1889,6 +1890,7 @@ public class cfSession {
 		pushActiveFile( requestFile );
 		cfFile applicationFile = findApplicationFile( requestFile );
 		if ( applicationFile != null ) {
+
 			if ( applicationFile.getName().endsWith( "m" ) ) {
 				renderApplicationCfm( applicationFile );
 			} else {
@@ -1901,7 +1903,16 @@ public class cfSession {
 
 				onRequestStart( requestFile.getURI() ); // invoke the onRequestStart method
 			}
+			
+		}else if ( cfEngine.isScriptProtect() ){
+
+			ScriptProtect.applyScriptProtection(this, variableStore.CGI_SCOPE);
+			ScriptProtect.applyScriptProtection(this, variableStore.FORM_SCOPE);
+			ScriptProtect.applyScriptProtection(this, variableStore.URL_SCOPE);
+			ScriptProtect.applyScriptProtection(this, variableStore.COOKIE_SCOPE);
+
 		}
+		
 	}
 
 	/**

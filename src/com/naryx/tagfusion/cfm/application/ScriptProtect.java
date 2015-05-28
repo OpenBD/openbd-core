@@ -29,19 +29,76 @@
 
 package com.naryx.tagfusion.cfm.application;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.naryx.tagfusion.cfm.cookie.cfCookieData;
+import com.naryx.tagfusion.cfm.engine.cfCGIData;
+import com.naryx.tagfusion.cfm.engine.cfData;
+import com.naryx.tagfusion.cfm.engine.cfEngine;
+import com.naryx.tagfusion.cfm.engine.cfFormData;
+import com.naryx.tagfusion.cfm.engine.cfSession;
+import com.naryx.tagfusion.cfm.engine.cfStringData;
+import com.naryx.tagfusion.cfm.engine.cfStructData;
+import com.naryx.tagfusion.cfm.engine.cfUrlData;
+import com.naryx.tagfusion.cfm.engine.variableStore;
+import com.naryx.tagfusion.xmlConfig.xmlCFML;
 
 
 public class ScriptProtect {
 
+	private static Pattern p;
+	
+	public static void init(xmlCFML config){
+		String SCRIPT_REGEX = config.getString( "server.system.scriptprotectregex", "<(\\s*)(object|embed|script|applet|meta)" );
+		cfEngine.log( "cfEngine: [server.system.scriptprotectregex]=" + SCRIPT_REGEX );
+
+		p = Pattern.compile(SCRIPT_REGEX, Pattern.CASE_INSENSITIVE );
+	}
+	
 	public static String sanitize( String value ) {
 		if ( value == null || value.isEmpty() )
 			return value;
 		
-		Pattern p = Pattern.compile("<(\\s*)(object|embed|script|applet|meta)", Pattern.CASE_INSENSITIVE );
-		Matcher matcher = p.matcher(value);
-    return matcher.replaceAll("<$1InvalidTag");
+    return p.matcher(value).replaceAll("<$1InvalidTag");
 	}
 
+	
+	/**
+	 * Called to protect a given scope
+	 * 
+	 * @param _Session
+	 * @param _scope
+	 */
+	public static void applyScriptProtection(cfSession _Session, int _scope) {		
+		cfData scopeData = _Session.getQualifiedData(_scope);
+		
+		if ( scopeData != null && _scope == variableStore.CGI_SCOPE )
+			((cfCGIData) scopeData).setScriptProtect();
+		else if (scopeData != null && scopeData.getDataType() == cfData.CFSTRUCTDATA) {
+			cfStructData data = (cfStructData) scopeData;
+			Object[] keys = data.keys();
+			for (int i = 0; i < keys.length; i++) {
+				String nextKey = keys[i].toString();
+				cfData valueData = data.getData(nextKey);
+
+				if (valueData.getDataType() == cfData.CFSTRINGDATA) {
+					String value = ((cfStringData) valueData).getString();
+					int origLen = value.length();
+					value = sanitize( value );
+
+					// only replace the existing cfData if it's changed - note this works because any replaced string will grow the existing string length
+					if (value.length() != origLen) {
+						if (_scope == variableStore.COOKIE_SCOPE) {
+							((cfCookieData) scopeData).overrideData(nextKey, value);
+						} else if (_scope == variableStore.FORM_SCOPE) {
+							((cfFormData) scopeData).overrideData(nextKey, new cfStringData(value));
+						} else if (_scope == variableStore.URL_SCOPE) {
+							((cfUrlData) scopeData).overrideData(nextKey, new cfStringData(value));
+						}
+					}
+				}
+			}
+		}
+	}
+	
 }

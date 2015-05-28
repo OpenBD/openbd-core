@@ -37,18 +37,14 @@ import ucar.unidata.util.DateUtil;
 
 import com.naryx.tagfusion.cfm.application.sessionstorage.SessionStorageFactory;
 import com.naryx.tagfusion.cfm.application.sessionstorage.SessionStorageInterface;
-import com.naryx.tagfusion.cfm.cookie.cfCookieData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
-import com.naryx.tagfusion.cfm.engine.cfCGIData;
 import com.naryx.tagfusion.cfm.engine.cfComponentData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfEngine;
-import com.naryx.tagfusion.cfm.engine.cfFormData;
 import com.naryx.tagfusion.cfm.engine.cfNumberData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStringData;
 import com.naryx.tagfusion.cfm.engine.cfStructData;
-import com.naryx.tagfusion.cfm.engine.cfUrlData;
 import com.naryx.tagfusion.cfm.engine.cfcMethodData;
 import com.naryx.tagfusion.cfm.engine.cfmAbortException;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
@@ -390,66 +386,41 @@ public class cfApplicationData extends cfStructExpireData implements java.io.Ser
 			SessionStorage.onRequestEnd(Session);
 	}
 
-	private void applyScriptProtection(cfSession _Session, String _protect) {
-		String scriptProtect = _protect;
-
+	private void applyScriptProtection(cfSession _Session, String scriptProtect) {
 		if (scriptProtect != null) {
-			scriptProtect = scriptProtect.toLowerCase();
-			if (scriptProtect.equals("none")) {
+			if (scriptProtect.equalsIgnoreCase("none")) {
 				// do nothing
 				return;
-			} else if (scriptProtect.equals("all")) {
-				applyScriptProtection(_Session, variableStore.CGI_SCOPE);
-				applyScriptProtection(_Session, variableStore.FORM_SCOPE);
-				applyScriptProtection(_Session, variableStore.URL_SCOPE);
-				applyScriptProtection(_Session, variableStore.COOKIE_SCOPE);
+			} else if (scriptProtect.equalsIgnoreCase("all")) {
+				
+				ScriptProtect.applyScriptProtection(_Session, variableStore.CGI_SCOPE);
+				ScriptProtect.applyScriptProtection(_Session, variableStore.FORM_SCOPE);
+				ScriptProtect.applyScriptProtection(_Session, variableStore.URL_SCOPE);
+				ScriptProtect.applyScriptProtection(_Session, variableStore.COOKIE_SCOPE);
+				
 			} else {
-				List<String> scopeStrs = com.nary.util.string.split(scriptProtect, ",");
+				
+				List<String> scopeStrs = com.nary.util.string.split(scriptProtect.toLowerCase(), ",");
+				
 				for (int i = 0; i < scopeStrs.size(); i++) {
-					String nextScope = ((String) scopeStrs.get(i)).toLowerCase();
+					String nextScope = ((String) scopeStrs.get(i));
 					if (nextScope.equals(variableStore.CGI_SCOPE_NAME)) {
-						applyScriptProtection(_Session, variableStore.CGI_SCOPE);
+						ScriptProtect.applyScriptProtection(_Session, variableStore.CGI_SCOPE);
 					} else if (nextScope.equals(variableStore.FORM_SCOPE_NAME)) {
-						applyScriptProtection(_Session, variableStore.FORM_SCOPE);
+						ScriptProtect.applyScriptProtection(_Session, variableStore.FORM_SCOPE);
 					} else if (nextScope.equals(variableStore.URL_SCOPE_NAME)) {
-						applyScriptProtection(_Session, variableStore.URL_SCOPE);
+						ScriptProtect.applyScriptProtection(_Session, variableStore.URL_SCOPE);
 					} else if (nextScope.equals(variableStore.COOKIE_SCOPE_NAME)) {
-						applyScriptProtection(_Session, variableStore.COOKIE_SCOPE);
+						ScriptProtect.applyScriptProtection(_Session, variableStore.COOKIE_SCOPE);
 					}
 				}
 			}
+		} else if ( cfEngine.isScriptProtect() ){
+			ScriptProtect.applyScriptProtection(_Session, variableStore.CGI_SCOPE);
+			ScriptProtect.applyScriptProtection(_Session, variableStore.FORM_SCOPE);
+			ScriptProtect.applyScriptProtection(_Session, variableStore.URL_SCOPE);
+			ScriptProtect.applyScriptProtection(_Session, variableStore.COOKIE_SCOPE);
 		}
 	}
 
-	private void applyScriptProtection(cfSession _Session, int _scope) {		
-		cfData scopeData = _Session.getQualifiedData(_scope);
-		
-		if ( scopeData != null && _scope == variableStore.CGI_SCOPE )
-			((cfCGIData) scopeData).setScriptProtect();
-		else if (scopeData != null && scopeData.getDataType() == cfData.CFSTRUCTDATA) {
-			cfStructData data = (cfStructData) scopeData;
-			Object[] keys = data.keys();
-			for (int i = 0; i < keys.length; i++) {
-				String nextKey = keys[i].toString();
-				cfData valueData = data.getData(nextKey);
-
-				if (valueData.getDataType() == cfData.CFSTRINGDATA) {
-					String value = ((cfStringData) valueData).getString();
-					int origLen = value.length();
-					value = ScriptProtect.sanitize( value );
-					
-					// only replace the existing cfData if it's changed - note this works because any replaced string will grow the existing string length
-					if (value.length() != origLen) {
-						if (_scope == variableStore.COOKIE_SCOPE) {
-							((cfCookieData) scopeData).overrideData(nextKey, value);
-						} else if (_scope == variableStore.FORM_SCOPE) {
-							((cfFormData) scopeData).overrideData(nextKey, new cfStringData(value));
-						} else if (_scope == variableStore.URL_SCOPE) {
-							((cfUrlData) scopeData).overrideData(nextKey, new cfStringData(value));
-						}
-					}
-				}
-			}
-		}
-	}
 }
