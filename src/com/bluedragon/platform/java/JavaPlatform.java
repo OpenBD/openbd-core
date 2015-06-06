@@ -51,7 +51,6 @@ import com.bluedragon.platform.FileIO;
 import com.bluedragon.platform.Platform;
 import com.bluedragon.platform.SmtpInterface;
 import com.bluedragon.platform.java.smtp.OutgoingMailServer;
-import com.bluedragon.plugin.PluginManager;
 import com.bluedragon.search.collection.CollectionFactory;
 import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfWebServices;
