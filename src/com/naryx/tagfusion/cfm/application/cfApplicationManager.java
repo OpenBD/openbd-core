@@ -71,7 +71,7 @@ public class cfApplicationManager extends Object implements java.io.Serializable
 	
 	private String sessionTimeOut, applicationTimeOut, defaultClientStorage;
 	private cfData sessionTimeOutData, applicationTimeOutData;
-	private boolean bJ2EESessionManagement, bScriptProtect;
+	private boolean bJ2EESessionManagement;
 	
 	// --------------------------------------------------
 
@@ -181,8 +181,6 @@ public class cfApplicationManager extends Object implements java.io.Serializable
 		applicationTimeOutData 	= null;
 
 		cfEngine.log("cfApplicationManager.DefaultClientStorage=[" + defaultClientStorage + "]; J2EE Sessions=" + bJ2EESessionManagement );
-
-		bScriptProtect = config.getBoolean("server.system.scriptprotect", false);
 	}
 
 	public String getDefaultSessionTimeOut() {
@@ -267,8 +265,6 @@ public class cfApplicationManager extends Object implements java.io.Serializable
 		String scriptProtect = null;
 		if (applicationCfc.containsKey(cfAPPLICATION.SCRIPTPROTECT)) {
 			scriptProtect = applicationCfc.getData(cfAPPLICATION.SCRIPTPROTECT).getString();
-		} else if (bScriptProtect) { // use global default
-			scriptProtect = "all";
 		}
 
 		// Set up the specific application mappings
@@ -362,8 +358,6 @@ public class cfApplicationManager extends Object implements java.io.Serializable
 		String scriptProtect = null;
 		if (parentTag.containsAttribute(cfAPPLICATION.SCRIPTPROTECT)) {
 			scriptProtect = parentTag.getDynamic(_Session, cfAPPLICATION.SCRIPTPROTECT).getString();
-		} else if (bScriptProtect) { // use global default
-			scriptProtect = "all";
 		}
 		
 		String datasource = null;

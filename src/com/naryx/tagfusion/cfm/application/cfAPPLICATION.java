@@ -145,7 +145,7 @@ public class cfAPPLICATION extends cfTag implements Serializable {
   		createAttInfo("LOGINSTORAGE",				"Controls what the type of client storage is", "", false ),
   		
   		createAttInfo("DATASOURCE",					"The dafault datasource for CFQUERY/CFSTOREDPROC/QueryRun() methods", "", false ),
-  		createAttInfo("SCRIPTPROTECT",			"Whether or not the engine will try and protect FORM submissions from script injection", "", false ),
+  		createAttInfo("SCRIPTPROTECT",			"Whether or not the engine will try and protect FORM submissions from script injection; none, all, cgi, cookie, form, url", "", false ),
   		createAttInfo("APPLICATIONTIMEOUT",	"The timeout of this application when it will be unloaded from memory.  Defaults to 1 hour", "", false ),
   		createAttInfo("SESSIONTIMEOUT",			"The timeout of this session when it will be unloaded from memory.  Defaults to 20 minutes", "", false ),
   		createAttInfo("SECUREJSON",					"Controls if the JSON RPC methods are made secure", "", false ),

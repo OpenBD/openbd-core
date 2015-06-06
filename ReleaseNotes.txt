@@ -5,6 +5,8 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Refactored ScriptProtection; exposed regex to bluedragon.xml; better startup logging
+- added: CFCONTENT gets a 'remote' to stream Amazon S3 and HTTP URL's
 - PluginManager update; allow for plugin to optionally override core functions
 - fixed bug in Base62() function
 - Abstracted out the ScriptProtect regex

@@ -63,6 +63,7 @@ import com.nary.io.StreamUtils;
 import com.nary.util.AverageTracker;
 import com.nary.util.FastMap;
 import com.nary.util.Localization;
+import com.naryx.tagfusion.cfm.application.ScriptProtect;
 import com.naryx.tagfusion.cfm.cache.CacheFactory;
 import com.naryx.tagfusion.cfm.file.cfFile;
 import com.naryx.tagfusion.cfm.file.cfmlFileCache;
@@ -122,6 +123,7 @@ public class cfEngine extends Object implements cfEngineMBean {
 									bMainFormUrlCase = false,
 									bDebugerOutputEnabled = false,
 									bCFoutputShorthand = false,
+									bScriptProtect = false,
 									bRemoteOpenBDXML = false;
 
 	private Vector<engineListener> engineListeners;
@@ -290,6 +292,7 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 
 		setDebugOutputFlag();
+		setScriptProtectFlag();
 		setStrictFlags();
 		setAssertionsFlag();
 		setCombinedFormUrlFlag();
@@ -601,6 +604,10 @@ public class cfEngine extends Object implements cfEngineMBean {
 		return cfEngine.thisInstance.bDebugOutputEnabled;
 	}
 
+	public final static boolean isScriptProtect() {
+		return cfEngine.thisInstance.bScriptProtect;
+	}
+
 	public final static boolean isDebuggerOutputEnabled() {
 		return cfEngine.thisInstance.bDebugerOutputEnabled;
 	}
@@ -653,6 +660,12 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 		bDebugerOutputEnabled = getSystemParameters().getBoolean("server.debugoutput.enabled", Boolean.valueOf(false).booleanValue());
 		log("cfEngine: [server.debugoutput.enabled] Show Debugger output? " + bDebugerOutputEnabled);
+	}
+
+	private void setScriptProtectFlag() {
+		bScriptProtect = getSystemParameters().getBoolean("server.system.scriptprotect", Boolean.valueOf(DEFAULT_SCRIPTPROTECT).booleanValue());
+		log("cfEngine: [server.system.scriptprotect] ScriptProtect " + (bScriptProtect ? "enabled" : "disabled"));
+		ScriptProtect.init( getConfig() );
 	}
 
 	private void setAssertionsFlag() {
