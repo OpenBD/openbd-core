@@ -52,6 +52,7 @@ import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.nary.io.FileUtils;
 import com.naryx.tagfusion.cfm.engine.cfBinaryData;
 import com.naryx.tagfusion.cfm.engine.cfData;
+import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStructData;
 import com.naryx.tagfusion.cfm.engine.cfmBadFileException;
@@ -232,23 +233,31 @@ public class cfCONTENT extends cfTag implements Serializable {
 		}
 
 		// Get the object
-		S3Object s3object = s3Client.getObject( gor );
-
-		_Session.setContentType( s3object.getObjectMetadata().getContentType() );
-
-		InputStream in = s3object.getObjectContent();
-
-		byte[] buffer = new byte[65536];
-		int readCount = 0;
 		try {
+		
+			S3Object s3object = s3Client.getObject( gor );
+	
+			_Session.setContentType( s3object.getObjectMetadata().getContentType() );
+	
+			InputStream in = s3object.getObjectContent();
+	
+			byte[] buffer = new byte[65536];
+			int readCount = 0;
 
 			while ( ( readCount = in.read( buffer ) ) != -1 ) {
 				_Session.write( buffer, 0, readCount );
 				_Session.pageFlush();
 			}
 
-		} catch ( IOException e ) {
-			throw newRunTimeException( e.getMessage() );
+		} catch ( Exception e ) {
+			
+			if ( e.getMessage().indexOf("404") != -1 ){
+				_Session.setStatus( 404 );
+				return;
+			}else{
+				cfEngine.log( e.getMessage() );
+				throw newRunTimeException( e.getMessage() + "; key=" + key + "; bucket=" + bucket );
+			}
 		}
 	}
 
@@ -263,6 +272,12 @@ public class cfCONTENT extends cfTag implements Serializable {
 
 			CloseableHttpResponse response = httpclient.execute( httpget );
 			try {
+				
+				if ( response.getStatusLine().getStatusCode() != 200 ){
+					_Session.setStatus(response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase() );
+					return;
+				}
+				
 				HttpEntity entity = response.getEntity();
 
 				if ( entity != null ) {

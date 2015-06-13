@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- fixed #7: cfcontent Remote S3 gives Internal Server Error
 - Refactored ScriptProtection; exposed regex to bluedragon.xml; better startup logging
 - added: CFCONTENT gets a 'remote' to stream Amazon S3 and HTTP URL's
 - PluginManager update; allow for plugin to optionally override core functions
