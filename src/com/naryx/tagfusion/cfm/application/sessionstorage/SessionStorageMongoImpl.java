@@ -113,7 +113,6 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 	private void setIndexes(){
 		if ( !indexes ){
 			try{
-				col.createIndex( new BasicDBObject("id",true) );
 				col.createIndex( new BasicDBObject("et",true) );
 				indexes = true;
 			}catch(Exception e){
@@ -144,7 +143,7 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 			// If the timeout is greater than 0, then lookup it from Mongo
 			if ( sessionTimeOut > 0 ){
 				setIndexes();
-				DBObject	keys	= new BasicDBObject( "id", sessionInfo.getTokenShort() );
+				DBObject	keys	= new BasicDBObject( "_id", sessionInfo.getTokenShort() );
 				DBObject	dbo		= col.findOne(keys);
 				
 				if ( dbo != null  ){
@@ -159,7 +158,7 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 			}
 		
 		} catch (Exception e) {
-			cfEngine.log( appName + " MongoDBException id:" + sessionInfo.getTokenShort() + "; Exception: " + e );
+			cfEngine.log( appName + " MongoDBException _id:" + sessionInfo.getTokenShort() + "; Exception: " + e );
 		}
 			
 		// We don't have a session so create a new one
@@ -189,8 +188,8 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 		try{
 			String sessionId		= sessData.getStorageID();
 
-			DBObject	keys			= new BasicDBObject("id", sessionId );
-			BasicDBObject	vals	= new BasicDBObject("id", sessionId).append("et", new Date(System.currentTimeMillis() + sessData.getTimeOut() ) );
+			DBObject	keys			= new BasicDBObject("_id", sessionId );
+			BasicDBObject	vals	= new BasicDBObject("et", new Date(System.currentTimeMillis() + sessData.getTimeOut() ) );
 			
 			// Serialize the object
 			ByteArrayOutputStreamRaw	bos	= new ByteArrayOutputStreamRaw( 32000 );

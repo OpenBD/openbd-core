@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Updated the indexes for the Mongo Session managemenet
 - fixed #7: cfcontent Remote S3 gives Internal Server Error
 - Refactored ScriptProtection; exposed regex to bluedragon.xml; better startup logging
 - added: CFCONTENT gets a 'remote' to stream Amazon S3 and HTTP URL's
