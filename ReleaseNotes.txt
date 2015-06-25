@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- fixed thread() script null pointer
 - Updated the indexes for the Mongo Session managemenet
 - fixed #7: cfcontent Remote S3 gives Internal Server Error
 - Refactored ScriptProtection; exposed regex to bluedragon.xml; better startup logging
