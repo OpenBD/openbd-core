@@ -349,6 +349,7 @@ public class registerTagsExpressions extends java.lang.Object {
 
 		functions.put( "getauthuser", "com.naryx.tagfusion.expression.function.getAuthUser" );
 		functions.put( "isuserinrole", "com.naryx.tagfusion.expression.function.isUserInRole" );
+		functions.put( "isuserloggedin","com.marcusfernstrom.isUserLoggedIn");
 		functions.put( "getnumericdate", "com.naryx.tagfusion.expression.function.getNumericDate" );
 
 		//[- added in CF8
