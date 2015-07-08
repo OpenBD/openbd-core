@@ -11,6 +11,10 @@ import com.naryx.tagfusion.expression.function.functionBase;
 import com.naryx.tagfusion.expression.function.getAuthUser;
 
 /**
+ * I Marcus Fernstrom hereby assign copyright of this code to the OpenBD project, to be licensed under the same terms as the rest of the code.
+ */
+
+/**
  * In order for this function to work properly, it must execute with the same
  * application settings that were used on the page where the user was logged in
  * via <cfloginuser> Specifically, the appName and loginStorage values must
