@@ -77,7 +77,9 @@ import com.naryx.tagfusion.expression.function.string.deserializejson;
 import com.naryx.tagfusion.xmlConfig.xmlCFML;
 import com.naryx.tagfusion.xmlConfig.xmlConfigManagerFactory;
 
+
 public class cfEngine extends Object implements cfEngineMBean {
+
 	public static final String DEFAULT_BUFFERSIZE = "0";
 	public static final String DEFAULT_SUPPRESS_WHITESPACE = "false";
 	public static final String DEFAULT_ERROR_HANDLER = "";
@@ -91,7 +93,7 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 	public static final String DEFAULT_STRICT_ARRAYBYREFERENCE = "false";
 
-	public static final String 	PRODUCT_NAME = "BlueDragon";
+	public static final String PRODUCT_NAME = "BlueDragon";
 
 	public static String PRODUCT_VERSION;
 	public static String PRODUCT_RELEASEDATE;
@@ -114,23 +116,23 @@ public class cfEngine extends Object implements cfEngineMBean {
 	private xmlCFML systemParameters; // this is the in-memory representation of bluedragon.xml
 
 	private boolean bDebugOutputEnabled = true,
-									bAssertionsEnabled = false,
-									bSuppressWhitespace = false,
-									bLegacyFormValidation = true,
-									bCombinedFormUrlScope = false,
-									bFunctionScopedVariables = false,
-									bStrictArrayPassByReference = false,
-									bMainFormUrlCase = false,
-									bDebugerOutputEnabled = false,
-									bCFoutputShorthand = false,
-									bScriptProtect = false,
-									bRemoteOpenBDXML = false;
+			bAssertionsEnabled = false,
+			bSuppressWhitespace = false,
+			bLegacyFormValidation = true,
+			bCombinedFormUrlScope = false,
+			bFunctionScopedVariables = false,
+			bStrictArrayPassByReference = false,
+			bMainFormUrlCase = false,
+			bDebugerOutputEnabled = false,
+			bCFoutputShorthand = false,
+			bScriptProtect = false,
+			bRemoteOpenBDXML = false;
 
 	private Vector<engineListener> engineListeners;
 	private ResourceBundle runtimeMessages;
 
 	public AverageTracker avgTracker;
-	public JournalManager	journalManager;
+	public JournalManager journalManager;
 
 	private String defaultCharset, webResourcePath;
 
@@ -139,26 +141,26 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 	private int[] debugIPsAsInts;
 
-	public static Platform	thisPlatform;
+	public static Platform thisPlatform;
 	public static FileSystemManager vfsManager;
-	public static DataSourcePoolFactory	dataSourcePoolFactory;
+	public static DataSourcePoolFactory dataSourcePoolFactory;
 
 	public static boolean bEngineActive = true;
-	public static String	OpenBDLogoDataUri = null;
-	public static String 	DefaultJSONReturnCase = "maintain";
-	public static String 	DefaultJSONReturnDate = "long";
+	public static String OpenBDLogoDataUri = null;
+	public static String DefaultJSONReturnCase = "maintain";
+	public static String DefaultJSONReturnDate = "long";
 
-	public static AtomicInteger	sessionCounter	= new AtomicInteger();
+	public static AtomicInteger sessionCounter = new AtomicInteger();
 
 	static {
-		WINDOWS = System.getProperty("os.name").startsWith("Windows");
+		WINDOWS = System.getProperty( "os.name" ).startsWith( "Windows" );
 		PRODUCT_VERSION = "Unknown";
 		PRODUCT_RELEASEDATE = "Unknown";
-		PRODUCT_STATE= "Unknown";
+		PRODUCT_STATE = "Unknown";
 
-		try{
-			InputStream in = cfEngine.class.getResourceAsStream("/openbd.properties");
-			if ( in != null ){
+		try {
+			InputStream in = cfEngine.class.getResourceAsStream( "/openbd.properties" );
+			if ( in != null ) {
 				Properties props = new Properties();
 				props.load( in );
 				PRODUCT_VERSION = props.getProperty( "version", PRODUCT_VERSION );
@@ -166,101 +168,101 @@ public class cfEngine extends Object implements cfEngineMBean {
 				PRODUCT_STATE = props.getProperty( "state", PRODUCT_STATE );
 				PRODUCT_RELEASEDATE = props.getProperty( "releasedate", PRODUCT_RELEASEDATE );
 			}
-		}catch( Exception e ){}
+		} catch ( Exception e ) {}
 	}
 
 
-
-	/** ------------------------------------------------------
+	/**
+	 * ------------------------------------------------------
 	 * Initialisation method
 	 *
 	 * Run once and initialises all the sub-components of the main engine
 	 */
-	private cfEngine(ServletConfig config) throws ServletException {
+	private cfEngine( ServletConfig config ) throws ServletException {
 		thisInstance = this;
 		thisServletContext = config.getServletContext();
 
 		// Setup the main marker class for the platform flag
-		String bluedragonXmlParm = config.getInitParameter("BLUEDRAGON_XML");
+		String bluedragonXmlParm = config.getInitParameter( "BLUEDRAGON_XML" );
 
-		try{
+		try {
 
-			thisPlatform	= (Platform)Class.forName("com.bluedragon.platform.java.JavaPlatform").newInstance();
+			thisPlatform = (Platform) Class.forName( "com.bluedragon.platform.java.JavaPlatform" ).newInstance();
 
-			if ((bluedragonXmlParm != null) && (bluedragonXmlParm.length() > 0))
-				xmlFileLocation	= getOpenBDXmlFile( bluedragonXmlParm );
+			if ( ( bluedragonXmlParm != null ) && ( bluedragonXmlParm.length() > 0 ) )
+				xmlFileLocation = getOpenBDXmlFile( bluedragonXmlParm );
 
-		}catch(Exception e){
-			throw new ServletException(PRODUCT_NAME + ": " + e );
+		} catch ( Exception e ) {
+			throw new ServletException( PRODUCT_NAME + ": " + e );
 		}
 
 
 		// Load in the main XML configuration file
 		try {
-			setSystemParameters(xmlConfigManagerFactory.createXmlConfigManager(xmlFileLocation).getXMLCFML());
+			setSystemParameters( xmlConfigManagerFactory.createXmlConfigManager( xmlFileLocation ).getXMLCFML() );
 			engineListeners = new Vector<engineListener>();
-		} catch (Exception E) {
+		} catch ( Exception E ) {
 			thisInstance = null;
-			System.out.println(PRODUCT_NAME + ": Error " + E + " loading: BLUEDRAGON_XML=" + bluedragonXmlParm);
-			throw new ServletException(PRODUCT_NAME + ": Error occurred loading: BLUEDRAGON_XML=" + bluedragonXmlParm + ", " + E);
+			System.out.println( PRODUCT_NAME + ": Error " + E + " loading: BLUEDRAGON_XML=" + bluedragonXmlParm );
+			throw new ServletException( PRODUCT_NAME + ": Error occurred loading: BLUEDRAGON_XML=" + bluedragonXmlParm + ", " + E );
 		}
 
 
 		// Load in the image
 		try {
-			InputStream in = this.getClass().getResourceAsStream("openbdlogo.txt");
-			if ( in != null)
+			InputStream in = this.getClass().getResourceAsStream( "openbdlogo.txt" );
+			if ( in != null )
 				OpenBDLogoDataUri = StreamUtils.readToString( in );
-		} catch (NullPointerException e1) {
+		} catch ( NullPointerException e1 ) {
 			OpenBDLogoDataUri = null;
-		} catch (IOException e1) {
+		} catch ( IOException e1 ) {
 			OpenBDLogoDataUri = null;
 		}
 
 
 		// Initialise the Platform
-		thisPlatform.init(config);
+		thisPlatform.init( config );
 
 		// Get a handle to the underlying FileSystem manager
 		vfsManager = thisPlatform.getFileIO().vfsManager();
 
 		// Initialize the Datasource
-		dataSourcePoolFactory	= new DataSourcePoolFactory();
+		dataSourcePoolFactory = new DataSourcePoolFactory();
 
 		try {
 			// Load up the runtimeErrorMessages
-			runtimeMessages = ResourceBundle.getBundle("com.naryx.tagfusion.cfm.engine.exceptionMessage");
+			runtimeMessages = ResourceBundle.getBundle( "com.naryx.tagfusion.cfm.engine.exceptionMessage" );
 
-			log(runtimeMessages.getString("cfEngine.welcomeMessage"));
-			log("Product Version: " + PRODUCT_VERSION);
-			log("Build date: " + BUILD_ISSUE);
+			log( runtimeMessages.getString( "cfEngine.welcomeMessage" ) );
+			log( "Product Version: " + PRODUCT_VERSION );
+			log( "Build date: " + BUILD_ISSUE );
 
 			// TagChecker
 			TagChecker = new tagChecker();
-			
+
 			// Core Expression
 			expressionEngine.init();
 
-			//fileCache initialisation
-			cfmlFileCache.init(thisServletContext, getSystemParameters());
+			// fileCache initialisation
+			cfmlFileCache.init( thisServletContext, getSystemParameters() );
 
 			// CFX initalization
-			com.naryx.tagfusion.cfx.cfCFX.init(getSystemParameters());
+			com.naryx.tagfusion.cfx.cfCFX.init( getSystemParameters() );
 
 			// CFCs
-			ComponentFactory.init(getSystemParameters());
+			ComponentFactory.init( getSystemParameters() );
 
 			startTime = System.currentTimeMillis();
 
-		} catch (Exception E) {
-			log(PRODUCT_NAME + " Engine Failed to load:" + E.getMessage());
+		} catch ( Exception E ) {
+			log( PRODUCT_NAME + " Engine Failed to load:" + E.getMessage() );
 			E.printStackTrace();
 			thisInstance = null;
-			throw new ServletException("Failed to initialise the cfEngine: " + E.getMessage());
+			throw new ServletException( "Failed to initialise the cfEngine: " + E.getMessage() );
 		}
 
 		// Create the plugin Manager and load up any extensions
-		pluginManager = new PluginManager(getSystemParameters());
+		pluginManager = new PluginManager( getSystemParameters() );
 
 		// Set the Default Character set
 		setDefaultCharset();
@@ -274,21 +276,21 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 		// Initialise any of the tags
 		try {
-			TagChecker.initialiseTags(getSystemParameters());
-		} catch (Throwable t) {
+			TagChecker.initialiseTags( getSystemParameters() );
+		} catch ( Throwable t ) {
 			t.printStackTrace();
 			thisInstance = null;
-			log( PRODUCT_NAME + " Engine Failed to initialise tags:" + t.getMessage());
-			com.nary.Debug.printStackTrace(t);
-			throw new ServletException(PRODUCT_NAME + " Engine Failed to initialise tags: " + t.getMessage());
+			log( PRODUCT_NAME + " Engine Failed to initialise tags:" + t.getMessage() );
+			com.nary.Debug.printStackTrace( t );
+			throw new ServletException( PRODUCT_NAME + " Engine Failed to initialise tags: " + t.getMessage() );
 		}
 
 		// Set the startup engine flags
-		String ipList	= getSystemParameters().getString("server.debugoutput.ipaddresses");
-		if ( (ipList == null) || (ipList.length() == 0) )
-			debugIPsAsInts	=	new int[0];
+		String ipList = getSystemParameters().getString( "server.debugoutput.ipaddresses" );
+		if ( ( ipList == null ) || ( ipList.length() == 0 ) )
+			debugIPsAsInts = new int[0];
 		else
-			debugIPsAsInts	= cfSession.DecodeIPs(ipList);
+			debugIPsAsInts = cfSession.DecodeIPs( ipList );
 
 
 		setDebugOutputFlag();
@@ -304,30 +306,30 @@ public class cfEngine extends Object implements cfEngineMBean {
 		setCFOutpuShorthand();
 
 		// Only update the bluedragon.xml file if flagged to do so
-		if ( getSystemParameters().getBoolean("server.system.rewritebluedragonxml", true ) && !bluedragonXmlParm.startsWith( "http" ) ) {
+		if ( getSystemParameters().getBoolean( "server.system.rewritebluedragonxml", true ) && !bluedragonXmlParm.startsWith( "http" ) ) {
 			try {
-				writeXmlFile(getSystemParameters(), false);
-			} catch (cfmRunTimeException e) {
-				log( PRODUCT_NAME + "  " + e.getMessage());
+				writeXmlFile( getSystemParameters(), false );
+			} catch ( cfmRunTimeException e ) {
+				log( PRODUCT_NAME + "  " + e.getMessage() );
 			}
 		}
 
 		// Auto-configure ODBC datasources (notifyListeners=false, autoConfig=true)
-		autoConfigOdbcDataSources(false, true);
+		autoConfigOdbcDataSources( false, true );
 
 		// Setup/clean the dynamic web service cache (and any other resources)
 		try {
 			cfWebServices.initialize( config );
-		} catch (Exception e) {
-			throw new ServletException(PRODUCT_NAME + " Engine Failed to initialise Web Services: " + e.getMessage());
+		} catch ( Exception e ) {
+			throw new ServletException( PRODUCT_NAME + " Engine Failed to initialise Web Services: " + e.getMessage() );
 		}
 
 		startRequestStats();
 
 		// Setup the Journal Manager
-		journalManager	= new JournalManager();
+		journalManager = new JournalManager();
 
-		log(runtimeMessages.getString("cfEngine.serverStarted"));
+		log( runtimeMessages.getString( "cfEngine.serverStarted" ) );
 
 		// The Engine is ready for requests, so lets call the ServerCFC handling
 		new ServerCFC().onServerStart( getSystemParameters() );
@@ -335,38 +337,39 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 
 	private File getOpenBDXmlFile( String bluedragonXmlParm ) throws IOException {
-		if ( bluedragonXmlParm.startsWith( "http://" ) || bluedragonXmlParm.startsWith( "https://" ) ){
-			bRemoteOpenBDXML 			= true;
-			File locationXMLFile 	= File.createTempFile( "openbd", ".xml" );
+		if ( bluedragonXmlParm.startsWith( "http://" ) || bluedragonXmlParm.startsWith( "https://" ) ) {
+			bRemoteOpenBDXML = true;
+			File locationXMLFile = File.createTempFile( "openbd", ".xml" );
 
 			System.out.println( "Loading Remote bluedragon.xml from: " + bluedragonXmlParm );
 			String remoteXML = HttpGet.doGet( bluedragonXmlParm ).getBodyAsString();
 
-			FileWriter	fos = null;
-			try{
-				fos	= new FileWriter( locationXMLFile );
+			FileWriter fos = null;
+			try {
+				fos = new FileWriter( locationXMLFile );
 				fos.write( remoteXML );
 				fos.flush();
-			}finally{
+			} finally {
 				StreamUtil.closeStream( fos );
 			}
 
 			return locationXMLFile;
-		}else{
-			return getResolvedFile(bluedragonXmlParm);
+		} else {
+			return getResolvedFile( bluedragonXmlParm );
 		}
 	}
 
 
-	public static synchronized void init(ServletConfig config) throws ServletException {
-		if (cfEngine.thisInstance == null)
-			new cfEngine(config);
+	public static synchronized void init( ServletConfig config ) throws ServletException {
+		if ( cfEngine.thisInstance == null )
+			new cfEngine( config );
 	}
 
 
-	private void setSystemParameters(xmlCFML xmlcfml) {
+	private void setSystemParameters( xmlCFML xmlcfml ) {
 		systemParameters = xmlcfml;
 	}
+
 
 	public xmlCFML getSystemParameters() {
 		return systemParameters;
@@ -375,11 +378,11 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 	public static void destroy() {
 		// If the BlueDragon engine has already been destroyed then just return.
-		if (cfEngine.thisInstance == null)
+		if ( cfEngine.thisInstance == null )
 			return;
 
-		log( PRODUCT_NAME + " is being shut down ... ");
-		bEngineActive	= false;
+		log( PRODUCT_NAME + " is being shut down ... " );
+		bEngineActive = false;
 
 		cfThreadRunner.stopAllThreads();
 
@@ -393,56 +396,62 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 		// Close off all the logging around the system
 		com.nary.util.LogFile.closeAll();
-		log("All logging has been shutdown");
+		log( "All logging has been shutdown" );
 
 		dataSourcePoolFactory.close();
 
 		CacheFactory.shutdown();
 
-		log( PRODUCT_NAME + " has been successfully shutdown");
-		com.nary.Debug.setFilename(null);
+		log( PRODUCT_NAME + " has been successfully shutdown" );
+		com.nary.Debug.setFilename( null );
 
 		thisInstance = null;
 	}
+
 
 	public static Map<String, cfDataSourceStatus> getDataSourceStatus() {
 		return cfEngine.thisInstance.dataSourceStatus;
 	}
 
-	public static int[]	getDebugIPs(){
+
+	public static int[] getDebugIPs() {
 		return cfEngine.thisInstance.debugIPsAsInts;
 	}
+
 
 	public static xmlCFML getConfig() {
 		return cfEngine.thisInstance.getSystemParameters();
 	}
 
+
 	// --------------------------------------------------------
 	// --] Engine Listener Methods
 	// --------------------------------------------------------
 
-	public static final void registerEngineListener(engineListener _new) {
-		cfEngine.thisInstance.engineListeners.addElement(_new);
+	public static final void registerEngineListener( engineListener _new ) {
+		cfEngine.thisInstance.engineListeners.addElement( _new );
 	}
+
 
 	private static final void notifyAllListenersShutdown() {
 
 		// This method may be called before the static instance variable has been initialized; for example
 		// when a shutdown occurs before any requests have been processed. To avoid the NPE, test the
 		// state of thisInstance first.
-		if (cfEngine.thisInstance != null) {
+		if ( cfEngine.thisInstance != null ) {
 			Enumeration<engineListener> E = cfEngine.thisInstance.engineListeners.elements();
-			while (E.hasMoreElements())
+			while ( E.hasMoreElements() )
 				E.nextElement().engineShutdown();
 		}
 	}
 
-	public static final void notifyAllListenersAdmin(xmlCFML newConfig) {
-		cfEngine.thisInstance.setSystemParameters(newConfig);
+
+	public static final void notifyAllListenersAdmin( xmlCFML newConfig ) {
+		cfEngine.thisInstance.setSystemParameters( newConfig );
 
 		Enumeration<engineListener> E = cfEngine.thisInstance.engineListeners.elements();
-		while (E.hasMoreElements())
-			E.nextElement().engineAdminUpdate(newConfig);
+		while ( E.hasMoreElements() )
+			E.nextElement().engineAdminUpdate( newConfig );
 
 		thisPlatform.engineAdminUpdate();
 
@@ -454,47 +463,48 @@ public class cfEngine extends Object implements cfEngineMBean {
 		cfmlFileCache.flushCache();
 	}
 
+
 	private void setDefaultBufferSize() {
 		// Set the response buffer size from the configuration. The default
 		// is 0 which means to buffer the entire page.
 		try {
-			int defaultBufferSize = getSystemParameters().getInt("server.system.buffersize", 0) * 1024;
-			if (defaultBufferSize == 0)
+			int defaultBufferSize = getSystemParameters().getInt( "server.system.buffersize", 0 ) * 1024;
+			if ( defaultBufferSize == 0 )
 				defaultBufferSize = cfHttpServletResponse.UNLIMITED_SIZE;
 
-			cfHttpServletResponse.setUserSize(defaultBufferSize);
+			cfHttpServletResponse.setUserSize( defaultBufferSize );
 
-		} catch (Exception e) {
-			getSystemParameters().setData("server.system.buffersize", DEFAULT_BUFFERSIZE);
-			cfHttpServletResponse.setUserSize(cfHttpServletResponse.UNLIMITED_SIZE);
-			log("response buffer set to entire page.");
+		} catch ( Exception e ) {
+			getSystemParameters().setData( "server.system.buffersize", DEFAULT_BUFFERSIZE );
+			cfHttpServletResponse.setUserSize( cfHttpServletResponse.UNLIMITED_SIZE );
+			log( "response buffer set to entire page." );
 		}
 	}
 
-	private void setDefaultJSONFlags(){
-		cfEngine.DefaultJSONReturnCase	= getSystemParameters().getString("server.system.jsoncase", "maintain").toLowerCase().trim();
-		if ( !"maintain".equals(cfEngine.DefaultJSONReturnCase) &&
-				!"lower".equals(cfEngine.DefaultJSONReturnCase) &&
-				!"upper".equals(cfEngine.DefaultJSONReturnCase) &&
-				!"true".equals(cfEngine.DefaultJSONReturnCase) &&
-				!"false".equals(cfEngine.DefaultJSONReturnCase)
-				)
+
+	private void setDefaultJSONFlags() {
+		cfEngine.DefaultJSONReturnCase = getSystemParameters().getString( "server.system.jsoncase", "maintain" ).toLowerCase().trim();
+		if ( !"maintain".equals( cfEngine.DefaultJSONReturnCase ) &&
+				!"lower".equals( cfEngine.DefaultJSONReturnCase ) &&
+				!"upper".equals( cfEngine.DefaultJSONReturnCase ) &&
+				!"true".equals( cfEngine.DefaultJSONReturnCase ) &&
+				!"false".equals( cfEngine.DefaultJSONReturnCase ) )
 			cfEngine.DefaultJSONReturnCase = "maintain";
 
-		cfEngine.DefaultJSONReturnDate	= getSystemParameters().getString("server.system.jsondate", "long").toLowerCase().trim();
-		if ( !"long".equals(cfEngine.DefaultJSONReturnDate) &&
-				!"http".equals(cfEngine.DefaultJSONReturnDate) &&
-				!"json".equals(cfEngine.DefaultJSONReturnDate) &&
-				!"mongo".equals(cfEngine.DefaultJSONReturnDate) &&
-				!"cfml".equals(cfEngine.DefaultJSONReturnDate)
-				)
+		cfEngine.DefaultJSONReturnDate = getSystemParameters().getString( "server.system.jsondate", "long" ).toLowerCase().trim();
+		if ( !"long".equals( cfEngine.DefaultJSONReturnDate ) &&
+				!"http".equals( cfEngine.DefaultJSONReturnDate ) &&
+				!"json".equals( cfEngine.DefaultJSONReturnDate ) &&
+				!"mongo".equals( cfEngine.DefaultJSONReturnDate ) &&
+				!"cfml".equals( cfEngine.DefaultJSONReturnDate ) )
 			cfEngine.DefaultJSONReturnDate = "long";
 
 		log( "cfEngine: JSON Encoding Defaults: server.system.jsoncase=" + cfEngine.DefaultJSONReturnCase + "; server.system.jsondate=" + cfEngine.DefaultJSONReturnDate );
 	}
 
+
 	private void setSuppressWhiteSpace() {
-		bSuppressWhitespace = getSystemParameters().getBoolean("server.system.whitespacecomp", Boolean.valueOf(DEFAULT_SUPPRESS_WHITESPACE).booleanValue());
+		bSuppressWhitespace = getSystemParameters().getBoolean( "server.system.whitespacecomp", Boolean.valueOf( DEFAULT_SUPPRESS_WHITESPACE ).booleanValue() );
 	}
 
 
@@ -509,14 +519,14 @@ public class cfEngine extends Object implements cfEngineMBean {
 	 *
 	 * @return
 	 */
-	public static String getAltLibPath(){
-		String altpath	= thisInstance.getSystemParameters().getString("server.system.libpath");
-		if ( altpath != null ){
-			File	f	= new File( altpath );
-			if ( f.isDirectory() && f.exists() ){
-				String t	= f.getAbsolutePath();
-				if ( !t.endsWith(File.separator) )
-					t	= t + File.separator;
+	public static String getAltLibPath() {
+		String altpath = thisInstance.getSystemParameters().getString( "server.system.libpath" );
+		if ( altpath != null ) {
+			File f = new File( altpath );
+			if ( f.isDirectory() && f.exists() ) {
+				String t = f.getAbsolutePath();
+				if ( !t.endsWith( File.separator ) )
+					t = t + File.separator;
 
 				return t;
 			}
@@ -525,35 +535,38 @@ public class cfEngine extends Object implements cfEngineMBean {
 		return altpath;
 	}
 
+
 	public static File getXmlFileName() {
 		return cfEngine.thisInstance.xmlFileLocation;
 	}
 
+
 	/*
 	 * getResolvedFile
-	 *
+	 * 
 	 * This method uses context.getRealPath() so it should only be called at init
 	 * time and not at request time. You can call it at request time if you know
 	 * that with BD Server and JX you want the file to be resolved relative to the
 	 * built-in web server's wwwroot directory. An example of this is the
 	 * CFXClassLoader.loadTagsFolderClass().
 	 */
-	public static File getResolvedFile(String directory) {
-		if ( ( directory == null) || ( directory.length() == 0 ) )
+	public static File getResolvedFile( String directory ) {
+		if ( ( directory == null ) || ( directory.length() == 0 ) )
 			return null;
 
-		if (directory.length() > 0 && directory.charAt(0) == '/') {
+		if ( directory.length() > 0 && directory.charAt( 0 ) == '/' ) {
 			// --[ Relative path
-			String realPath = FileUtils.getRealPath(directory);
-			return (realPath == null ? null : new File(realPath));
-		} else if (directory.length() > 0 && directory.charAt(0) == '$') {
+			String realPath = FileUtils.getRealPath( directory );
+			return ( realPath == null ? null : new File( realPath ) );
+		} else if ( directory.length() > 0 && directory.charAt( 0 ) == '$' ) {
 			// --[ Real path
-			return new File(directory.substring(1));
+			return new File( directory.substring( 1 ) );
 		} else {
 			// --[ Real path
-			return new File(directory);
+			return new File( directory );
 		}
 	}
+
 
 	public static final tagChecker getTagChecker() {
 		return cfEngine.thisInstance.TagChecker;
@@ -564,25 +577,27 @@ public class cfEngine extends Object implements cfEngineMBean {
 		return cfEngine.thisInstance.nativeLibDirectory;
 	}
 
-	public static final String getMessage(String id) {
+
+	public static final String getMessage( String id ) {
 		try {
-			return cfEngine.thisInstance.runtimeMessages.getString(id);
-		} catch (MissingResourceException e) {
+			return cfEngine.thisInstance.runtimeMessages.getString( id );
+		} catch ( MissingResourceException e ) {
 			return "Unrecognized error code: " + id;
 		}
 	}
 
-	public static final String getMessage(String id, String values[]) {
+
+	public static final String getMessage( String id, String values[] ) {
 		try {
-			String message = cfEngine.thisInstance.runtimeMessages.getString(id);
-			if (values == null || message == null)
+			String message = cfEngine.thisInstance.runtimeMessages.getString( id );
+			if ( values == null || message == null )
 				return message;
 
-			for (int x = 0; x < values.length; x++)
-				message = com.nary.util.string.replaceString(message, "%" + (x + 1), values[x]);
+			for ( int x = 0; x < values.length; x++ )
+				message = com.nary.util.string.replaceString( message, "%" + ( x + 1 ), values[x] );
 
 			return message;
-		} catch (MissingResourceException e) {
+		} catch ( MissingResourceException e ) {
 			return "Unrecognized error code: " + id;
 		}
 	}
@@ -592,138 +607,161 @@ public class cfEngine extends Object implements cfEngineMBean {
 		return cfEngine.thisInstance.bCombinedFormUrlScope;
 	}
 
+
 	public final static boolean isCFOutputShorthand() {
 		return cfEngine.thisInstance.bCFoutputShorthand;
 	}
+
 
 	public final static boolean isFormUrlCaseMaintained() {
 		return cfEngine.thisInstance.bMainFormUrlCase;
 	}
 
+
 	public final static boolean isDebugOutputEnabled() {
 		return cfEngine.thisInstance.bDebugOutputEnabled;
 	}
+
 
 	public final static boolean isScriptProtect() {
 		return cfEngine.thisInstance.bScriptProtect;
 	}
 
+
 	public final static boolean isDebuggerOutputEnabled() {
 		return cfEngine.thisInstance.bDebugerOutputEnabled;
 	}
+
 
 	public final static boolean isAssertionsEnabled() {
 		return cfEngine.thisInstance.bAssertionsEnabled;
 	}
 
-	public final static boolean isStrictPassArrayByReference(){
+
+	public final static boolean isStrictPassArrayByReference() {
 		return cfEngine.thisInstance.bStrictArrayPassByReference;
 	}
 
-	public final static boolean isFunctionScopedVariables(){
+
+	public final static boolean isFunctionScopedVariables() {
 		return cfEngine.thisInstance.bFunctionScopedVariables;
 	}
+
 
 	/**
 	 * The encoding value should be used internally.
 	 */
 	public static String getDefaultEncoding() {
-		return Localization.convertCharSetToCharEncoding(cfEngine.getDefaultCharset());
+		return Localization.convertCharSetToCharEncoding( cfEngine.getDefaultCharset() );
 	}
+
 
 	public static String getDefaultCharset() {
 		return cfEngine.thisInstance.defaultCharset;
 	}
+
 
 	/**
 	 * The charset value should be used in the request/response content-type
 	 * header.
 	 */
 	private void setDefaultCharset() {
-		defaultCharset = getSystemParameters().getString("server.system.defaultcharset", DEFAULT_CHARSET);
-		log("cfEngine: Using default character encoding " + defaultCharset);
+		defaultCharset = getSystemParameters().getString( "server.system.defaultcharset", DEFAULT_CHARSET );
+		log( "cfEngine: Using default character encoding " + defaultCharset );
 	}
+
 
 	private void setWebResourcePath() {
-		webResourcePath = getSystemParameters().getString("server.system.resourcepath", "/WEB-INF/webresources" );
-		if ( webResourcePath.endsWith("/") )
-			webResourcePath = webResourcePath.substring( 0, webResourcePath.length()-1 );
+		webResourcePath = getSystemParameters().getString( "server.system.resourcepath", "/WEB-INF/webresources" );
+		if ( webResourcePath.endsWith( "/" ) )
+			webResourcePath = webResourcePath.substring( 0, webResourcePath.length() - 1 );
 
-		webResourcePath = getResolvedFile(webResourcePath).toString();
+		webResourcePath = getResolvedFile( webResourcePath ).toString();
 
-		log("cfEngine: WebResourcePath " + webResourcePath );
+		log( "cfEngine: WebResourcePath " + webResourcePath );
 	}
+
 
 	private void setDebugOutputFlag() {
-		bDebugOutputEnabled = getSystemParameters().getBoolean("server.system.debug", Boolean.valueOf(DEFAULT_DEBUG).booleanValue());
-		log("cfEngine: [server.system.debug] Show Debug output on error? " + bDebugOutputEnabled);
+		bDebugOutputEnabled = getSystemParameters().getBoolean( "server.system.debug", Boolean.valueOf( DEFAULT_DEBUG ).booleanValue() );
+		log( "cfEngine: [server.system.debug] Show Debug output on error? " + bDebugOutputEnabled );
 
-		bDebugerOutputEnabled = getSystemParameters().getBoolean("server.debugoutput.enabled", Boolean.valueOf(false).booleanValue());
-		log("cfEngine: [server.debugoutput.enabled] Show Debugger output? " + bDebugerOutputEnabled);
+		bDebugerOutputEnabled = getSystemParameters().getBoolean( "server.debugoutput.enabled", Boolean.valueOf( false ).booleanValue() );
+		log( "cfEngine: [server.debugoutput.enabled] Show Debugger output? " + bDebugerOutputEnabled );
 	}
 
+
 	private void setScriptProtectFlag() {
-		bScriptProtect = getSystemParameters().getBoolean("server.system.scriptprotect", Boolean.valueOf(DEFAULT_SCRIPTPROTECT).booleanValue());
-		log("cfEngine: [server.system.scriptprotect] ScriptProtect " + (bScriptProtect ? "enabled" : "disabled"));
+		bScriptProtect = getSystemParameters().getBoolean( "server.system.scriptprotect", Boolean.valueOf( DEFAULT_SCRIPTPROTECT ).booleanValue() );
+		log( "cfEngine: [server.system.scriptprotect] ScriptProtect " + ( bScriptProtect ? "enabled" : "disabled" ) );
 		ScriptProtect.init( getConfig() );
 	}
 
+
 	private void setAssertionsFlag() {
-		bAssertionsEnabled = getSystemParameters().getBoolean("server.system.assert", Boolean.valueOf(DEFAULT_ASSERT).booleanValue());
-		log("cfEngine: [server.system.assert] Assertions " + (bAssertionsEnabled ? "enabled" : "disabled"));
+		bAssertionsEnabled = getSystemParameters().getBoolean( "server.system.assert", Boolean.valueOf( DEFAULT_ASSERT ).booleanValue() );
+		log( "cfEngine: [server.system.assert] Assertions " + ( bAssertionsEnabled ? "enabled" : "disabled" ) );
 	}
+
 
 	private void setCombinedFormUrlFlag() {
-		bCombinedFormUrlScope = getSystemParameters().getBoolean("server.system.formurlcombined", false);
-		log("cfEngine: [server.system.formurlcombined] Combined Form/Url Scope? " + bCombinedFormUrlScope);
+		bCombinedFormUrlScope = getSystemParameters().getBoolean( "server.system.formurlcombined", false );
+		log( "cfEngine: [server.system.formurlcombined] Combined Form/Url Scope? " + bCombinedFormUrlScope );
 	}
+
+
 	private void setCFOutpuShorthand() {
-		bCFoutputShorthand = getSystemParameters().getBoolean("server.system.cfoutputshorthand", false);
-		log("cfEngine: [server.system.cfoutputshorthand] <%= ... %> ? " + bCFoutputShorthand );
+		bCFoutputShorthand = getSystemParameters().getBoolean( "server.system.cfoutputshorthand", false );
+		log( "cfEngine: [server.system.cfoutputshorthand] <%= ... %> ? " + bCFoutputShorthand );
 	}
+
 
 	private void setFormUrlCaseMaintainedFlag() {
-		bMainFormUrlCase = getSystemParameters().getBoolean("server.system.formurlmaintaincase", false);
-		log("cfEngine: [server.system.formurlmaintaincase] Case Form/Url maintained? " + bMainFormUrlCase);
+		bMainFormUrlCase = getSystemParameters().getBoolean( "server.system.formurlmaintaincase", false );
+		log( "cfEngine: [server.system.formurlmaintaincase] Case Form/Url maintained? " + bMainFormUrlCase );
 	}
+
 
 	private void setStrictFlags() {
-		bStrictArrayPassByReference = getSystemParameters().getBoolean("server.system.strictarraypassbyreference", Boolean.valueOf(DEFAULT_STRICT_ARRAYBYREFERENCE).booleanValue());
-		log("cfEngine: [server.system.strictarraypassbyreference] Strict Mode: ArrayPassByReference? " + bStrictArrayPassByReference);
+		bStrictArrayPassByReference = getSystemParameters().getBoolean( "server.system.strictarraypassbyreference", Boolean.valueOf( DEFAULT_STRICT_ARRAYBYREFERENCE ).booleanValue() );
+		log( "cfEngine: [server.system.strictarraypassbyreference] Strict Mode: ArrayPassByReference? " + bStrictArrayPassByReference );
 
-		bFunctionScopedVariables = getSystemParameters().getBoolean("server.system.functionscopedvariables", Boolean.valueOf(DEFAULT_STRICT_FUNCTIONSCOPEDVARS).booleanValue());
-		log("cfEngine: [server.system.functionscopedvariables] Strict Mode: FunctionScopedVariables? " + bFunctionScopedVariables);
+		bFunctionScopedVariables = getSystemParameters().getBoolean( "server.system.functionscopedvariables", Boolean.valueOf( DEFAULT_STRICT_FUNCTIONSCOPEDVARS ).booleanValue() );
+		log( "cfEngine: [server.system.functionscopedvariables] Strict Mode: FunctionScopedVariables? " + bFunctionScopedVariables );
 	}
 
-	private void setLegacyFormValidation(){
-		bLegacyFormValidation = getSystemParameters().getBoolean("server.system.legacyformvalidation", true);
-		log("cfEngine: [server.system.legacyformvalidation] Legacy server side form validation? " + bLegacyFormValidation);
+
+	private void setLegacyFormValidation() {
+		bLegacyFormValidation = getSystemParameters().getBoolean( "server.system.legacyformvalidation", true );
+		log( "cfEngine: [server.system.legacyformvalidation] Legacy server side form validation? " + bLegacyFormValidation );
 	}
 
 
 	private void setNativeLibDirectory() {
-		nativeLibDirectory = getSystemParameters().getString("server.system.nativelibdir");
+		nativeLibDirectory = getSystemParameters().getString( "server.system.nativelibdir" );
 
-		if (nativeLibDirectory == null) {
-			log(PRODUCT_NAME + " failed to set NativeLibDirectory. Check the nativelibdir is defined in the configuration file.");
-		} else if (!nativeLibDirectory.endsWith("/")) {
+		if ( nativeLibDirectory == null ) {
+			log( PRODUCT_NAME + " failed to set NativeLibDirectory. Check the nativelibdir is defined in the configuration file." );
+		} else if ( !nativeLibDirectory.endsWith( "/" ) ) {
 			nativeLibDirectory = nativeLibDirectory + "/";
 		}
 
-		String osArch = System.getProperty("os.arch");
-		if ((osArch != null) && (osArch.indexOf("64") != -1)) {
+		String osArch = System.getProperty( "os.arch" );
+		if ( ( osArch != null ) && ( osArch.indexOf( "64" ) != -1 ) ) {
 			nativeLibDirectory = nativeLibDirectory + "x64/";
 		}
-		log("cfEngine: server.system.nativelibdir=[" + nativeLibDirectory + "]");
+		log( "cfEngine: server.system.nativelibdir=[" + nativeLibDirectory + "]" );
 	}
+
 
 	public static void autoConfigOdbcDataSources() {
-		autoConfigOdbcDataSources(true, false);
+		autoConfigOdbcDataSources( true, false );
 	}
 
-	public static void autoConfigOdbcDataSources(boolean notifyListeners, boolean autoConfig) {
+
+	public static void autoConfigOdbcDataSources( boolean notifyListeners, boolean autoConfig ) {
 		// currently only supported on Windows
-		if (!WINDOWS)
+		if ( !WINDOWS )
 			return;
 
 		try {
@@ -731,113 +769,115 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 			// If this is an auto-config instead of an odbc refresh
 			// then check if auto-config is disabled in bluedragon.xml
-			if (autoConfig) {
-				if (!config.getBoolean("server.cfquery.autoconfig-odbc", true)) {
-					log("Auto-configure of ODBC datasources is disabled");
+			if ( autoConfig ) {
+				if ( !config.getBoolean( "server.cfquery.autoconfig-odbc", true ) ) {
+					log( "Auto-configure of ODBC datasources is disabled" );
 					return;
 				}
 			}
 
-			log("cfEngine: [server.cfquery.autoconfig-odbc] Auto-configure of ODBC datasources is enabled");
+			log( "cfEngine: [server.cfquery.autoconfig-odbc] Auto-configure of ODBC datasources is enabled" );
 
 			boolean writeXmlFile = false;
 
 			String[] odbcDataSources = ODBCNativeLib.getOdbcDataSources();
 
-			for (int i = 0; i < odbcDataSources.length; i += 2) {
+			for ( int i = 0; i < odbcDataSources.length; i += 2 ) {
 				String dsnName = odbcDataSources[i];
 				String description = odbcDataSources[i + 1];
 				String dsnKey = "server.cfquery.datasource[" + dsnName.toLowerCase() + "]";
 
 				// test to see if datasource name already configured
-				String currentDescr = config.getString(dsnKey + ".description");
-				if (currentDescr == null) {
-					config.setData(dsnKey + ".name", dsnName);
-					config.setData(dsnKey + ".logintimeout", "120");
-					config.setData(dsnKey + ".connectiontimeout", "120");
-					config.setData(dsnKey + ".username", "");
-					config.setData(dsnKey + ".hoststring", ODBCNativeLib.URL_PREFIX + dsnName);
-					config.setData(dsnKey + ".databasename", dsnName);
-					config.setData(dsnKey + ".drivername", ODBCNativeLib.DRIVER_CLASS);
-					config.setData(dsnKey + ".password", "");
-					config.setData(dsnKey + ".description", description);
-					config.setData(dsnKey + ".maxconnections", "24");
-					config.setData(dsnKey + ".sqlselect", "true");
-					config.setData(dsnKey + ".sqldelete", "true");
-					config.setData(dsnKey + ".sqlinsert", "true");
-					config.setData(dsnKey + ".sqlupdate", "true");
-					config.setData(dsnKey + ".sqlstoredprocedures", "true");
-					config.setData(dsnKey + ".drivertype", "3");
-					config.setData(dsnKey + ".servername", "");
-					config.setData(dsnKey + ".port", "");
-					cfEngine.getDataSourceStatus().put(dsnName.toLowerCase(), new cfDataSourceStatus());
+				String currentDescr = config.getString( dsnKey + ".description" );
+				if ( currentDescr == null ) {
+					config.setData( dsnKey + ".name", dsnName );
+					config.setData( dsnKey + ".logintimeout", "120" );
+					config.setData( dsnKey + ".connectiontimeout", "120" );
+					config.setData( dsnKey + ".username", "" );
+					config.setData( dsnKey + ".hoststring", ODBCNativeLib.URL_PREFIX + dsnName );
+					config.setData( dsnKey + ".databasename", dsnName );
+					config.setData( dsnKey + ".drivername", ODBCNativeLib.DRIVER_CLASS );
+					config.setData( dsnKey + ".password", "" );
+					config.setData( dsnKey + ".description", description );
+					config.setData( dsnKey + ".maxconnections", "24" );
+					config.setData( dsnKey + ".sqlselect", "true" );
+					config.setData( dsnKey + ".sqldelete", "true" );
+					config.setData( dsnKey + ".sqlinsert", "true" );
+					config.setData( dsnKey + ".sqlupdate", "true" );
+					config.setData( dsnKey + ".sqlstoredprocedures", "true" );
+					config.setData( dsnKey + ".drivertype", "3" );
+					config.setData( dsnKey + ".servername", "" );
+					config.setData( dsnKey + ".port", "" );
+					cfEngine.getDataSourceStatus().put( dsnName.toLowerCase(), new cfDataSourceStatus() );
 
-					log("Auto-configured ODBC datasource: " + dsnName);
+					log( "Auto-configured ODBC datasource: " + dsnName );
 
 					writeXmlFile = true;
 				}
 			}
 
-			if (writeXmlFile)
-				cfEngine.writeXmlFile(config, notifyListeners);
-		} catch (UnsatisfiedLinkError ignore) {
-		} catch (Exception e) {
-			log("ODBC auto-configuration error: " + e.getMessage());
-			com.nary.Debug.printStackTrace(e);
+			if ( writeXmlFile )
+				cfEngine.writeXmlFile( config, notifyListeners );
+		} catch ( UnsatisfiedLinkError ignore ) {} catch ( Exception e ) {
+			log( "ODBC auto-configuration error: " + e.getMessage() );
+			com.nary.Debug.printStackTrace( e );
 		}
 	}
 
-	public static void writeXmlFile(xmlCFML newXmlCFML) throws cfmRunTimeException {
-		writeXmlFile(newXmlCFML, true);
+
+	public static void writeXmlFile( xmlCFML newXmlCFML ) throws cfmRunTimeException {
+		writeXmlFile( newXmlCFML, true );
 	}
 
-	public static void reloadXmlFile()  throws cfmRunTimeException {
+
+	public static void reloadXmlFile() throws cfmRunTimeException {
 		File xmlFileName = getXmlFileName();
-		if ( xmlFileName != null ){
+		if ( xmlFileName != null ) {
 
 			try {
-				thisInstance.setSystemParameters(xmlConfigManagerFactory.createXmlConfigManager( xmlFileName ).getXMLCFML());
-			} catch (Exception E) {
+				thisInstance.setSystemParameters( xmlConfigManagerFactory.createXmlConfigManager( xmlFileName ).getXMLCFML() );
+			} catch ( Exception E ) {
 				cfCatchData catchData = new cfCatchData();
-				catchData.setMessage("failed to load configuration file");
+				catchData.setMessage( "failed to load configuration file" );
 				catchData.setExtendedInfo( E.getMessage() );
-				throw new cfmRunTimeException(catchData);
+				throw new cfmRunTimeException( catchData );
 			}
 			notifyAllListenersAdmin( thisInstance.getSystemParameters() );
 
-		}else{
+		} else {
 			cfCatchData catchData = new cfCatchData();
-			catchData.setMessage("failed to find configuration file");
-			throw new cfmRunTimeException(catchData);
+			catchData.setMessage( "failed to find configuration file" );
+			throw new cfmRunTimeException( catchData );
 		}
 	}
 
-	public synchronized static void writeXmlFile(xmlCFML newXmlCFML, boolean notifyListeners) throws cfmRunTimeException {
-		
-		if ( thisInstance.bRemoteOpenBDXML ){
-			log("Attempted to update a remote bluedragon.xml; operation failed");
+
+	public synchronized static void writeXmlFile( xmlCFML newXmlCFML, boolean notifyListeners ) throws cfmRunTimeException {
+
+		if ( thisInstance.bRemoteOpenBDXML ) {
+			log( "Attempted to update a remote bluedragon.xml; operation failed" );
 			return;
 		}
-		
+
 		File xmlFileName = getXmlFileName();
 
-		if ((xmlFileName != null) && (xmlFileName.canWrite())) {
+		if ( ( xmlFileName != null ) && ( xmlFileName.canWrite() ) ) {
 			// delete the oldest (10th) backup; increment the numbers of the remaining backups
-			for (int backupNo = 10; backupNo > 0; backupNo--) {
-				File backupFile = new File(xmlFileName + ".bak." + backupNo);
-				if (backupFile.exists()) {
-					if (backupNo == 10) {
+			for ( int backupNo = 10; backupNo > 0; backupNo-- ) {
+				File backupFile = new File( xmlFileName + ".bak." + backupNo );
+				if ( backupFile.exists() ) {
+					if ( backupNo == 10 ) {
 						backupFile.delete();
 					} else {
-						backupFile.renameTo(new File(xmlFileName + ".bak." + (backupNo + 1)));
+						backupFile.renameTo( new File( xmlFileName + ".bak." + ( backupNo + 1 ) ) );
 					}
 				}
 			}
 
 			// clean up older backup files
-			for (int backupNo = 11; true; backupNo++) {
-				File backupFile = new File(xmlFileName + ".bak." + backupNo);
-				if (backupFile.exists()) {
+			for ( int backupNo = 11; true; backupNo++ ) {
+				File backupFile = new File( xmlFileName + ".bak." + backupNo );
+				if ( backupFile.exists() ) {
 					backupFile.delete();
 				} else {
 					break;
@@ -846,21 +886,21 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 			// write back out the xml file to the file, saving the old one
 			File xmlFile = xmlFileName;
-			File newFile = new File(xmlFileName + ".bak.1");
+			File newFile = new File( xmlFileName + ".bak.1" );
 
 			// Put in the last updated
-			newXmlCFML.setData("server.system.lastupdated", com.nary.util.Date.formatDate(System.currentTimeMillis(), "dd/MMM/yyyy HH:mm.ss", Locale.US));
-			newXmlCFML.setData("server.system.lastfile", newFile.toString());
+			newXmlCFML.setData( "server.system.lastupdated", com.nary.util.Date.formatDate( System.currentTimeMillis(), "dd/MMM/yyyy HH:mm.ss", Locale.US ) );
+			newXmlCFML.setData( "server.system.lastfile", newFile.toString() );
 
 			// Rename the file
-			xmlFile.renameTo(newFile);
+			xmlFile.renameTo( newFile );
 
 			try {
-				newXmlCFML.writeTo(xmlFile);
-			} catch (IOException e) {
+				newXmlCFML.writeTo( xmlFile );
+			} catch ( IOException e ) {
 				cfCatchData catchData = new cfCatchData();
-				catchData.setMessage("failed to write configuration file, " + e.toString());
-				throw new cfmRunTimeException(catchData);
+				catchData.setMessage( "failed to write configuration file, " + e.toString() );
+				throw new cfmRunTimeException( catchData );
 			}
 		} else {
 			// NOTE: this will happen with BD J2EE when it is running in a WAR file,
@@ -868,30 +908,31 @@ public class cfEngine extends Object implements cfEngineMBean {
 			// file is marked read-only, or when something goes seriously wrong at BD
 			// init time.
 			cfCatchData catchData = new cfCatchData();
-			catchData.setMessage("failed to write configuration file");
-			throw new cfmRunTimeException(catchData);
+			catchData.setMessage( "failed to write configuration file" );
+			throw new cfmRunTimeException( catchData );
 		}
 
-		if (notifyListeners) {
-			notifyAllListenersAdmin(newXmlCFML);
+		if ( notifyListeners ) {
+			notifyAllListenersAdmin( newXmlCFML );
 		}
 	}
+
 
 	// --------------------------------------------------------
 	// --] Main Service method
 	// --------------------------------------------------------
 
-	public static void service(HttpServletRequest req, HttpServletResponse res) throws ServletException {
+	public static void service( HttpServletRequest req, HttpServletResponse res ) throws ServletException {
 		Thread.currentThread().setName( req.getRequestURI() );
 
 		thisInstance.totalRequests++;
 
-		if (thisInstance.avgTracker != null) {
+		if ( thisInstance.avgTracker != null ) {
 			thisInstance.avgTracker.begin();
 		}
 
-		cfSession _Session 							= new cfSession(req, res, thisServletContext);
-		JournalSession	journalSession 	= thisInstance.journalManager.getJournalSession(req);
+		cfSession _Session = new cfSession( req, res, thisServletContext );
+		JournalSession journalSession = thisInstance.journalManager.getJournalSession( req );
 
 		cfFile requestFile = null;
 
@@ -899,21 +940,21 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 			// If we are instrumenting this request, then we want to use that and disable any other plugin that maybe used
 			if ( journalSession != null )
-				journalSession.requestStart(_Session);
+				journalSession.requestStart( _Session );
 			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestStart( _Session );
 
 
-			_Session.setSuppressWhiteSpace(thisInstance.bSuppressWhitespace);
-			_Session.checkAndDecodePost(thisInstance.bLegacyFormValidation);
+			_Session.setSuppressWhiteSpace( thisInstance.bSuppressWhitespace );
+			_Session.checkAndDecodePost( thisInstance.bLegacyFormValidation );
 
 
 			// Load in the main request file
 			try {
 				requestFile = _Session.getRequestFile();
-			} catch (cfmBadFileException bfe) {
+			} catch ( cfmBadFileException bfe ) {
 				// attempt to invoke onMissingTemplate handler for file-not-found
-				if (bfe.fileNotFound() && _Session.onMissingTemplate()) {
+				if ( bfe.fileNotFound() && _Session.onMissingTemplate() ) {
 					_Session.pageEnd();
 					return;
 				}
@@ -921,46 +962,46 @@ public class cfEngine extends Object implements cfEngineMBean {
 			}
 
 			// Render the Application.cfm or Application.cfc
-			_Session.onRequestStart(requestFile);
+			_Session.onRequestStart( requestFile );
 
 			// Render the main request file
-			_Session.onRequest(requestFile);
+			_Session.onRequest( requestFile );
 
 			// Render the 'OnRequestEnd.cfm' file
-			_Session.onRequestEnd(requestFile.getURI());
+			_Session.onRequestEnd( requestFile.getURI() );
 
 			// Send all data, including any that may be in the cache straight to the client
 			_Session.pageEnd();
 
-		} catch (cfmAbortException ACF) {
+		} catch ( cfmAbortException ACF ) {
 			// Do nothing. Don't print anything out to the Session
 			_Session.pageEnd();
-		} catch (cfmBadFileException BF) {
+		} catch ( cfmBadFileException BF ) {
 
-			BF.handleException(requestFile, _Session);
-			
+			BF.handleException( requestFile, _Session );
+
 			// If we are instrumenting this request, then we want to use that and disable any other plugin that maybe used
 			if ( journalSession != null )
 				journalSession.requestBadFileException( BF, _Session );
 			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestBadFileException( BF, _Session );
 
-		} catch (cfmRunTimeException CF) {
+		} catch ( cfmRunTimeException CF ) {
 
-			CF.handleException(_Session);
-			
+			CF.handleException( _Session );
+
 			// If a plugin is listening to this request
 			if ( journalSession != null )
 				journalSession.requestRuntimeException( CF, _Session );
 			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestRuntimeException( CF, _Session );
 
-		} catch (Throwable E) {
-			new cfmRunTimeException(_Session, E).handleException(_Session);
+		} catch ( Throwable E ) {
+			new cfmRunTimeException( _Session, E ).handleException( _Session );
 		} finally {
 
 			// no matter what happens, we must ensure this gets called
-			if (thisInstance.avgTracker != null)
+			if ( thisInstance.avgTracker != null )
 				thisInstance.avgTracker.end();
 
 
@@ -968,8 +1009,8 @@ public class cfEngine extends Object implements cfEngineMBean {
 
 			// If we are instrumenting this request, then we want to use that and disable any other plugin that maybe used
 			if ( journalSession != null )
-				journalSession.requestEnd(_Session);
-			else if  ( thisInstance.requestListener != null )
+				journalSession.requestEnd( _Session );
+			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestEnd( _Session );
 
 			_Session.close();
@@ -977,6 +1018,7 @@ public class cfEngine extends Object implements cfEngineMBean {
 			Thread.currentThread().setName( "no-request" );
 		}
 	}
+
 
 	/**
 	 * serviceCfcMethod - this method is invoked when a url like the following is
@@ -987,168 +1029,178 @@ public class cfEngine extends Object implements cfEngineMBean {
 	 * It invokes the specified method which is defined in the CFC with the
 	 * specified arguments.
 	 */
-	public static void serviceCfcMethod(HttpServletRequest req, HttpServletResponse res) {
+	public static void serviceCfcMethod( HttpServletRequest req, HttpServletResponse res ) {
 		Thread.currentThread().setName( req.getRequestURI() );
 		thisInstance.totalRequests++;
 
-		cfSession _Session 							= new cfSession(req, res, thisServletContext);
-		JournalSession	journalSession 	= thisInstance.journalManager.getJournalSession(req);
+		cfSession _Session = new cfSession( req, res, thisServletContext );
+		JournalSession journalSession = thisInstance.journalManager.getJournalSession( req );
 
 		cfFile svrFile = null;
-		boolean	defaultExceptionHandling = true;
+		boolean defaultExceptionHandling = true;
 		boolean serializeQueryByColumns = false;
 
 		try {
-			_Session.setSuppressWhiteSpace(thisInstance.bSuppressWhitespace);
+			_Session.setSuppressWhiteSpace( thisInstance.bSuppressWhitespace );
 
 			// If we are instrumenting this request, then we want to use that and disable any other plugin that maybe used
 			if ( journalSession != null )
-				journalSession.requestStart(_Session);
+				journalSession.requestStart( _Session );
 			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestStart( _Session );
 
 			_Session.checkAndDecodePost( false );
 
-			//  Load in the main request file
+			// Load in the main request file
 			svrFile = _Session.getRequestFile();
-			_Session.onRequestStart(svrFile);
+			_Session.onRequestStart( svrFile );
 
 			// Extract the component name from the URI (it's the filename minus the extension)
 			String compName = svrFile.getURI();
-			int pos = compName.lastIndexOf('/');
-			if (pos != -1)
-				compName = compName.substring(pos + 1);
+			int pos = compName.lastIndexOf( '/' );
+			if ( pos != -1 )
+				compName = compName.substring( pos + 1 );
 
-			pos = compName.lastIndexOf('.');
-			if (pos != -1)
-				compName = compName.substring(0, pos);
+			pos = compName.lastIndexOf( '.' );
+			if ( pos != -1 )
+				compName = compName.substring( 0, pos );
 
 			// Extract the method name and arguments
 			String methodName = null;
 			String formatMethod = null;
-			String jsonpCallback	= null;
-			String jsonCase	= null;
+			String jsonpCallback = null;
+			String jsonCase = null;
 			boolean jsonEncodedParams = false;
 			cfArgStructData arguments = new cfArgStructData();
-			String[]	bdParams	= null;
+			String[] bdParams = null;
 			Object[] paramNames;
 
-			cfFormData formData = (cfFormData) _Session.getQualifiedData(variableStore.FORM_SCOPE);
+			cfFormData formData = (cfFormData) _Session.getQualifiedData( variableStore.FORM_SCOPE );
 			paramNames = formData.keys();
-			for (int i = 0; i < paramNames.length; i++) {
+			for ( int i = 0; i < paramNames.length; i++ ) {
 				String name = (String) paramNames[i];
-				cfData value = formData.getData(name);
+				// need uppercase version to account for formurlmaintaincase
+				String ucName = name.toUpperCase();
+				cfData value = formData.getData( name );
 
-				if (name.equals("METHOD"))
+				if ( ucName.equals( "METHOD" ) )
 					methodName = value.getString();
-				else if ( name.equals("__BDNODEBUG") )
+				else if ( ucName.equals( "__BDNODEBUG" ) )
 					defaultExceptionHandling = false;
-				else if ( name.equals("__BDJSONENCODED") )
+				else if ( ucName.equals( "__BDJSONENCODED" ) )
 					jsonEncodedParams = true;
-				else if ( name.equals("__BDJSONCASE") )
+				else if ( ucName.equals( "__BDJSONCASE" ) )
 					jsonCase = value.getString().toLowerCase();
-				else if ( name.equals("__BDRETURNFORMAT"))
+				else if ( ucName.equals( "__BDRETURNFORMAT" ) )
 					formatMethod = value.getString().toUpperCase();
-				else if ( name.equals("__BDPARAMS"))
-					bdParams = value.getString().split(",");
-				else if ( name.equals("__BDQUERYFORMAT"))
-					serializeQueryByColumns = ( value.getString().equalsIgnoreCase("column") );
-				else if (!name.equals("FIELDNAMES"))
-					arguments.setData(name, value);
+				else if ( ucName.equals( "__BDPARAMS" ) )
+					bdParams = value.getString().split( "," );
+				else if ( ucName.equals( "__BDQUERYFORMAT" ) )
+					serializeQueryByColumns = ( value.getString().equalsIgnoreCase( "column" ) );
+				else if ( !ucName.equals( "FIELDNAMES" ) )
+					arguments.setData( (String) paramNames[i], value );
 			}
 
-			cfUrlData urlData = (cfUrlData) _Session.getQualifiedData(variableStore.URL_SCOPE);
+			cfUrlData urlData = (cfUrlData) _Session.getQualifiedData( variableStore.URL_SCOPE );
 			paramNames = urlData.keys();
-			for (int i = 0; i < paramNames.length; i++) {
+			for ( int i = 0; i < paramNames.length; i++ ) {
 				String name = (String) paramNames[i];
-				cfData value = urlData.getData(name);
+				// need uppercase version to account for formurlmaintaincase
+				String ucName = name.toUpperCase();
+				cfData value = urlData.getData( name );
 
-				if (name.equals("METHOD"))
+				if ( ucName.equals( "METHOD" ) )
 					methodName = value.getString();
-				else if ( name.equals("CALLBACK") )
+				else if ( ucName.equals( "CALLBACK" ) )
 					jsonpCallback = value.getString();
-				else if ( name.equals("__BDNODEBUG") )
+				else if ( ucName.equals( "__BDNODEBUG" ) )
 					defaultExceptionHandling = false;
-				else if ( name.equals("__BDJSONENCODED") )
+				else if ( ucName.equals( "__BDJSONENCODED" ) )
 					jsonEncodedParams = true;
-				else if ( name.equals("__BDJSONCASE") )
+				else if ( ucName.equals( "__BDJSONCASE" ) )
 					jsonCase = value.getString().toLowerCase();
-				else if ( name.equals("__BDPARAMS"))
-					bdParams = value.getString().split(",");
-				else if ( name.equals("__BDRETURNFORMAT") )
+				else if ( ucName.equals( "__BDPARAMS" ) )
+					bdParams = value.getString().split( "," );
+				else if ( ucName.equals( "__BDRETURNFORMAT" ) )
 					formatMethod = value.getString().toUpperCase();
-				else if ( name.equals("__BDQUERYFORMAT") )
-					serializeQueryByColumns = ( value.getString().equalsIgnoreCase("column") );
+				else if ( ucName.equals( "__BDQUERYFORMAT" ) )
+					serializeQueryByColumns = ( value.getString().equalsIgnoreCase( "column" ) );
 				else
-					arguments.setData(name, value);
+					arguments.setData( name, value );
 			}
 
 			// Make sure a method name was specified
-			if (methodName == null) {
+			if ( methodName == null ) {
 				cfCatchData catchData = new cfCatchData();
-				catchData.setMessage("the request must contain a METHOD parameter");
-				throw new cfmRunTimeException(catchData);
+				catchData.setMessage( "the request must contain a METHOD parameter" );
+				throw new cfmRunTimeException( catchData );
 			}
 
 			// Make sure this is a valid JSONP call
-			if ( formatMethod != null && formatMethod.equals("JSONP") && jsonpCallback == null ){
+			if ( formatMethod != null && formatMethod.equals( "JSONP" ) && jsonpCallback == null ) {
 				cfCatchData catchData = new cfCatchData();
-				catchData.setMessage("the request must contain a CALLBACK parameter if using JSONP");
-				throw new cfmRunTimeException(catchData);
+				catchData.setMessage( "the request must contain a CALLBACK parameter if using JSONP" );
+				throw new cfmRunTimeException( catchData );
 			}
 
 
 			// The params are JSON encoded, so we need to unwrap them to their rich counter parts
 			if ( jsonEncodedParams )
-				arguments = deserializejson.transformStructElements(arguments, bdParams);
+				arguments = deserializejson.transformStructElements( arguments, bdParams );
 
 			// Invoke the method
 			_Session.onCFCRequest( svrFile.getURI(), compName, methodName, arguments, formatMethod, serializeQueryByColumns, jsonpCallback, jsonCase );
 
 			// Render the 'OnRequestEnd.cfm' file
-			_Session.onRequestEnd(svrFile.getURI());
+			_Session.onRequestEnd( svrFile.getURI() );
 			_Session.pageEnd();
 
-		} catch (cfmAbortException ACF) {
+		} catch ( cfmAbortException ACF ) {
 			// Do nothing. Don't print anything out to the Session
 			_Session.pageEnd();
-		} catch (cfmBadFileException BF) {
+		} catch ( cfmBadFileException BF ) {
 
-			try{ _Session.setStatus( 404, "Not Found" ); }catch(Exception ignore){}
+			try {
+				_Session.setStatus( 404, "Not Found" );
+			} catch ( Exception ignore ) {}
 			if ( defaultExceptionHandling )
-				BF.handleException(svrFile, _Session);
-			
+				BF.handleException( svrFile, _Session );
+
 			// If we are instrumenting this request, then we want to use that and disable any other plugin that maybe used
 			if ( journalSession != null )
-				journalSession.requestBadFileException(BF, _Session);
-			else if( thisInstance.requestListener != null )
+				journalSession.requestBadFileException( BF, _Session );
+			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestBadFileException( BF, _Session );
 
 
-		} catch (cfmRunTimeException CF) {
+		} catch ( cfmRunTimeException CF ) {
 
-			try{ _Session.setStatus( 500, CF.getMessageThenDetail() ); }catch(Exception ignore){}
+			try {
+				_Session.setStatus( 500, CF.getMessageThenDetail() );
+			} catch ( Exception ignore ) {}
 
 			if ( defaultExceptionHandling )
-				CF.handleException(_Session);
+				CF.handleException( _Session );
 
-			
+
 			// If we are instrumenting this request, then we want to use that and disable any other plugin that maybe used
 			if ( journalSession != null )
-				journalSession.requestRuntimeException(CF, _Session);
+				journalSession.requestRuntimeException( CF, _Session );
 			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestRuntimeException( CF, _Session );
 
-		} catch (Throwable E) {
+		} catch ( Throwable E ) {
 			com.nary.Debug.printStackTrace( E );
-			try{ _Session.setStatus( 500, E.getMessage() ); }catch(Exception ignore){}
+			try {
+				_Session.setStatus( 500, E.getMessage() );
+			} catch ( Exception ignore ) {}
 			if ( defaultExceptionHandling )
-				new cfmRunTimeException(_Session, E).handleException(_Session);
+				new cfmRunTimeException( _Session, E ).handleException( _Session );
 		} finally {
 
 			// If we are instrumenting this request, then we want to use that and disable any other plugin that maybe used
 			if ( journalSession != null )
-				journalSession.requestEnd(_Session);
+				journalSession.requestEnd( _Session );
 			else if ( thisInstance.requestListener != null )
 				thisInstance.requestListener.requestEnd( _Session );
 
@@ -1160,13 +1212,15 @@ public class cfEngine extends Object implements cfEngineMBean {
 		}
 	}
 
+
 	/*
 	 * Starts the tracking of request stats
 	 */
 	public void startRequestStats() {
 		if ( avgTracker == null )
-			avgTracker = new AverageTracker("cfEngine");
+			avgTracker = new AverageTracker( "cfEngine" );
 	}
+
 
 	/*
 	 * Stops the tracking of request stats
@@ -1175,88 +1229,106 @@ public class cfEngine extends Object implements cfEngineMBean {
 		avgTracker = null;
 	}
 
+
 	public AverageTracker getRequestStats() {
 		return avgTracker;
 	}
 
-	public void registerRequestListener( RequestListener _requestListener){
+
+	public void registerRequestListener( RequestListener _requestListener ) {
 		requestListener = _requestListener;
 	}
 
-	public RequestListener getRequestListener(){
+
+	public RequestListener getRequestListener() {
 		return requestListener;
 	}
 
-	public void removeRequestListener(){
+
+	public void removeRequestListener() {
 		requestListener = null;
 	}
 
+
 	@Override
-	public long getTotalRequests(){
+	public long getTotalRequests() {
 		return totalRequests;
 	}
 
+
 	@Override
-	public long getCurrentRequests(){
+	public long getCurrentRequests() {
 		return ( avgTracker != null ) ? avgTracker.getActiveCount() : -1;
 	}
 
+
 	@Override
-	public long getAverageRequestTime(){
+	public long getAverageRequestTime() {
 		return ( avgTracker != null ) ? avgTracker.getAverage() : -1;
 	}
 
+
 	@Override
-	public long getMaxRequestTime(){
+	public long getMaxRequestTime() {
 		return ( avgTracker != null ) ? avgTracker.getMax() : -1;
 	}
 
+
 	@Override
-	public long getMinRequestTime(){
+	public long getMinRequestTime() {
 		return ( avgTracker != null ) ? avgTracker.getMin() : -1;
 	}
 
+
 	@Override
-	public long getFreeMemory(){
+	public long getFreeMemory() {
 		return Runtime.getRuntime().freeMemory();
 	}
 
+
 	@Override
-	public long getTotalMemory(){
+	public long getTotalMemory() {
 		return Runtime.getRuntime().totalMemory();
 	}
 
+
 	@Override
-	public long getTotalBytesSent(){
+	public long getTotalBytesSent() {
 		return totalBytesSent;
 	}
 
+
 	@Override
-	public String getStartTime(){
+	public String getStartTime() {
 		return new cfDateData( startTime ).getString();
 	}
 
+
 	@Override
-	public int getFunctionCount(){
+	public int getFunctionCount() {
 		return expressionEngine.getTotalFunctions();
 	}
 
-	public static String getWebResourcePath(){
+
+	public static String getWebResourcePath() {
 		return thisInstance.webResourcePath;
 	}
 
+
 	@Override
-	public int getTagCount(){
+	public int getTagCount() {
 		return TagChecker.getTotalTags();
 	}
 
+
 	@Override
-	public String getProductVersion(){
+	public String getProductVersion() {
 		return PRODUCT_VERSION;
 	}
 
+
 	@Override
-	public String getBuildVersion(){
+	public String getBuildVersion() {
 		return BUILD_ISSUE;
 	}
 
@@ -1266,7 +1338,7 @@ public class cfEngine extends Object implements cfEngineMBean {
 	 *
 	 * @param l
 	 */
-	public static void log( String l ){
-		thisPlatform.log(l);
+	public static void log( String l ) {
+		thisPlatform.log( l );
 	}
 }

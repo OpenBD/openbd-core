@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- fixed #12:  RPC Method with formurlmaintaincase
 - fixed thread() script null pointer
 - Updated the indexes for the Mongo Session managemenet
 - fixed #7: cfcontent Remote S3 gives Internal Server Error
