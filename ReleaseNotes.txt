@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- added "JsonFileRead()" function
 - Joda Library updated to 2.8.1 for AWS time bug [/WEB-INF/lib/ updated]
 - fixed #12:  RPC Method with formurlmaintaincase
 - fixed thread() script null pointer

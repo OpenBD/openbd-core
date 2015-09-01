@@ -607,6 +607,8 @@ public class registerTagsExpressions extends java.lang.Object {
 		functions.put( "httpdump", 										"com.naryx.tagfusion.expression.function.system.httpDump" );
 		functions.put( "getjournaldirectory", 				"com.naryx.tagfusion.expression.function.getJournalDirectory" );
 
+		functions.put( "jsonfileread", 								"com.naryx.tagfusion.expression.function.string.JsonFileRead" );
+
 		cfEngine.thisPlatform.registerFunctions(functions);
   }
 }
