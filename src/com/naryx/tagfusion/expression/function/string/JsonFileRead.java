@@ -142,7 +142,7 @@ public class JsonFileRead extends functionBase {
 
 
 		// We must read the file and put it into the cache
-		String lockname	= org.aw20.security.MD5.getDigest( srcFile.toString() );
+		String lockname	= "lock" + org.aw20.security.MD5.getDigest( srcFile.toString() );
 
 		cfLockingObject lock = cfLOCK.getLock( _session, lockname );
 		try {
