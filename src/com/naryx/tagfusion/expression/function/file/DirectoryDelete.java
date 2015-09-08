@@ -42,93 +42,99 @@ import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.cfm.file.vfs.cfVFSData;
 import com.naryx.tagfusion.expression.function.functionBase;
 
-public class DirectoryDelete extends functionBase {
-  private static final long serialVersionUID = 1L;
 
-  public DirectoryDelete(){ 
-  	min = 1; max = 5;
-  	setNamedParams( new String[]{ "path", "recurse" } );
-  }
-  
-	public String[] getParamInfo(){
-		return new String[]{
-			"the path of the directory to delete",
-			"whether it should delete all the sub-directories"
+public class DirectoryDelete extends functionBase {
+
+	private static final long serialVersionUID = 1L;
+
+
+	public DirectoryDelete() {
+		min = 1;
+		max = 2;
+		setNamedParams( new String[] { "path", "recurse" } );
+	}
+
+
+	public String[] getParamInfo() {
+		return new String[] {
+				"the path of the directory to delete",
+				"whether it should delete all the sub-directories"
 		};
 	}
-	
-	public java.util.Map getInfo(){
+
+
+	public java.util.Map getInfo() {
 		return makeInfo(
-				"file", 
-				"For the given directory deletes the contents of the file", 
+				"file",
+				"For the given directory deletes the contents of the file",
 				ReturnType.BOOLEAN );
 	}
 
-	
-	public cfData execute(cfSession _session, cfArgStructData argStruct) throws cfmRunTimeException {
-  	String inFile	= getNamedStringParam(argStruct, "path", null );
-  	if ( inFile == null )
-  		throwException(_session, "invalid 'directory' attribute");
-  	
 
-  	cfVFSData vfsData = null;
-  	try{
-  		vfsData	= new cfVFSData( inFile );
-  		
-  		if ( !vfsData.isNative() ){
-  			
-  			vfsData.getFileObject().delete();
-    		
-  		}else{
-  			
-  			boolean recurse	= getNamedBooleanParam(argStruct, "recurse", false );
-  			deleteDirectory( vfsData.getFile(), recurse );
-  			
-  		}
+	public cfData execute( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		String inFile = getNamedStringParam( argStruct, "path", null );
+		if ( inFile == null )
+			throwException( _session, "invalid 'directory' attribute" );
 
-  	}catch(Exception e){
-  		throwException( _session, "File [" + inFile + "] caused an error (" + e.getMessage() + ")" );
-  		return cfBooleanData.FALSE;
-  	}finally{
-  		
-  		if ( vfsData != null ){
-  			try{
-  				vfsData.close();
-  			}catch(Exception e){}
-  		}
-  	}
-  	
-  	return cfBooleanData.TRUE;
-  }
-	
-	
-	
-	public static void deleteDirectory( File directory, boolean recurse ) throws Exception{
-		
+
+		cfVFSData vfsData = null;
+		try {
+			vfsData = new cfVFSData( inFile );
+
+			if ( !vfsData.isNative() ) {
+
+				vfsData.getFileObject().delete();
+
+			} else {
+
+				boolean recurse = getNamedBooleanParam( argStruct, "recurse", false );
+				deleteDirectory( vfsData.getFile(), recurse );
+
+			}
+
+		} catch ( Exception e ) {
+			throwException( _session, "File [" + inFile + "] caused an error (" + e.getMessage() + ")" );
+			return cfBooleanData.FALSE;
+		} finally {
+
+			if ( vfsData != null ) {
+				try {
+					vfsData.close();
+				} catch ( Exception e ) {}
+			}
+		}
+
+		return cfBooleanData.TRUE;
+	}
+
+
+	public static void deleteDirectory( File directory, boolean recurse ) throws Exception {
+
 		if ( !directory.exists() || !directory.isDirectory() || !directory.canWrite() )
-			throw new Exception("invalid directory: " + directory );
-		
-		if (recurse) {
-			recursiveDelete(directory);
+			throw new Exception( "invalid directory: " + directory );
+
+		if ( recurse ) {
+			recursiveDelete( directory );
 			directory.delete();
 		} else {
 			File[] files = directory.listFiles();
-			if ((files == null) || (files.length == 0))
+			if ( ( files == null ) || ( files.length == 0 ) )
 				directory.delete();
 			else
-				throw new Exception("The directory " + directory + " cannot be deleted because it is not empty and RECURSE is set to NO");
+				throw new Exception( "The directory " + directory + " cannot be deleted because it is not empty and RECURSE is set to NO" );
 		}
-		
+
 	}
-	
-	private static void recursiveDelete(File _toDelete) {
+
+
+	private static void recursiveDelete( File _toDelete ) {
 		File[] files = _toDelete.listFiles();
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isDirectory()) { // delete contents of dir first
-				recursiveDelete(files[i]);
+		for ( int i = 0; i < files.length; i++ ) {
+			if ( files[i].isDirectory() ) { // delete contents of dir first
+				recursiveDelete( files[i] );
 			}
 			files[i].delete();
 		}
 	}
-	
+
 }
