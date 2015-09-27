@@ -41,7 +41,6 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jempbox-1.6.0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jericho-html-3.1.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jfreechart-1.0.1.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/joda-time-2.2.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jsoup-1.6.2.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jtds-1.2.5.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jtidy-r938.jar"/>
@@ -53,7 +52,6 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mail.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mailet_1_0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/markdown4j-2.2.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongo-java-driver-2.12.0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mysql-connector-java-5.1.26-bin.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/ojdbc14.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/postgresql-8.4-701.jdbc4.jar"/>
@@ -78,5 +76,7 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/yuicompressor-2.4.6.jar"/>
 	<classpathentry kind="lib" path="build/lib/activation.jar"/>
 	<classpathentry kind="lib" path="build/lib/servlet-api-2.4.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/joda-time-2.8.1.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongo-java-driver-3.0.4.jar"/>
 	<classpathentry kind="output" path="webapp/WEB-INF/classes"/>
 </classpath>

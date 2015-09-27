@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2000 - 2013 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 TagServlet Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *
@@ -25,13 +25,12 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *
  *  http://openbd.org/
- *  $Id: MongoClientWrapper.java 2416 2013-11-06 16:54:56Z alan $
  */
 package com.bluedragon.mongo;
 
 import com.bluedragon.plugin.PluginManager;
-import com.mongodb.DB;
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
 
 
 public class MongoClientWrapper extends Object {
@@ -61,7 +60,7 @@ public class MongoClientWrapper extends Object {
 		return usageCount;
 	}
 
-	public DB	getDB(String dbname){
-		return this.mongoclient.getDB( dbname );
+	public MongoDatabase	getDatabase(String dbname){
+		return this.mongoclient.getDatabase( dbname );
 	}
 }

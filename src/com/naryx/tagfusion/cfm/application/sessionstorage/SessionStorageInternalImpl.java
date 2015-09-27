@@ -124,4 +124,7 @@ public class SessionStorageInternalImpl extends SessionStorageBase implements Se
 		cfSessionStore.clear();
 	}
 	
+	public String getURI(){
+		return null;
+	}
 }

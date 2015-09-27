@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2012 TagServlet Ltd
+ *  Copyright (C) 2012-2015 TagServlet Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,7 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  $Id: SessionStorageFactory.java 2131 2012-06-27 19:02:26Z alan $
  */
 package com.naryx.tagfusion.cfm.application.sessionstorage;
 
@@ -35,91 +34,88 @@ import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 public class SessionStorageFactory {
 
 	public enum SessionEngine {
-		NONE,
-  	INTERNAL,
-  	J2EE,
-  	MONGO,
-  	MEMCACHED
-  };
-	
-	public static SessionStorageInterface	NULL_STORAGESESSION	= new SessionStorageNullImpl();
-	
+		NONE, INTERNAL, J2EE, MONGO, MEMCACHED
+	};
 
-	public static SessionStorageInterface	createStorage( String appName, SessionStorageInterface sessionStorage, boolean bSessionManagement, boolean bJ2EESessionManagement, String storage ) throws cfmRunTimeException {
-	
-		if ( !bSessionManagement ){
-			
-			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.NONE )
-				return null;
-			else{
-				
-				if ( sessionStorage != null )
+	public static SessionStorageInterface NULL_STORAGESESSION = new SessionStorageNullImpl();
+
+	public static SessionStorageInterface createStorage(String appName, SessionStorageInterface sessionStorage, boolean bSessionManagement, boolean bJ2EESessionManagement, String storage) throws cfmRunTimeException {
+
+		if (!bSessionManagement) {
+
+			if (sessionStorage != null && sessionStorage.getType() == SessionEngine.NONE)
+				return sessionStorage;
+			else {
+
+				if (sessionStorage != null)
 					sessionStorage.shutdown();
-				
+
 				return NULL_STORAGESESSION;
 			}
-			
-		} else if ( bJ2EESessionManagement ){
-			
-			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.J2EE )
-				return null;
-			else{
-				
-				if ( sessionStorage != null )
+
+		} else if (storage != null) {
+
+			if (storage.startsWith("mongo")) {
+
+				if (sessionStorage != null && sessionStorage.getType() == SessionEngine.MONGO && sessionStorage.getURI().equals(storage))
+					return sessionStorage;
+				else {
+
+					if (sessionStorage != null)
+						sessionStorage.shutdown();
+
+					try {
+						return new SessionStorageMongoImpl(appName, storage);
+					} catch (Exception e) {
+						throw new cfmRunTimeException(catchDataFactory.generalException("SessionStorageFactory", e.getMessage()));
+					}
+				}
+
+			} else if (storage.startsWith("memcached://")) {
+
+				if (sessionStorage != null && sessionStorage.getType() == SessionEngine.MEMCACHED && sessionStorage.getURI().equals(storage))
+					return sessionStorage;
+				else {
+
+					if (sessionStorage != null)
+						sessionStorage.shutdown();
+
+					try {
+						return new SessionStorageMemcachedImpl(appName, storage);
+					} catch (Exception e) {
+						throw new cfmRunTimeException(catchDataFactory.generalException("SessionStorageFactory", e.getMessage()));
+					}
+				}
+
+			} else
+				throw new cfmRunTimeException(catchDataFactory.generalException("SessionStorageFactory", "unknown storage: [" + storage + "]"));
+
+		} else if (bJ2EESessionManagement) {
+
+			if (sessionStorage != null && sessionStorage.getType() == SessionEngine.J2EE)
+				return sessionStorage;
+			else {
+
+				if (sessionStorage != null)
 					sessionStorage.shutdown();
-				
+
 				return new SessionStorageJ2EEImpl(appName);
 			}
-			
-		} else if ( storage == null ){
-			
-			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.INTERNAL )
-				return null;
-			else{
-				
-				if ( sessionStorage != null )
-					sessionStorage.shutdown();
-				
-				return new SessionStorageInternalImpl(appName);
-			}
-			
-		} else if ( storage.startsWith("mongo://") ) {
-		
-			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.MONGO )
-				return null;
-			else{
-				
-				if ( sessionStorage != null )
-					sessionStorage.shutdown();
-				
-				try{
-					return new SessionStorageMongoImpl(appName, storage);
-				}catch( Exception e){
-					throw new cfmRunTimeException( catchDataFactory.generalException("SessionStorageFactory", e.getMessage()) );
-				}
-			}
 
-			
-		} else if ( storage.startsWith("memcached://") ) {
-		
-			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.MEMCACHED )
-				return null;
-			else{
-				
-				if ( sessionStorage != null )
+		} else {
+
+			if (sessionStorage != null && sessionStorage.getType() == SessionEngine.INTERNAL)
+				return sessionStorage;
+			else {
+
+				if (sessionStorage != null)
 					sessionStorage.shutdown();
-				
-				try{
-					return new SessionStorageMemcachedImpl(appName, storage);
-				}catch( Exception e){
-					throw new cfmRunTimeException( catchDataFactory.generalException("SessionStorageFactory", e.getMessage()) );
-				}
+
+				return new SessionStorageInternalImpl(appName);
 			}
 
 		}
-		
-		
-		return null;
+
 	}
-	
+
 }

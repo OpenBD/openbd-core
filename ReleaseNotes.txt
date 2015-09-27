@@ -5,6 +5,9 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- updated Mongo Driver 3.0.4 [/WEB-INF/lib/ updated]
+  - updated session management to include mongodb:// support
+  - improved performance with sessionstorage
 - fixed DirectoryDelete max arguments validation
 - added "JsonFileRead()" function
 - Joda Library updated to 2.8.1 for AWS time bug [/WEB-INF/lib/ updated]

@@ -63,4 +63,6 @@ public interface SessionStorageInterface {
 	public SessionStorageFactory.SessionEngine	getType();
 	
 	public void shutdown();
+	
+	public String getURI();
 }
