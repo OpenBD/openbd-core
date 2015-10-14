@@ -32,8 +32,9 @@ package com.bluedragon.vision.engine;
 import java.util.Iterator;
 import java.util.List;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
+import com.mongodb.client.MongoCollection;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfComponentData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -335,7 +336,7 @@ public class VisionLiveSession implements debuggerListener, debugRecorder {
 
 	@Override
 	public void execStoredProc(String datasourceName, String callString, String procName, long execTime) {}
-	public void execMongo( DBCollection col, String action, DBObject qry, long execTime ){}
+	public void execMongo( MongoCollection<Document> col, String action, Document qry, long execTime ){}
 
 	public final void startScriptFunction(userDefinedFunction userDefinedFunction) {}
 	public final void endScriptFunction(userDefinedFunction userDefinedFunction) {}

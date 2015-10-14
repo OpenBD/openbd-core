@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,14 +25,14 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionRemove.java 1770 2011-11-05 11:50:08Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -42,19 +42,18 @@ import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 public class MongoCollectionRemove extends MongoCollectionInsert {
 	private static final long serialVersionUID = 1L;
 
-	public MongoCollectionRemove(){  min = 3; max = 4; setNamedParams( new String[]{ "datasource", "collection", "query", "writeconcern" } ); }
+	public MongoCollectionRemove(){  min = 3; max = 3; setNamedParams( new String[]{ "datasource", "collection", "query" } ); }
   
 	public String[] getParamInfo(){
 		return new String[]{
 			"datasource name.  Name previously created using MongoRegister",
 			"collection name",
-			"query to run. Can be a single structure, or a JSON string (which will be converted to a structure via Mongo)",
-			"the mode to save the data: FSYNC_SAFE, JOURNAL_SAFE, MAJORITY, NONE, NORMAL (default), REPLICAS_SAFE, SAFE"
+			"query to run. Can be a single structure, or a JSON string (which will be converted to a structure via Mongo)"
 		};
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Removes the objects that this query will find", 
@@ -63,7 +62,7 @@ public class MongoCollectionRemove extends MongoCollectionInsert {
 	
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -73,17 +72,10 @@ public class MongoCollectionRemove extends MongoCollectionInsert {
 		if ( query == null )
 			throwException(_session, "please specify query to remove");
 		
-		String writeconcern	= getNamedStringParam(argStruct, "writeconcern", null );
-		
 		try{
 			
-			DBCollection col = db.getCollection(collection);
-				
-			if ( writeconcern == null )
-				col.remove( convertToDBObject(query) );
-			else
-				col.remove( convertToDBObject(query), getConcern(writeconcern) );
-
+			MongoCollection<Document> col = db.getCollection(collection);
+			col.deleteMany( getDocument(query) );
 			return cfBooleanData.TRUE;
 
 		} catch (MongoException me){

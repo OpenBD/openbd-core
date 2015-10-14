@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,22 +25,15 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionGroup.java 1770 2011-11-05 11:50:08Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
-import com.naryx.tagfusion.cfm.tag.tagUtils;
 
-public class MongoCollectionGroup extends MongoCollectionInsert {
+public class MongoCollectionGroup extends MongoCollectionList {
 	private static final long serialVersionUID = 1L;
 
 	public MongoCollectionGroup(){  min = 6; max = 7; setNamedParams( new String[]{ "datasource", "collection", "key", "cond", "reduce", "initial", "finalize" } ); }
@@ -57,55 +50,16 @@ public class MongoCollectionGroup extends MongoCollectionInsert {
 		};
 	}
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String, String> getInfo(){
 		return makeInfo(
 				"mongo", 
-				"Runs a Group command", 
+				"no longer supported, use MongoCollectionAggregator()", 
 				ReturnType.STRUCTURE );
 	}
 	
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
-		
-		String collection	= getNamedStringParam(argStruct, "collection", null);
-		if ( collection == null )
-			throwException(_session, "please specify a collection");
-		
-		cfData key	= getNamedParam(argStruct, "key", null );
-		if ( key == null )
-			throwException(_session, "please specify a key");
-		
-		cfData cond	= getNamedParam(argStruct, "cond", null );
-		if ( cond == null )
-			throwException(_session, "please specify a cond");
-		
-		cfData initial	= getNamedParam(argStruct, "initial", null );
-		if ( initial == null )
-			throwException(_session, "please specify a initial");
-		
-		String reduce	= getNamedStringParam(argStruct, "reduce", null );
-		if ( reduce == null )
-			throwException(_session, "please specify a reduce");
-		
-		String finalize	= getNamedStringParam(argStruct, "finalize", null );
-		
-		try{
-			
-			DBCollection col = db.getCollection(collection);
-			
-			DBObject	result;
-			
-			if ( finalize != null )
-				result = col.group( convertToDBObject(key), convertToDBObject(cond), convertToDBObject(initial), reduce, finalize);
-			else
-				result = col.group( convertToDBObject(key), convertToDBObject(cond), convertToDBObject(initial), reduce );
-
-			return tagUtils.convertToCfData( result );
-
-		} catch (MongoException me){
-			throwException(_session, me.getMessage());
-			return null;
-		}
+		throwException(_session, "no longer supported, use MongoCollectionAggregator()");
+		return null;
 	}
 }

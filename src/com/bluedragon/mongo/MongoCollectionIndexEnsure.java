@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2014 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,14 +25,11 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionIndexEnsure.java 2426 2014-03-30 18:53:18Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.IndexOptions;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -55,7 +52,7 @@ public class MongoCollectionIndexEnsure extends MongoDatabaseList {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String, String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Ensures the given index for the collection exists, or creates it if not",
@@ -64,7 +61,7 @@ public class MongoCollectionIndexEnsure extends MongoDatabaseList {
 	
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
 			throwException(_session, "please specify a 'collection' parameter");
@@ -77,12 +74,10 @@ public class MongoCollectionIndexEnsure extends MongoDatabaseList {
 		if ( index == null )
 			throwException(_session, "please specify 'index' parameter");
 		
-		DBObject	options	= new BasicDBObject()
-			.append( "name", index )
-			.append( "unique", getNamedBooleanParam(argStruct, "unique", false) );
-		
 		try{
-			db.getCollection(collection).createIndex( convertToDBObject(keys), options );
+
+			db.getCollection( collection ).createIndex( getDocument(keys), new IndexOptions().background( true ).unique( getNamedBooleanParam(argStruct, "unique", false) ) );
+
 			return cfBooleanData.TRUE;
 		} catch (Exception me){
 			throwException(_session, me.getMessage());

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2000 - 2015 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *

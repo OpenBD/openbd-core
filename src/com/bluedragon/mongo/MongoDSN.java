@@ -126,6 +126,10 @@ public class MongoDSN extends Object {
 		return mdb;
 	}
 	
+	public MongoClient getClient(){
+		return mongoclient;
+	}
+	
 	
 	public static MongoClient	newClient(String server, String user, String pass, String db) throws UnknownHostException{
 	

@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,16 +25,15 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionMapReduce.java 1770 2011-11-05 11:50:08Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MapReduceCommand;
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.MapReduceAction;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -59,25 +58,16 @@ public class MongoCollectionMapReduce extends MongoCollectionInsert {
 		};
 	}
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String, String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Runs a Map Reduce command", 
 				ReturnType.BOOLEAN );
 	}
-	
-	private MapReduceCommand.OutputType getType(String s){
-		if ( s.equalsIgnoreCase("MERGE") )
-			return MapReduceCommand.OutputType.MERGE;
-		else if ( s.equalsIgnoreCase("REDUCE") )
-			return MapReduceCommand.OutputType.REDUCE;
-		else
-			return MapReduceCommand.OutputType.REPLACE;
-	}
-	
+		
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -95,29 +85,25 @@ public class MongoCollectionMapReduce extends MongoCollectionInsert {
 		if ( outputcollection == null )
 			throwException(_session, "please specify a outputcollection");
 		
-		String type			= getNamedStringParam(argStruct, "type", "REPLACE" );
+		String action		= getNamedStringParam(argStruct, "type", "replace" ).toLowerCase();
 		String finalize	= getNamedStringParam(argStruct, "finalize", null );
 		cfData	query		= getNamedParam(argStruct, "query", null );
 		
 		try{
+			MapReduceIterable<Document>	mi	= db.getCollection( collection ).mapReduce( map, reduce );
 			
-			DBCollection col = db.getCollection(collection);
-			
-			DBObject	queryDB	= null;
 			if ( query != null )
-				queryDB	= convertToDBObject(query);
-			
-			MapReduceCommand	mrc	= new MapReduceCommand( col,
-																										map,
-																										reduce,
-																										outputcollection,
-																										getType(type),
-																										queryDB );
+				mi.filter( getDocument( query ) );
 			
 			if ( finalize != null )
-				mrc.setFinalize(finalize);
+				mi.finalizeFunction( finalize );
 			
-			col.mapReduce(mrc);
+			mi.collectionName( outputcollection );
+			mi.action( MapReduceAction.valueOf( action ) );
+			
+			
+			// Kick start the map reduce
+			mi.first();
 			
 			return cfBooleanData.TRUE;
 

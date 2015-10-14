@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,74 +25,76 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionSave.java 2343 2013-03-12 01:41:47Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
+import org.bson.Document;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 
-public class MongoCollectionSave extends MongoCollectionInsert {
+
+public class MongoCollectionSave extends MongoCollectionList {
+
 	private static final long serialVersionUID = 1L;
 
-	public MongoCollectionSave(){  min = 3; max = 4; setNamedParams( new String[]{ "datasource", "collection", "data", "writeconcern" } ); }
-  
-	public String[] getParamInfo(){
-		return new String[]{
-			"datasource name.  Name previously created using MongoRegister",
-			"collection name",
-			"data to save into the collection.  Can be a single structure, or a JSON string (which will be converted to a structure via Mongo)",
-			"the mode to save the data: FSYNC_SAFE, JOURNAL_SAFE, MAJORITY, NONE, NORMAL (default), REPLICAS_SAFE, SAFE"
+
+	public MongoCollectionSave() {
+		min = max = 3;
+		setNamedParams( new String[] { "datasource", "collection", "data" } );
+	}
+
+
+	public String[] getParamInfo() {
+		return new String[] {
+				"datasource name.  Name previously created using MongoRegister",
+				"collection name",
+				"data to save into the collection.  Can be a single structure, or a JSON string (which will be converted to a structure via Mongo)"
 		};
 	}
-	
-	
-	public java.util.Map getInfo(){
+
+
+	public java.util.Map<String, String> getInfo() {
 		return makeInfo(
-				"mongo", 
-				"Saves the object into mongo, doing an INSERT or an UPDATE depending on the existence of _id", 
+				"mongo",
+				"Saves the object into mongo, doing an INSERT or an UPDATE depending on the existence of _id",
 				ReturnType.BOOLEAN );
 	}
-	
-	
-	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
-		
-		String collection	= getNamedStringParam(argStruct, "collection", null);
-		if ( collection == null )
-			throwException(_session, "please specify a collection");
-		
-		cfData	data	= getNamedParam(argStruct, "data", null );
-		if ( data == null )
-			throwException(_session, "please specify data to save");
-		
-		String writeconcern	= getNamedStringParam(argStruct, "writeconcern", null );
-		
-		try{
-			
-			DBCollection col = db.getCollection(collection);
-			DBObject qry = convertToDBObject(data);
-			long start = System.currentTimeMillis();
-			
-			if ( writeconcern == null )
-				col.save( qry );
-			else
-				col.save( qry, getConcern(writeconcern) );
 
-			_session.getDebugRecorder().execMongo(col, "save", qry, System.currentTimeMillis()-start);
-			
+
+	public cfData execute( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		MongoDatabase db = getMongoDatabase( _session, argStruct );
+
+		String collection = getNamedStringParam( argStruct, "collection", null );
+		if ( collection == null )
+			throwException( _session, "please specify a collection" );
+
+		cfData data = getNamedParam( argStruct, "data", null );
+		if ( data == null )
+			throwException( _session, "please specify data to save" );
+
+		try {
+			Document doc = getDocument( data );
+			MongoCollection<Document> col = db.getCollection( collection );
+			long start = System.currentTimeMillis();
+
+			if ( doc.containsKey( "_id" ) ) {
+				col.updateOne( new Document( "_id", doc.get( "_id" ) ), new Document("$set",doc) );
+			} else {
+				col.insertOne( doc );
+			}
+
+			_session.getDebugRecorder().execMongo( col, "save", doc, System.currentTimeMillis() - start );
+
 			return cfBooleanData.TRUE;
 
-		} catch (MongoException me){
-			throwException(_session, me.getMessage());
+		} catch ( Exception me ) {
+			throwException( _session, me.getMessage() );
 			return null;
 		}
 	}

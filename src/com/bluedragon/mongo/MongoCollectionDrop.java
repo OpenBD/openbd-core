@@ -30,8 +30,8 @@
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -50,26 +50,22 @@ public class MongoCollectionDrop extends MongoDatabaseList {
 		};
 	}
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
-				"Drops the given collection if it exists.  Returns true if it was found and dropped", 
+				"Drops the given collection if it exists.  Returns true", 
 				ReturnType.BOOLEAN );
 	}
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
 			throwException(_session, "please specify a collection");
 		
 		try{
-			if ( !db.collectionExists(collection) ){
-				return cfBooleanData.FALSE;
-			}else{
-				db.getCollection(collection).drop();
-				return cfBooleanData.TRUE;
-			}
+			db.getCollection(collection).drop();
+			return cfBooleanData.TRUE;
 		} catch (MongoException me){
 			throwException(_session, me.getMessage());
 			return null;

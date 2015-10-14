@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2013 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoRegister.java 2325 2013-02-09 19:07:29Z alan $
  */
 package com.bluedragon.mongo;
 
@@ -54,7 +52,7 @@ public class MongoRegister extends functionBase {
 		};
 	}
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Creates a new datasource for Mongo, to be referenced using the 'name' by the other Mongo functions.  If already exists an exception will be thrown.  If the connection has not been used within 5minutes it will be automatically closed and reopened on the next time it is called upon", 

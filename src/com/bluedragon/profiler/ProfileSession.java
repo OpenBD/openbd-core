@@ -34,8 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
+import com.mongodb.client.MongoCollection;
 import com.naryx.tagfusion.cfm.engine.cfCatchData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfEngine;
@@ -59,9 +60,11 @@ public class ProfileSession extends Object implements debugRecorder {
 	private cfSession session;
 	private long startTime;
 	private int 	countQuery = 0, countMongo = 0, countException = 0;
+	@SuppressWarnings( "rawtypes" )
 	private List<Map>	listMap;
 
 	
+	@SuppressWarnings( "rawtypes" )
 	public ProfileSession( cfSession session ){
 		this.session 		= session;
 		this.startTime	= System.currentTimeMillis();
@@ -115,6 +118,7 @@ public class ProfileSession extends Object implements debugRecorder {
 		}
 	}
 	
+	@SuppressWarnings( "rawtypes" )
 	@Override
 	public void endRequest() {
 		Map<String,Object>	requestM = new HashMap<String,Object>();
@@ -180,13 +184,14 @@ public class ProfileSession extends Object implements debugRecorder {
 		listMap.add(m);
 	}
 	
-	public void execMongo( DBCollection col, String action, DBObject qry, long execTime ){
+	@Override
+	public void execMongo( MongoCollection<Document> col, String action, Document qry, long execTime ) {
 		Map<String,Object>	m = new HashMap<String,Object>();
 		
 		m.put("ms", 		execTime );
 		m.put("action",	action );
-		m.put("col", 		col.getName() );
-		m.put("db",			col.getDB().getName() );
+		m.put("col", 		col.getNamespace().getCollectionName() );
+		m.put("db",			col.getNamespace().getDatabaseName() );
 
 		if ( qry != null )
 			m.put("qry", qry.toString() );

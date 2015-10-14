@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,17 +25,18 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionFind.java 2343 2013-03-12 01:41:47Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import java.util.Map;
+
+import org.bson.Document;
+
+import com.mongodb.Block;
 import com.mongodb.MongoException;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -60,7 +61,7 @@ public class MongoCollectionFind extends MongoCollectionInsert {
 		};
 	}
 
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Performs a query against Mongo returning back an array of structures of the documents matching the query", 
@@ -68,7 +69,7 @@ public class MongoCollectionFind extends MongoCollectionInsert {
 	}
 
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -84,21 +85,21 @@ public class MongoCollectionFind extends MongoCollectionInsert {
 		cfData fields	= getNamedParam(argStruct, 		"fields", null );
 		
 		try{
-			DBCollection col = db.getCollection(collection);
+			MongoCollection<Document> col = db.getCollection(collection);
 
 			// Get the initial cursor
-			DBCursor	cursor;
+			FindIterable<Document>	cursor;
 			long start = System.currentTimeMillis();
-			DBObject qry = convertToDBObject(query);
+			Document qry = getDocument(query);
+			
+			cursor = col.find( qry );
 			
 			if ( fields != null )
-				cursor = col.find( qry, convertToDBObject(fields) );
-			else
-				cursor = col.find( qry, new BasicDBObject() );
-			
+				cursor = cursor.projection( getDocument(fields) );
+	
 			// Are we sorting?
 			if ( sort != null )
-				cursor	= cursor.sort( convertToDBObject(sort) );
+				cursor	= cursor.sort( getDocument(sort) );
 			
 			// Are we limiting
 			if ( skip != -1 )
@@ -110,10 +111,18 @@ public class MongoCollectionFind extends MongoCollectionInsert {
 
 			// Now we can run the query
 			cfArrayData	results	= cfArrayData.createArray(1);
-			while ( cursor.hasNext() ){
-				results.addElement( tagUtils.convertToCfData(cursor.next().toMap()) );
-			}
+			
+			cursor.forEach( new Block<Document>() {
 
+				@SuppressWarnings( "rawtypes" )
+				@Override
+				public void apply( final Document st ) {
+					try {
+						results.addElement( tagUtils.convertToCfData( (Map)st ) );
+					} catch ( cfmRunTimeException e ) {}
+				}
+			} );
+			
 			_session.getDebugRecorder().execMongo(col, "find", qry, System.currentTimeMillis()-start);
 			
 			return results;

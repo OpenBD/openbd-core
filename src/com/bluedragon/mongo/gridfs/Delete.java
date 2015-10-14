@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: Delete.java 2000 2012-03-25 14:13:44Z alan $
  */
 package com.bluedragon.mongo.gridfs;
 
@@ -60,7 +58,7 @@ public class Delete extends Add {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Deletes a file(s) from the Mongo GridFS bucket.  You can delete specifying either file, _id or a query.", 
@@ -71,7 +69,7 @@ public class Delete extends Add {
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
 		
 		// Get the necessary Mongo references
-		DB			db	= getDataSource(_session, argStruct);
+		DB db	= getDB(_session,argStruct);
 		GridFS	gridfs	= getGridFS(_session, argStruct, db);
 
 
@@ -94,7 +92,7 @@ public class Delete extends Add {
 		// Get the Query
 		cfData mTmp	= getNamedParam(argStruct, "query", null);
 		if ( mTmp != null ){
-			gridfs.remove(convertToDBObject(mTmp));
+			gridfs.remove(getDBObject(mTmp));
 			return cfBooleanData.TRUE;
 		}
 		

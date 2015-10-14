@@ -38,8 +38,9 @@ package com.naryx.tagfusion.util;
  
 import java.util.List;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
+import com.mongodb.client.MongoCollection;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
@@ -81,5 +82,5 @@ public interface debugRecorder{
   public void execOnStart( cfData sqlData );
   public void execOnEnd( cfData sqlData );
 	public void execStoredProc(String datasourceName, String callString, String procName, long execTime);
-	public void execMongo( DBCollection col, String action, DBObject qry, long execTime );
+	public void execMongo( MongoCollection<Document> col, String action, Document qry, long execTime );
 }

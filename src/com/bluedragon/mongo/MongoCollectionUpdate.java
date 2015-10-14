@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,82 +25,90 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionUpdate.java 2343 2013-03-12 01:41:47Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.UpdateOptions;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 
-public class MongoCollectionUpdate extends MongoCollectionInsert {
+
+public class MongoCollectionUpdate extends MongoCollectionList {
+
 	private static final long serialVersionUID = 1L;
 
-	public MongoCollectionUpdate(){  min = 4; max = 7; setNamedParams( new String[]{ "datasource", "collection", "query", "data", "upsert", "multi", "writeconcern" } ); }
-  
-	public String[] getParamInfo(){
-		return new String[]{
-			"datasource name.  Name previously created using MongoRegister",
-			"collection name",
-			"the query to which to find the object to update",
-			"data to save into the collection.  Can be a single structure, or a JSON string (which will be converted to a structure via Mongo)",
-			"if the database should create the element if it does not exist",
-			"if the update should be applied to all objects matching",
-			"the mode to save the data: FSYNC_SAFE, JOURNAL_SAFE, MAJORITY, NONE, NORMAL (default), REPLICAS_SAFE, SAFE"
+
+	public MongoCollectionUpdate() {
+		min = 4;
+		max = 7;
+		setNamedParams( new String[] { "datasource", "collection", "query", "data", "upsert", "multi" } );
+	}
+
+
+	public String[] getParamInfo() {
+		return new String[] {
+				"datasource name.  Name previously created using MongoRegister",
+				"collection name",
+				"the query to which to find the object to update",
+				"data to save into the collection.  Can be a single structure, or a JSON string (which will be converted to a structure via Mongo)",
+				"if the database should create the element if it does not exist",
+				"if the update should be applied to all objects matching"
 		};
 	}
-	
-	public java.util.Map getInfo(){
+
+
+	public java.util.Map<String, String> getInfo() {
 		return makeInfo(
-				"mongo", 
-				"Updates the data in mongo", 
+				"mongo",
+				"Updates the data in mongo",
 				ReturnType.BOOLEAN );
 	}
-	
-	
-	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
-		
-		String collection	= getNamedStringParam(argStruct, "collection", null);
+
+
+	public cfData execute( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		MongoDatabase db = getMongoDatabase( _session, argStruct );
+
+		String collection = getNamedStringParam( argStruct, "collection", null );
 		if ( collection == null )
-			throwException(_session, "please specify a collection");
-		
-		cfData	data	= getNamedParam(argStruct, "data", null );
+			throwException( _session, "please specify a collection" );
+
+		cfData data = getNamedParam( argStruct, "data", null );
 		if ( data == null )
-			throwException(_session, "please specify data to update");
-		
-		cfData	query	= getNamedParam(argStruct, "query", null );
+			throwException( _session, "please specify data to update" );
+
+		cfData query = getNamedParam( argStruct, "query", null );
 		if ( query == null )
-			throwException(_session, "please specify query to update");
-		
-		String writeconcern	= getNamedStringParam(argStruct, "writeconcern", null );
-		boolean upsert	= getNamedBooleanParam(argStruct, "upsert", false );
-		boolean multi		= getNamedBooleanParam(argStruct, "multi", false );
+			throwException( _session, "please specify query to update" );
 
-		try{
-			
-			DBCollection col = db.getCollection(collection);
-			DBObject qry = convertToDBObject(query);
-			long start	= System.currentTimeMillis();
-				
-			if ( writeconcern == null )
-				col.update( qry, convertToDBObject(data), upsert, multi );
+		boolean upsert = getNamedBooleanParam( argStruct, "upsert", false );
+		boolean multi = getNamedBooleanParam( argStruct, "multi", false );
+
+		try {
+
+			MongoCollection<Document> col = db.getCollection( collection );
+			Document qry = getDocument( query );
+			Document dat = getDocument( data );
+			long start = System.currentTimeMillis();
+
+			if ( multi )
+				col.updateMany( qry, dat, new UpdateOptions().upsert( upsert ) );
 			else
-				col.update( qry, convertToDBObject(data), upsert, multi, getConcern(writeconcern) );
+				col.updateOne( qry, dat, new UpdateOptions().upsert( upsert ) );
 
-			_session.getDebugRecorder().execMongo(col, "update", qry, System.currentTimeMillis()-start);
-			
+			_session.getDebugRecorder().execMongo( col, "update", qry, System.currentTimeMillis() - start );
+
 			return cfBooleanData.TRUE;
 
-		} catch (MongoException me){
-			throwException(_session, me.getMessage());
+		} catch ( MongoException me ) {
+			throwException( _session, me.getMessage() );
 			return null;
 		}
 	}

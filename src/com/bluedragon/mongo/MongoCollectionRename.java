@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,13 +25,13 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionRename.java 1770 2011-11-05 11:50:08Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
 import com.mongodb.MongoException;
+import com.mongodb.MongoNamespace;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.RenameCollectionOptions;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -53,7 +53,7 @@ public class MongoCollectionRename extends MongoDatabaseList {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Counts the number of documents in a collection, filtering with the optional query", 
@@ -62,7 +62,7 @@ public class MongoCollectionRename extends MongoDatabaseList {
 	
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -72,11 +72,12 @@ public class MongoCollectionRename extends MongoDatabaseList {
 		if ( name == null )
 			throwException(_session, "please specify a name");
 		
-		boolean droptarget	= getNamedBooleanParam(argStruct, "droptarget", false );
-		
 		try{
 			
-			db.getCollection(collection).rename(name, droptarget);
+			db
+				.getCollection( collection )
+				.renameCollection( new MongoNamespace( db.getName(), name ), new RenameCollectionOptions().dropTarget( getNamedBooleanParam(argStruct, "droptarget", false ) ) );
+
 			return cfBooleanData.TRUE;
 			
 		} catch (MongoException me){

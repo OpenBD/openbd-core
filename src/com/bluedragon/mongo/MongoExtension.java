@@ -136,19 +136,17 @@ public class MongoExtension implements Plugin, RequestListener, SystemClockEvent
 		}
 	}
 
-	public static MongoDatabase	get( String name ) throws Exception {
+	public static MongoDSN	getDSN( String name ) throws Exception {
 		synchronized( dbPool ){
 			MongoDSN	mdsn	= dbPool.get(name.toLowerCase());
 			mdsn.lastUsed = System.currentTimeMillis();
 
 			MongoDatabase	db	= mdsn.getDatabase();
-
 			if ( db == null ){
 				mdsn.open();
-				db = mdsn.getDatabase();
 			}
 
-			return db;
+			return mdsn;
 		}
 	}
 

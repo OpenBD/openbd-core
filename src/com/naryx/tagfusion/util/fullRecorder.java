@@ -44,8 +44,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
+import com.mongodb.client.MongoCollection;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfSession;
@@ -346,6 +347,6 @@ public class fullRecorder implements debugRecorder {
 	public void execStoredProc(String datasourceName, String callString, String procName, long execTime) {
 	}
 	
-	public void execMongo( DBCollection col, String action, DBObject qry, long execTime ){}
+	public void execMongo( MongoCollection<Document> col, String action, Document qry, long execTime ){}
 	
 }
