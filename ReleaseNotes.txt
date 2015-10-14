@@ -5,6 +5,8 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- fixed amazonS3List() to behave as it did prior to switch to using AWS SDK
+- Added support for ISO8601 date/time format in ParseDateTime
 - updated Mongo Driver 3.0.4 [/WEB-INF/lib/ updated]
   - updated session management to include mongodb:// support
   - improved performance with sessionstorage
