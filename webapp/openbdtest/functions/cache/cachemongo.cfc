@@ -37,7 +37,8 @@ function beforeTests() {
 	var cacheProps = {
 	  "type": "mongo",
 	  "server": "127.0.0.1:27017",
-	  "db": "devcahce"
+	  "mongoclienturi": "mongodb://127.0.0.1:27017",
+	  "db": "devcache"
 	};
 
 	cacheRegionNew( "mongotest", cacheProps );
@@ -113,21 +114,6 @@ function testCacheTimespan(){
 	assertTrue( isNull( CacheGet( "id1", "mongotest" ) ) );
 }
 
-
-
-function testCacheIdleSpan(){
-	assertTrue( CacheRegionExists("mongotest") );
-
-	var cacheValue = now();
-
-	CachePut( region="mongotest", id="id1", value=cacheValue, idlespan=CreateTimeSpan(0,0,0,5) );
-
-	assertTrue( !isNull( CacheGet( "id1", "mongotest" ) ) );
-	assertEquals( cacheValue, CacheGet("id1", "mongotest") );
-
-	sleep( 7000 );
-	assertTrue( isNull( CacheGet( "id1", "mongotest" ) ) );
-}
 
 
 </cfscript>
