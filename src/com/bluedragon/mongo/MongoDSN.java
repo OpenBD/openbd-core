@@ -149,7 +149,7 @@ public class MongoDSN extends Object {
 		
 		
 		if ( user != null ) {
-			MongoCredential cred = MongoCredential.createMongoCRCredential( user, db, pass.toCharArray() );
+			MongoCredential cred = MongoCredential.createCredential( user, db, pass.toCharArray() );
 			List<MongoCredential> creds = new ArrayList<MongoCredential>();
 			creds.add( cred );
 
