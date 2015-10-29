@@ -102,6 +102,7 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 	
 	@Override
 	public void set(String id, cfData data, long ageMs, long idleTime) {
+		//TODO: idleTime not implemented so idleSpan won't work
 		Date ct	 = null;
 		statsSet++;
 		
@@ -155,7 +156,14 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 			if ( doc.containsKey("vs") )
 				return new cfStringData( (String)doc.get("vs") );
 			else{
-				byte[]	buf	= (byte[])doc.get("vb");
+				Object bufObj	= doc.get("vb");
+				byte[]	buf;
+				if ( bufObj instanceof org.bson.types.Binary	){
+					buf = ( (org.bson.types.Binary) bufObj ).getData();
+				}else{ // should be byte []. Keep for backwards compatibility
+					buf = (byte[]) bufObj;
+				}
+				//byte[]	buf	= (byte[])doc.get("vb");
 				try {
 					return (cfData)FileUtil.loadClass(buf, true);
 				} catch (Exception e) {
@@ -176,7 +184,7 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 		if ( exact ){
 			col.deleteOne( new Document("id", id) );
 		}else{
-			col.deleteMany( Filters.regex("id", "/" + id + "*/") ); 
+			col.deleteMany( Filters.regex("id", "" + id + "*") ); 
 		}
 	}
 
