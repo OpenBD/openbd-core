@@ -163,7 +163,7 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 				}else{ // should be byte []. Keep for backwards compatibility
 					buf = (byte[]) bufObj;
 				}
-				//byte[]	buf	= (byte[])doc.get("vb");
+				
 				try {
 					return (cfData)FileUtil.loadClass(buf, true);
 				} catch (Exception e) {
