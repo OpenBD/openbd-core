@@ -163,7 +163,6 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 							buf = (byte[]) bufObj;
 						}
 						
-						//byte[]	buf	= (byte[])doc.get("d");
 						sessData	= (cfSessionData)FileUtil.loadClass(buf, true);
 						sessData.setMD5( MD5.getDigest(buf) );
 					}
