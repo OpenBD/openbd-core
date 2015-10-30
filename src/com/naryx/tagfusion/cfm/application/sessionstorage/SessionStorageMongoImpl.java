@@ -154,7 +154,16 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 					Date et	= (Date)doc.get("et");
 					if ( et.getTime() > System.currentTimeMillis() ){
 						// Found a live one that we can use!!!
-						byte[]	buf	= (byte[])doc.get("d");
+						
+						Object bufObj	= doc.get("d");
+						byte[]	buf;
+						if ( bufObj instanceof org.bson.types.Binary	){
+							buf = ( (org.bson.types.Binary) bufObj ).getData();
+						}else{ // should be byte []. Keep for backwards compatibility
+							buf = (byte[]) bufObj;
+						}
+						
+						//byte[]	buf	= (byte[])doc.get("d");
 						sessData	= (cfSessionData)FileUtil.loadClass(buf, true);
 						sessData.setMD5( MD5.getDigest(buf) );
 					}
