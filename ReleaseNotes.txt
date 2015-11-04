@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- At least Java 8 version support
 - added result parameter support to queryrun function
 - fixed amazonS3List() to behave as it did prior to switch to using AWS SDK
 - Added support for ISO8601 date/time format in ParseDateTime
