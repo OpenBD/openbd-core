@@ -42,7 +42,7 @@ import com.naryx.tagfusion.expression.function.functionBase;
 
 
 
-public class unescapeHTML extends functionBase {
+public class DecodeForHTML extends functionBase {
 
 
 
@@ -50,7 +50,7 @@ public class unescapeHTML extends functionBase {
 
 
 
-	public unescapeHTML() {
+	public DecodeForHTML() {
 		min = max = 1;
 		setNamedParams(new String[] { "string" });
 	}

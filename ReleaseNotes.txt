@@ -5,7 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
-- Add unescapeHTML function
+- Add DecodeForHTML function
 - At least Java 8 version support
 - added result parameter support to queryrun function
 - fixed amazonS3List() to behave as it did prior to switch to using AWS SDK

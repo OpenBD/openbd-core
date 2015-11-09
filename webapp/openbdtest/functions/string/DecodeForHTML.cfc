@@ -30,10 +30,10 @@
 --->
 <cfcomponent extends="openbdtest.common.TestCase">
 
-	<cffunction name="testunescapeHTML">
+	<cffunction name="testDecodeForHTML">
 
-		<cfset assertEquals(unescapeHTML("&lt;Fran&ccedil;ais&gt;"), "<Français>" )>
-		<cfset assertEquals(unescapeHTML("&gt;&zzzz;x"), ">&zzzz;x" )>
+		<cfset assertEquals(DecodeForHTML("&lt;Fran&ccedil;ais&gt;"), "<Français>" )>
+		<cfset assertEquals(DecodeForHTML("&gt;&zzzz;x"), ">&zzzz;x" )>
 
 	</cffunction>
 

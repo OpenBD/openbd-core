@@ -594,7 +594,7 @@ public class registerTagsExpressions extends java.lang.Object {
 		functions.put("encodeforhtmlattribute",				"com.naryx.tagfusion.expression.function.string.encodeForHtmlAttribute");
 		functions.put("encodeforjavascript",					"com.naryx.tagfusion.expression.function.string.encodeForJavascript");
 		functions.put("encodeforfilename",						"com.naryx.tagfusion.expression.function.string.encodeForFilename");
-		functions.put("unescapehtml",									"com.naryx.tagfusion.expression.function.string.unescapeHTML");
+		functions.put("decodeforhtml",									"com.naryx.tagfusion.expression.function.string.DecodeForHTML");
 		functions.put("hmac",													"com.naryx.tagfusion.expression.function.hmac");
 		functions.put("urlfromstruct",								"com.naryx.tagfusion.expression.function.urlFromStruct");
 
