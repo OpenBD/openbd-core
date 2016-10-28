@@ -56,8 +56,8 @@ public class SalesForceQuery extends SalesForceBaseFunction {
 	private static final long serialVersionUID = 1L;
 
 	public SalesForceQuery(){
-		min = 3; max = 5;
-		setNamedParams( new String[]{ "email", "passwordtoken", "query", "cacheage", "timeout", "region" } );
+		min = 3; max = 7;
+		setNamedParams( new String[]{ "email", "passwordtoken", "query", "cacheage", "timeout", "region", "all" } );
 	}
 	
 	public String[] getParamInfo(){
@@ -67,7 +67,8 @@ public class SalesForceQuery extends SalesForceBaseFunction {
 			"SalesForce SOQL statement",
 			"Age of the cache in seconds.  If this is 0 (default) then the query is not cached.  Otherwise, if the query is within the time given then the cached version is returned",
 			"the time in milliseconds, that the connection will wait for a response",
-			"the cache region to use, defaults to SALESFORCE"
+			"the cache region to use, defaults to SALESFORCE",
+			"boolean indicating whether to query all. Defaults to false"
 		};
 	}
 	
@@ -88,6 +89,8 @@ public class SalesForceQuery extends SalesForceBaseFunction {
 		// If we are using caching then see if it is there
 		String region = null;
 		String md5Key = null;
+		
+		boolean queryAll = getNamedBooleanParam( argStruct, "all", false );
 		
 		if ( cacheAgeMS > 0 ){
 			md5Key	= CacheFactory.createCacheKey(query);
@@ -112,7 +115,7 @@ public class SalesForceQuery extends SalesForceBaseFunction {
     try {
     	long	startTime	= System.currentTimeMillis();
 
-    	cfSQLQueryData queryResultData	= getQuery(_session, argStruct, query);
+    	cfSQLQueryData queryResultData	= getQuery(_session, argStruct, query, queryAll);
 
   		cfEngine.log( "SalesForceQuery() Time=" + (System.currentTimeMillis()-startTime) + "ms; rows=" + queryResultData.getSize() + "; " + query );
 
@@ -144,12 +147,12 @@ public class SalesForceQuery extends SalesForceBaseFunction {
 	 * @throws ConnectionException
 	 * @throws cfmRunTimeException
 	 */
-	private cfSQLQueryData	getQuery(cfSession _session, cfArgStructData argStruct, String query) throws ConnectionException, cfmRunTimeException{
+	private cfSQLQueryData	getQuery(cfSession _session, cfArgStructData argStruct, String query, boolean queryAll) throws ConnectionException, cfmRunTimeException{
 		PartnerConnection connection = getConnection( _session, argStruct );
 		
 		try{
 		  long time	= System.currentTimeMillis();
-	    List<Map<String,Object>>	rows	= runQuery(connection, query);
+	    List<Map<String,Object>>	rows	= runQuery(connection, query, queryAll);
 	    time	= System.currentTimeMillis() - time;
 	
 	    Map<String,Integer>	activeColumns	= new HashMap<String,Integer>();
@@ -206,8 +209,10 @@ public class SalesForceQuery extends SalesForceBaseFunction {
 	 * @return
 	 * @throws ConnectionException
 	 */
-	private List<Map<String,Object>>	runQuery( PartnerConnection connection, String soql ) throws ConnectionException{
-    QueryResult queryResults = connection.query(soql);
+	private List<Map<String,Object>>	runQuery( PartnerConnection connection, String soql, boolean queryAll ) throws ConnectionException{
+    
+		QueryResult queryResults = queryAll ? connection.queryAll(soql) : connection.query(soql);
+		
     List<Map<String,Object>>	rows	= new ArrayList<Map<String,Object>>();
     
     if (queryResults.getSize() > 0) {
