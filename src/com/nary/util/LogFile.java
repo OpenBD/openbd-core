@@ -31,10 +31,17 @@
 package com.nary.util;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.concurrent.TimeUnit;
+
+import org.aw20.util.SystemClock;
+import org.aw20.util.SystemClockEvent;
 
 import com.naryx.tagfusion.cfm.engine.cfEngine;
 
@@ -44,30 +51,63 @@ import com.naryx.tagfusion.cfm.engine.cfEngine;
  * The logfile has an auto-rotation facility, initially set at 25MB
  */
 
-public class LogFile extends Object {
+public class LogFile extends Object implements SystemClockEvent {
 
 	private static final String LOG_DATE_FORMAT = "dd/MM/yy HH:mm.ss: ";
 
-	private RandomAccessFile outFile;
+	private FileOutputStream fileWriter;
+	private OutputStreamWriter outWriter;
+	
 	private long logFileSize = 0;
 	private String filename;
-
+	private String encoding;
+	private boolean prependTimeStamp;
+	
 	private long maxLogFileSize = 25000000; // - default to 25MB
+	
+	private long maxLogFileAge = TimeUnit.DAYS.toMillis( 30 ); // - default to 30 days
 
-	private LogFile(String logPath) throws Exception {
+	private LogFile(String logPath, String _encoding, boolean _PrependTimeStamp) throws Exception {
 		filename = logPath;
-		outFile = new RandomAccessFile(logPath, "rw");
-		logFileSize = outFile.length();
-		outFile.seek(logFileSize);
+		fileWriter = new FileOutputStream(logPath,true);
+		outWriter = new OutputStreamWriter( fileWriter, _encoding );
+		logFileSize = new File( logPath ).length();
+		
+		
+		SystemClock.setListenerDay( this );
 	}
 
 	private void setMaxLogFileSize(long maxLogFileSize) {
 		this.maxLogFileSize = maxLogFileSize;
 	}
 
+	private void setMaxLogFileAge(int maxLogFileAge) {
+		this.maxLogFileSize = TimeUnit.DAYS.toMillis( maxLogFileAge );
+	}
+
+	
+	@Override
+	public void clockEvent( int arg0 ) {
+		// clean up old files
+		File logFile = new File( filename );
+		File logDirectory = ( logFile ).getParentFile();
+		File [] files = logDirectory.listFiles( new FileFilter(){
+
+			@Override
+			public boolean accept( File _file ) {
+				return _file.getName().startsWith( logFile.getName() ) 
+						&& _file.lastModified() > ( System.currentTimeMillis() - maxLogFileAge );
+			}} );
+		
+		for ( File nextFile : files ){
+			nextFile.delete();
+		}
+		
+	}
+
 	private void println(String _line) {
 		try {
-			writeData(com.nary.util.Date.formatNow(LOG_DATE_FORMAT) + _line + "\r\n");
+			writeData( ( prependTimeStamp ? com.nary.util.Date.formatNow(LOG_DATE_FORMAT) : "" ) + _line + "\r\n");
 		} catch (Exception e) {
 			// DateFormat.format() has been observed to throw NullPointerExceptions
 			cfEngine.log("Error " + e + " formatting date in LogFile.println( String _line )");
@@ -75,12 +115,13 @@ public class LogFile extends Object {
 	}
 
 	private void println(Object _ob) {
-		writeData(com.nary.util.Date.formatNow(LOG_DATE_FORMAT) + _ob.toString() + "\r\n");
+		writeData( ( prependTimeStamp ? com.nary.util.Date.formatNow(LOG_DATE_FORMAT) : "" ) + _ob.toString() + "\r\n");
 	}
 
 	private void close() {
 		try {
-			outFile.close();
+			outWriter.close();
+			fileWriter.close();
 		} catch (Exception E) {
 		}
 	}
@@ -102,7 +143,7 @@ public class LogFile extends Object {
 	}
 
 	private void writeToFile(String _line) throws IOException {
-		outFile.writeBytes(_line);
+		outWriter.write(_line);
 		logFileSize += _line.length();
 	}
 
@@ -110,7 +151,8 @@ public class LogFile extends Object {
 
 		// Close off the file
 		try {
-			outFile.close();
+			outWriter.close();
+			fileWriter.close();
 		} catch (IOException e) {
 		}
 
@@ -139,7 +181,9 @@ public class LogFile extends Object {
 			}
 
 			// Open up the file
-			outFile = new RandomAccessFile(filename, "rw");
+			fileWriter = new FileOutputStream(filename,true);
+			outWriter = new OutputStreamWriter( fileWriter, encoding );
+
 			logFileSize = 0;
 
 		} catch (IOException ignoreException) {
@@ -151,10 +195,14 @@ public class LogFile extends Object {
 
 	private static Hashtable logfiles = new Hashtable();
 
-	public static synchronized boolean open(String _Name, String _Path) {
+	public static synchronized boolean open(String _Name, String _Path ) {
+		return open( _Name, _Path, Charset.defaultCharset().toString(), true );
+	}
+	
+	public static synchronized boolean open(String _Name, String _Path, String _encoding, boolean _PrependTimeStamp ) {
 		LogFile LF;
 		try {
-			LF = new LogFile(_Path);
+			LF = new LogFile(_Path, _encoding, _PrependTimeStamp);
 		} catch (Exception E) {
 			return false;
 		}
@@ -166,7 +214,7 @@ public class LogFile extends Object {
 	public static void println(File outFile, String _Line) {
 		if (!logfiles.containsKey(outFile.toString())) {
 			try {
-				logfiles.put(outFile.toString(), new LogFile(outFile.toString()));
+				logfiles.put(outFile.toString(), new LogFile(outFile.toString(), Charset.defaultCharset().toString(), true));
 			} catch (Exception E) {
 				return;
 			}
@@ -190,9 +238,15 @@ public class LogFile extends Object {
 			((LogFile) (logfiles.get(_Name.toUpperCase()))).setMaxLogFileSize(rotationSize);
 	}
 
+	public static void setMaxAge(String _Name, int maxAgeDays) {
+		if (logfiles.containsKey(_Name.toUpperCase()))
+			((LogFile) (logfiles.get(_Name.toUpperCase()))).setMaxLogFileAge(maxAgeDays);
+	}
+
 	public static void closeAll() {
 		Enumeration E = logfiles.elements();
 		while (E.hasMoreElements())
 			((LogFile) E.nextElement()).close();
 	}
+
 }
