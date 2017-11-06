@@ -35,6 +35,7 @@ import org.antlr.runtime.Token;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 
+
 public class CFTernaryExpression extends CFExpression {
 
 	private static final long serialVersionUID = 1L;
@@ -43,6 +44,7 @@ public class CFTernaryExpression extends CFExpression {
 	private CFExpression ifTrue;
 	private CFExpression ifFalse;
 
+
 	public CFTernaryExpression( Token _t, CFExpression _main, CFExpression _ifTrue, CFExpression _ifFalse ) {
 		super( _t );
 		main = _main;
@@ -50,17 +52,23 @@ public class CFTernaryExpression extends CFExpression {
 		ifFalse = _ifFalse;
 	}
 
+
 	@Override
-	public cfData Eval(CFContext context) throws cfmRunTimeException {
-		if ( main.Eval( context ).getBoolean() ){
+	public cfData Eval( CFContext context ) throws cfmRunTimeException {
+		cfData mainData = main.Eval( context );
+		if ( mainData.getDataType() == cfData.CFLDATA ) {
+			mainData = ( (cfLData) mainData ).Get( context );
+		}
+		if ( mainData.getBoolean() ) {
 			return ifTrue.Eval( context );
-		}else{
+		} else {
 			return ifFalse.Eval( context );
 		}
 	}
 
+
 	@Override
-	public String Decompile(int indent) {
+	public String Decompile( int indent ) {
 		return main.Decompile( indent ) + " ? " + ifTrue.Decompile( indent ) + " : " + ifFalse.Decompile( indent );
 	}
 

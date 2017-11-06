@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: Find.java 2000 2012-03-25 14:13:44Z alan $
  */
 package com.bluedragon.mongo.gridfs;
 
@@ -61,7 +59,7 @@ public class Find extends FindOne {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Finds a given file(s) from the Mongo GridFS bucket.  You can get the file specifying either file name, _id or a query.   You can download the actual file using MongoGridFSGet()", 
@@ -72,7 +70,7 @@ public class Find extends FindOne {
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
 		
 		// Get the necessary Mongo references
-		DB			db	= getDataSource(_session, argStruct);
+		DB			db	= getDB(_session, argStruct);
 		GridFS	gridfs	= getGridFS(_session, argStruct, db);
 
 		
@@ -84,7 +82,7 @@ public class Find extends FindOne {
 			
 			cfData mTmp	= getNamedParam(argStruct, "query", null);
 			if ( mTmp != null )
-				return toArray( gridfs.find(convertToDBObject(mTmp)) );
+				return toArray( gridfs.find(getDBObject(mTmp)) );
 		}
 
 		throwException(_session, "Please specify file or a query");

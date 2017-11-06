@@ -34,6 +34,7 @@ import java.util.Iterator;
 
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfData;
+import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStringData;
 import com.naryx.tagfusion.cfm.engine.cfStructData;
@@ -95,6 +96,17 @@ public class SalesForceCreate extends SalesForceBaseFunction {
 
       // Make the call out to salesforce
       SaveResult[] saveresult = connection.create(new SObject[]{so});
+      if ( !saveresult[0].isSuccess() ) {
+        StringBuilder errorSB = new StringBuilder();
+        errorSB.append( "Error creating; Errors - " );
+        com.sforce.soap.partner.Error[] errors = saveresult[0].getErrors();
+        for ( com.sforce.soap.partner.Error e : errors ) {
+          errorSB.append( e.getMessage() );
+          errorSB.append( ";" );
+        }
+        cfEngine.log( "SalesForceCreate - " + errorSB.toString() );
+      }
+	    
       return new cfStringData( saveresult[0].getId() );
 
     }catch(ConnectionException e){

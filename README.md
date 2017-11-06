@@ -12,21 +12,15 @@ Here you will find the manual for both OpenBD and the CFML tags.   You can obtai
 
 You can run OpenBD quickly without all the hassle of setting and configuring a JEE server.   Use the [JettyDesktop launcher](https://github.com/aw20/jettydesktop) - instructions on use located at the [JettyDesktop Wiki](https://github.com/aw20/jettydesktop/wiki).   This will run the OpenBD WAR file easily and quickly.
 
-### Weekly Updates
-
-Follow the weekly updates on the going's on with OpenBD
-
-https://github.com/OpenBD/openbd-core/wiki/Weekly-Update-Journal
-
 ### Official Support 
 
 OpenBD is owned and maintained by aw2.0 Ltd.  Official support subscriptions can be purchased from aw2.0 Ltd. 
 
-For more details visit: http://aw20.co.uk/openbd/
+For more details visit: http://www.aw20.co.uk/openbd/
 
 ### Community Mailing List
 
-An active Google Groups list can be found: https://groups.google.com/forum/#!forum/openbd
+An active Google Groups list can be found: https://groups.google.com/forum/#!forum/openbluedragon
 
 ### Building OpenBD
 

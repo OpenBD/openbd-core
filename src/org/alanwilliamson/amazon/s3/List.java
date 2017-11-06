@@ -41,74 +41,105 @@ import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfDateData;
+import com.naryx.tagfusion.cfm.engine.cfNullData;
 import com.naryx.tagfusion.cfm.engine.cfNumberData;
 import com.naryx.tagfusion.cfm.engine.cfQueryResultData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStringData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 
-public class List extends AmazonBase {
-	private static final long serialVersionUID = 1L;
-	
-	public List(){  min = 2; max = 3; setNamedParams( new String[]{ "datasource", "bucket", "prefix" } ); }
 
-	public String[] getParamInfo(){
-		return new String[]{
-			"Amazon datasource",
-			"Amazon Bucket",
-			"Optional prefix to list"
+public class List extends AmazonBase {
+
+	private static final long serialVersionUID = 1L;
+
+
+	public List() {
+		min = 2;
+		max = 3;
+		setNamedParams( new String[] { "datasource", "bucket", "prefix" } );
+	}
+
+
+	public String[] getParamInfo() {
+		return new String[] {
+				"Amazon datasource",
+				"Amazon Bucket",
+				"Optional prefix to list"
 		};
 	}
-  
-	public java.util.Map<String,String> getInfo() {
+
+
+	public java.util.Map<String, String> getInfo() {
 		return makeInfo(
 				"amazon",
 				"Amazon S3: Returns all the keys for this bucket as a query with the fields 'key', 'size', 'modified' and 'etag'.  Any key returning a slash (/) at the end is considered a subprefix (or directory) of the current prefix.",
 				ReturnType.QUERY );
 	}
-	
-	public cfData execute( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException{
-		
-		AmazonKey amazonKey	= getAmazonKey(_session, argStruct);
-		AmazonS3 s3Client		= getAmazonS3(amazonKey);
-		
- 		String bucket	= getNamedStringParam(argStruct, "bucket", null );
- 		String prefix	= getNamedStringParam(argStruct, "prefix", "" );
-  	
+
+
+	public cfData execute( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+
+		AmazonKey amazonKey = getAmazonKey( _session, argStruct );
+		AmazonS3 s3Client = getAmazonS3( amazonKey );
+
+		String bucket = getNamedStringParam( argStruct, "bucket", null );
+		String prefix = getNamedStringParam( argStruct, "prefix", "" );
+
 		if ( bucket == null )
-			throwException(_session, "Please specify a bucket" );
+			throwException( _session, "Please specify a bucket" );
 
-  	try {
-  		//Create the results
-  		cfQueryResultData qD = new cfQueryResultData( new String[]{"key","size","modified","etag"}, null );
-  		qD.setQuerySource( "AmazonS3." + amazonKey.getDataSource() );
-  		
-  		ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-  			.withBucketName(bucket)
-  			.withPrefix(prefix);
-  		ObjectListing objectListing;
+		try {
+			// Create the results
+			cfQueryResultData qD = new cfQueryResultData( new String[] { "key", "size", "modified", "etag" }, null );
+			qD.setQuerySource( "AmazonS3." + amazonKey.getDataSource() );
 
-  		do {
-  			objectListing = s3Client.listObjects(listObjectsRequest);
-  			
-  			for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-    			qD.addRow(1);
-    			qD.setCurrentRow( qD.getSize() );
-    			
-    			qD.setCell( 1, new cfStringData( objectSummary.getKey() ) );
-    			qD.setCell( 2, new cfNumberData( objectSummary.getSize() ) );
-    			qD.setCell( 3, new cfDateData( objectSummary.getLastModified() ) );
-    			qD.setCell( 4, new cfStringData( objectSummary.getETag() ) );
-  			}
-  			
-  			listObjectsRequest.setMarker(objectListing.getNextMarker());
-  		} while (objectListing.isTruncated());
+			ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+					.withBucketName( bucket )
+					.withDelimiter( "/" )
+					.withPrefix( prefix );
+			ObjectListing objectListing;
+
+			do {
+				objectListing = s3Client.listObjects( listObjectsRequest );
+
+				java.util.List<String> prefixes = objectListing.getCommonPrefixes();
+
+				// first add the prefixes
+				for ( String nextPrefix : prefixes ) {
+					qD.addRow( 1 );
+					qD.setCurrentRow( qD.getSize() );
+
+					qD.setCell( 1, new cfStringData( nextPrefix ) );
+					qD.setCell( 2, new cfNumberData( 0 ) );
+					qD.setCell( 3, cfNullData.NULL );
+					qD.setCell( 4, cfNullData.NULL );
+
+				}
+
+				for ( S3ObjectSummary objectSummary : objectListing.getObjectSummaries() ) {
+
+					// don't include the prefix being listed
+					if ( objectSummary.getKey().equals( prefix ) ) {
+						continue;
+					}
+					qD.addRow( 1 );
+					qD.setCurrentRow( qD.getSize() );
+
+					qD.setCell( 1, new cfStringData( objectSummary.getKey() ) );
+					qD.setCell( 2, new cfNumberData( objectSummary.getSize() ) );
+					qD.setCell( 3, new cfDateData( objectSummary.getLastModified() ) );
+					qD.setCell( 4, new cfStringData( objectSummary.getETag() ) );
+				}
+
+				listObjectsRequest.setMarker( objectListing.getNextMarker() );
+			} while ( objectListing.isTruncated() );
 
 			return qD;
-		} catch (Exception e) {
-			throwException(_session, "AmazonS3: " + e.getMessage() );
+		} catch ( Exception e ) {
+			throwException( _session, "AmazonS3: " + e.getMessage() );
 			return cfBooleanData.FALSE;
 		}
-  }
+	}
 
 }

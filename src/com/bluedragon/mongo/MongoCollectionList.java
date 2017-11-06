@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,15 +25,11 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionList.java 1770 2011-11-05 11:50:08Z alan $
  */
 package com.bluedragon.mongo;
 
-import java.util.Iterator;
-import java.util.Set;
-
-import com.mongodb.DB;
+import com.mongodb.Block;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
@@ -54,7 +50,7 @@ public class MongoCollectionList extends MongoDatabaseList {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String, String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Lists all the available collections", 
@@ -63,17 +59,22 @@ public class MongoCollectionList extends MongoDatabaseList {
 	
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoClient client	= getMongoClient( _session, argStruct );
 		
 		try{
-			Set<String> names = db.getCollectionNames();
-			
 			cfArrayData	arr	= cfArrayData.createArray(1);
+			
+			client.listDatabaseNames().forEach( new Block<String>(){
 
-			Iterator<String>	it	= names.iterator();
-			while ( it.hasNext() ){
-				arr.addElement( new cfStringData( it.next() ) );
-			}
+				@Override
+				public void apply( String dbName ) {
+					try {
+						arr.addElement( new cfStringData( dbName ) );
+					} catch ( cfmRunTimeException e ) {}
+				}
+				
+			});
+			
 			
 			return arr;
 		} catch (MongoException me){

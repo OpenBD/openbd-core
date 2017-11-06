@@ -43,6 +43,7 @@ import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -744,15 +745,21 @@ public class cfHttpConnection implements cfHttpConnectionI {
 		if ( httpData.isBodySet() ) {
 			try {
 				if ( message instanceof HttpPost ) {
-
-					( ( HttpPost )message ).setEntity( new StringEntity( httpData.getBody() ) );
+					if ( this.charset == null ) {
+						( (HttpPost) message ).setEntity( new StringEntity( httpData.getBody() ) );
+					} else {
+						( (HttpPost) message ).setEntity( new StringEntity( httpData.getBody(), this.charset ) );
+					}
 
 				} else if ( message instanceof HttpPut ) {
-
-					( ( HttpPut )message ).setEntity( new StringEntity( httpData.getBody() ) );
+					if ( this.charset == null ) {
+						( (HttpPut) message ).setEntity( new StringEntity( httpData.getBody() ) );
+					} else {
+						( (HttpPut) message ).setEntity( new StringEntity( httpData.getBody(), this.charset ) );
+					}
 
 				}
-			} catch ( UnsupportedEncodingException e ) {
+			} catch ( UnsupportedEncodingException | UnsupportedCharsetException e ) {
 				throw newRunTimeException( "Failed due to UnsupportedEncoding while setting body: " + e.getMessage() );
 			}
 		}

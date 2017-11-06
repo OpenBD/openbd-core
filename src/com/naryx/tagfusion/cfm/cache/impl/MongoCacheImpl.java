@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2012 TagServlet Ltd
+ *  Copyright (C) 2012-2015 TagServlet Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  $Id: MongoCacheImpl.java 2426 2014-03-30 18:53:18Z alan $
- *  
  *  server user password db collection
  */
 package com.naryx.tagfusion.cfm.cache.impl;
@@ -38,16 +36,16 @@ import org.aw20.io.ByteArrayOutputStreamRaw;
 import org.aw20.io.FileUtil;
 import org.aw20.util.SystemClock;
 import org.aw20.util.SystemClockEvent;
+import org.bson.Document;
 
 import ucar.unidata.util.DateUtil;
 
-import com.bluedragon.mongo.MongoDSN;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteConcern;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
 import com.naryx.tagfusion.cfm.cache.CacheInterface;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -60,8 +58,8 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 	private cfStructData props;
 	
 	private MongoClient	mongo = null;
-	private DB db = null;
-	private DBCollection col = null;
+	private MongoDatabase db = null;
+	private MongoCollection<Document> col = null;
 	
 	@Override
 	public cfStructData getProperties() {
@@ -74,8 +72,8 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 		
 		this.props	= _props;
 
-		if ( !props.containsKey("server") )
-			throw new Exception("'server' does not exist. in format: server1:port1 server2:port2");
+		if ( !props.containsKey("mongoclienturi") )
+			throw new Exception("'mongoclienturi' does not exist. in format: mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]");
 
 		if ( !props.containsKey("db") )
 			props.setData("db", "openbdcache" );
@@ -83,17 +81,12 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 		if ( !props.containsKey("collection") )
 			props.setData("collection", region );
 
-		// Get the server
-		String server	= props.getData("server").getString();
-		
-		String user	= props.containsKey("user") ? props.getData("user").toString() : null;
-		String pass	= props.containsKey("password") ? props.getData("password").toString() : null;
-		
-		mongo	= MongoDSN.newClient( server, user, pass, props.getData("db").getString() );
-		
-		db	= mongo.getDB( props.getData("db").getString() );
 
-		// Get the database/collection
+		MongoClientURI	mcu	= new MongoClientURI(props.getData("mongoclienturi").getString());
+		mongo	= new MongoClient( mcu );
+		
+		db	= mongo.getDatabase( props.getData("db").getString() );
+
 		createCollection();
 		
 		SystemClock.setListenerMinute( this, 5 );
@@ -102,13 +95,14 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 	
 	private void createCollection() throws dataNotSupportedException{
 		col	= db.getCollection( props.getData("collection").getString() );
-		col.createIndex( new BasicDBObject("id",true) );
-		col.createIndex( new BasicDBObject("ct",true) );
+		col.createIndex( new Document("id",true) );
+		col.createIndex( new Document("ct",true) );
 	}
 	
 	
 	@Override
 	public void set(String id, cfData data, long ageMs, long idleTime) {
+		//TODO: idleTime not implemented so idleSpan won't work
 		Date ct	 = null;
 		statsSet++;
 		
@@ -121,8 +115,7 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 			ct	= new Date( System.currentTimeMillis() + ageMs );
 		
 		// Set up the key
-		DBObject	keys	= new BasicDBObject("id", id);
-		BasicDBObject	vals	= new BasicDBObject("id", id).append("ct", ct);
+		Document	vals	= new Document("id", id).append("ct", ct);
 		
 		if ( data instanceof cfStringData )
 			vals.append( "vs", ((cfStringData)data).getString() );
@@ -139,19 +132,20 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 			
 		}
 		
-		col.update( keys, new BasicDBObject("$set", vals), true, false, WriteConcern.JOURNAL_SAFE );
+		
+		Document	keys	= new Document("id", id);
+		col.updateOne(keys, new Document("$set", vals), new UpdateOptions().upsert(true));
 	}
 
 	
 	@Override
 	public cfData get(String id) {
-		DBObject	keys	= new BasicDBObject("id", id);
+		Document doc	= col.find( Filters.eq("id", id) ).first();
 		
-		DBObject	dbo	= col.findOne(keys);
-		if ( dbo != null ){
+		if ( doc != null ){
 
 			// Check that the date is correct
-			Date ct	= (Date)dbo.get("ct");
+			Date ct	= (Date)doc.get("ct");
 			if ( ct.getTime() < System.currentTimeMillis() ){
 				delete( id, true );
 				statsMissAge++;
@@ -159,10 +153,17 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 			}
 			
 			statsHit++;
-			if ( dbo.containsField("vs") )
-				return new cfStringData( (String)dbo.get("vs") );
+			if ( doc.containsKey("vs") )
+				return new cfStringData( (String)doc.get("vs") );
 			else{
-				byte[]	buf	= (byte[])dbo.get("vb");
+				Object bufObj	= doc.get("vb");
+				byte[]	buf;
+				if ( bufObj instanceof org.bson.types.Binary	){
+					buf = ( (org.bson.types.Binary) bufObj ).getData();
+				}else{ // should be byte []. Keep for backwards compatibility
+					buf = (byte[]) bufObj;
+				}
+				
 				try {
 					return (cfData)FileUtil.loadClass(buf, true);
 				} catch (Exception e) {
@@ -181,9 +182,9 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 		statsDelete++;
 		
 		if ( exact ){
-			col.remove( new BasicDBObject("id", id) );
+			col.deleteOne( new Document("id", id) );
 		}else{
-			col.remove( new BasicDBObject("id", new BasicDBObject("$regex","/" + id + "*/") ) );
+			col.deleteMany( Filters.regex("id", "" + id + "*") ); 
 		}
 	}
 
@@ -229,7 +230,7 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 		
 		if ( col != null ){
 			stats.setData("size", 				col.count() );
-			stats.setData("collection", 	col.getName() );
+			stats.setData("collection", 	col.getNamespace().getCollectionName() );
 			stats.setData("db", 					db.getName() );
 		}
 		
@@ -252,6 +253,6 @@ public class MongoCacheImpl implements CacheInterface, SystemClockEvent {
 	
 	@Override
 	public void clockEvent(int eventType) {
-		col.remove( new BasicDBObject( "ct", new BasicDBObject("$lte", new Date()) ) );
+		col.deleteMany( Filters.lte("ct", new Date() ) );
 	}
 }

@@ -42,55 +42,60 @@ import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStringData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 
+
 public class GenerateSecretKey extends functionBase {
 
 	private static final long serialVersionUID = 1L;
 
+
 	public GenerateSecretKey() {
-		max = 2; min = 1;
-		setNamedParams( new String[]{ "algorithm", "keysize" } );
+		max = 2;
+		min = 1;
+		setNamedParams( new String[] { "algorithm", "keysize" } );
 	}
-	
-	public String[] getParamInfo(){
-		return new String[]{
-			"Key Algorirm to use valid values: 'des', 'desede', 'aes', 'blowfish'",
-			"Keysize - defaults to 56 for DES, 168 for DESEDE, or 128 for BLOWFISH and AES"
+
+
+	public String[] getParamInfo() {
+		return new String[] {
+				"Key Algorithm to use valid values: 'des', 'desede', 'aes', 'blowfish'",
+				"Keysize - defaults to 56 for DES, 168 for DESEDE, or 128 for BLOWFISH and AES"
 		};
 	}
 
-	public java.util.Map getInfo(){
+
+	public java.util.Map getInfo() {
 		return makeInfo(
-				"security", 
-				"Generates a new secret key based on the algorithm", 
+				"security",
+				"Generates a new secret key based on the algorithm",
 				ReturnType.STRING );
 	}
-	
-	
-	public cfData execute(cfSession _session, cfArgStructData argStruct) throws cfmRunTimeException {
-		String algorithm 	= getNamedStringParam( argStruct, "algorithm", null );
+
+
+	public cfData execute( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		String algorithm = getNamedStringParam( argStruct, "algorithm", null );
 		if ( algorithm == null )
-			throwException(_session, "please provide the algorithm parameter");
-		
-		algorithm	= algorithm.toUpperCase();
-		
-		int keysize	= getNamedIntParam(argStruct, "keysize", -1 );
-		if ( keysize == -1 ){
-			if (algorithm.equals("DES")) {
+			throwException( _session, "please provide the algorithm parameter" );
+
+		algorithm = algorithm.toUpperCase();
+
+		int keysize = getNamedIntParam( argStruct, "keysize", -1 );
+		if ( keysize == -1 ) {
+			if ( algorithm.equals( "DES" ) ) {
 				keysize = 56;
-			} else if (algorithm.equals("DESEDE")) {
+			} else if ( algorithm.equals( "DESEDE" ) ) {
 				keysize = 168;
-			}else
+			} else
 				keysize = 128;
 		}
-		
+
 		// else use the default - AES, BLOWFISH
 		try {
-			KeyGenerator kg = KeyGenerator.getInstance(algorithm);
-			kg.init(keysize, new SecureRandom());
+			KeyGenerator kg = KeyGenerator.getInstance( algorithm );
+			kg.init( keysize, new SecureRandom() );
 			SecretKey key = kg.generateKey();
-			return new cfStringData(new String(Base64.base64Encode(key.getEncoded()), "latin1"));
-		} catch (Exception e) {
-			throwException(_session, "Failed to generate key. " + e.getMessage());
+			return new cfStringData( new String( Base64.base64Encode( key.getEncoded() ), "latin1" ) );
+		} catch ( Exception e ) {
+			throwException( _session, "Failed to generate key. " + e.getMessage() );
 		}
 
 		return null; // keep compiler happy

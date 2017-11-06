@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,7 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  $Id: nullRecorder.java 2374 2013-06-10 22:14:24Z alan $
  */
 
 
@@ -39,8 +38,9 @@ package com.naryx.tagfusion.util;
  
 import java.util.List;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
+import com.mongodb.client.MongoCollection;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
@@ -62,14 +62,16 @@ public class nullRecorder implements debugRecorder{
   public boolean getShow(){ return false; }
   public boolean getShowDBActivity(){ return false; }
   
-  public void queryRan( String template, String qname, cfSQLQueryData query, List _qp ){}
+  @SuppressWarnings( "rawtypes" )
+	public void queryRan( String template, String qname, cfSQLQueryData query, List _qp ){}
   public void updateRan( String template, String datasrc, String sql ){}
   public void insertRan( String template, String datasrc, String sql ){}
 
 	
   public void exceptionThrown( cfmRunTimeException exception, cfFile f, cfTag t ){}
 		 
-  public void storedProcRan( String _template, String _datasrc, String _procName, long _execTime, List _params, List _results ){}
+  @SuppressWarnings( "rawtypes" )
+	public void storedProcRan( String _template, String _datasrc, String _procName, long _execTime, List _params, List _results ){}
 	public void execStoredProc(String datasourceName, String callString, String procName, long execTime) {}
 	
   
@@ -81,5 +83,5 @@ public class nullRecorder implements debugRecorder{
   public void dump( cfSession session ){}
 	public void execOnStart(cfData sqlData) {}
 	public void execOnEnd(cfData sqlData) {}
-	public void execMongo( DBCollection col, String action, DBObject qry, long execTime ){}
+	public void execMongo( MongoCollection<Document> col, String action, Document qry, long execTime ){}
 }

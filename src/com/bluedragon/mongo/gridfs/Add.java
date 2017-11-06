@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: Add.java 2396 2013-07-16 18:13:03Z alan $
  */
 package com.bluedragon.mongo.gridfs;
 
@@ -34,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.bluedragon.mongo.MongoCollectionInsert;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.MongoException;
 import com.mongodb.gridfs.GridFS;
@@ -44,6 +43,7 @@ import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStringData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
+import com.naryx.tagfusion.expression.function.string.serializejson;
 
 public class Add extends MongoCollectionInsert {
 	private static final long serialVersionUID = 1L;
@@ -67,7 +67,7 @@ public class Add extends MongoCollectionInsert {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Saves a file into a Mongo GridFS bucket returning back the _id of the resulting object", 
@@ -82,10 +82,15 @@ public class Add extends MongoCollectionInsert {
 		return new GridFS(db, bucket);
 	}
 	
+	protected DB getDB(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		return getMongoClient( _session, argStruct ).getDB( getMongoDatabase( _session, argStruct).getName() );
+	}
+	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
 		
 		// Get the necessary Mongo references
-		DB			db	= getDataSource(_session, argStruct);
+		DB db	= getDB(_session,argStruct);
+		
 		GridFS	gridfs	= getGridFS(_session, argStruct, db);
 		GridFSInputFile fsInputFile = null;
 		
@@ -131,7 +136,7 @@ public class Add extends MongoCollectionInsert {
 		// Get and set the metadata
 		cfData mTmp	= getNamedParam(argStruct, "metadata", null);
 		if ( mTmp != null )
-			fsInputFile.setMetaData(convertToDBObject(mTmp));
+			fsInputFile.setMetaData(getDBObject(mTmp));
 		
 		
 		// Save the Object
@@ -142,5 +147,14 @@ public class Add extends MongoCollectionInsert {
 			throwException(_session, me.getMessage());
 			return null;
 		}
+	}
+	
+	protected BasicDBObject	getDBObject(cfData d) throws cfmRunTimeException{
+		if ( d.getDataType() == cfData.CFSTRUCTDATA ){
+			StringBuilder buffer = new StringBuilder(1024);
+			new serializejson().encodeJSON(buffer, d, false, serializejson.CaseType.MAINTAIN, serializejson.DateType.MONGO );
+			return (BasicDBObject)com.mongodb.util.JSON.parse(buffer.toString());
+		}else
+			return (BasicDBObject)com.mongodb.util.JSON.parse(d.getString());
 	}
 }

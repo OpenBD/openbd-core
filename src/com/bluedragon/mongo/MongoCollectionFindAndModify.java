@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,15 +25,18 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionFindAndModify.java 2343 2013-03-12 01:41:47Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import java.util.Map;
+
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
@@ -43,7 +46,7 @@ import com.naryx.tagfusion.cfm.tag.tagUtils;
 public class MongoCollectionFindAndModify extends MongoCollectionInsert {
 	private static final long serialVersionUID = 1L;
 
-	public MongoCollectionFindAndModify(){  min = 4; max = 9; setNamedParams( new String[]{ "datasource", "collection", "query", "update", "fields", "sort", "remove", "returnnew", "upsert" } ); }
+	public MongoCollectionFindAndModify(){  min = 4; max = 8; setNamedParams( new String[]{ "datasource", "collection", "query", "update", "fields", "sort", "returnnew", "upsert" } ); }
   
 	public String[] getParamInfo(){
 		return new String[]{
@@ -53,13 +56,12 @@ public class MongoCollectionFindAndModify extends MongoCollectionInsert {
 			"update object to apply",
 			"fields to return",
 			"sort to apply before picking first object",
-			"flag to say if it will be removed, default=false",
 			"if true, the updated document is returned, otherwise the old document is returned (or it would be lost forever) default=false",
 			"do upsert (insert if document not present) default=false"
 		};
 	}
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Finds the first document in the query and updates it", 
@@ -67,8 +69,9 @@ public class MongoCollectionFindAndModify extends MongoCollectionInsert {
 	}
 	
 	
+	@SuppressWarnings( "rawtypes" )
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -82,38 +85,30 @@ public class MongoCollectionFindAndModify extends MongoCollectionInsert {
 		if ( query == null )
 			throwException(_session, "please specify query to update");
 
-		boolean returnnew	= getNamedBooleanParam(argStruct, "returnnew", false );
-		boolean upsert		= getNamedBooleanParam(argStruct, "upsert", false );
-		boolean remove		= getNamedBooleanParam(argStruct, "remove", false );
-		cfData	fields		= getNamedParam(argStruct, "fields", null );
-		cfData	sort			= getNamedParam(argStruct, "sort", null );
-
 		try{
 			
-			DBCollection col = db.getCollection(collection);
+			MongoCollection<Document> col = db.getCollection(collection);
+			FindOneAndUpdateOptions	findOneAndUpdateOptions	= new FindOneAndUpdateOptions();
 			
-			DBObject fieldsObj = null;
-			if ( fields != null )
-				fieldsObj	= convertToDBObject( fields );
+			if ( getNamedParam(argStruct, "fields", null ) != null )
+				findOneAndUpdateOptions.projection( getDocument( getNamedParam(argStruct, "fields", null ) ) );
 
-			DBObject sortObj = null;
-			if ( sort != null )
-				sortObj	= convertToDBObject( sort );
+			if ( getNamedParam(argStruct, "sort", null ) != null )
+				findOneAndUpdateOptions.sort( getDocument( getNamedParam(argStruct, "sort", null ) ) );
 
-			DBObject qry = convertToDBObject(query);
+			findOneAndUpdateOptions.upsert( getNamedBooleanParam(argStruct, "upsert", false ) );
+			
+			if ( getNamedBooleanParam(argStruct, "returnnew", false ) )
+				findOneAndUpdateOptions.returnDocument( ReturnDocument.AFTER );
+			
+			Document qry = getDocument(query);
 			long start = System.currentTimeMillis();
 			
-			DBObject result = col.findAndModify( 	qry, 
-																						fieldsObj,
-																						sortObj, 
-																						remove, 
-																						convertToDBObject(update), 
-																						returnnew, 
-																						upsert );
-
+			Document result = col.findOneAndUpdate( qry, getDocument(update), findOneAndUpdateOptions );
+			
 			_session.getDebugRecorder().execMongo(col, "findandmodify", qry, System.currentTimeMillis()-start);
 			
-			return tagUtils.convertToCfData( result );
+			return tagUtils.convertToCfData( (Map)result );
 
 		} catch (MongoException me){
 			throwException(_session, me.getMessage());

@@ -73,4 +73,9 @@ public abstract class SessionStorageBase {
 	public void clearAll() {
 	}
 
+	public String getURI(){
+		return null;
+	}
+
+	
 }

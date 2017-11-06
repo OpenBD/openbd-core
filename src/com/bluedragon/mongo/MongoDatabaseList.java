@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,17 +25,15 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoDatabaseList.java 2325 2013-02-09 19:07:29Z alan $
  */
 package com.bluedragon.mongo;
 
-import java.util.Iterator;
-import java.util.List;
+import org.bson.Document;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
+import com.mongodb.Block;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -45,74 +43,104 @@ import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.expression.function.functionBase;
 import com.naryx.tagfusion.expression.function.string.serializejson;
 
+
 public class MongoDatabaseList extends functionBase {
+
 	private static final long serialVersionUID = 1L;
 
-	public MongoDatabaseList(){  min = 1; max = 1; setNamedParams( new String[]{ "datasource" } ); }
-  
-	public String[] getParamInfo(){
-		return new String[]{
-			"datasource name.  Name previously created using MongoRegister"
+
+	public MongoDatabaseList() {
+		min = 1;
+		max = 1;
+		setNamedParams( new String[] { "datasource" } );
+	}
+
+
+	public String[] getParamInfo() {
+		return new String[] {
+				"datasource name.  Name previously created using MongoRegister"
 		};
 	}
-	
-	public java.util.Map getInfo(){
+
+
+	public java.util.Map<String, String> getInfo() {
 		return makeInfo(
-				"mongo", 
-				"Lists all the available databases", 
+				"mongo",
+				"Lists all the available databases",
 				ReturnType.ARRAY );
 	}
-	
-	protected DB getDataSource(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		String datasource = getNamedStringParam(argStruct, "datasource", null );
+
+
+	protected MongoClient getMongoClient( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		String datasource = getNamedStringParam( argStruct, "datasource", null );
 		if ( datasource == null )
-			throwException(_session, "please specify a datasource");
+			throwException( _session, "please specify a datasource" );
 
-		try{
-			DB	db	= (DB)MongoExtension.get( datasource.toLowerCase() );
-			if ( db == null )
-				throwException(_session, "Mongo datasource [" + datasource + "] could not be found.  Did you register it?");
+		try {
+			MongoDSN dsn = MongoExtension.getDSN( datasource.toLowerCase() );
+			if ( dsn == null )
+				throwException( _session, "Mongo datasource [" + datasource + "] could not be found.  Did you register it?" );
 
-			return db;
-		}catch(Exception e){
-			throwException(_session, "Mongo datasource [" + datasource + "] " + e.getMessage() );
+			return dsn.getClient();
+		} catch ( Exception e ) {
+			throwException( _session, "Mongo datasource [" + datasource + "] " + e.getMessage() );
 			return null;
 		}
 	}
-	
-	
-	
+
+
+	protected MongoDatabase getMongoDatabase( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		String datasource = getNamedStringParam( argStruct, "datasource", null );
+		if ( datasource == null )
+			throwException( _session, "please specify a datasource" );
+
+		try {
+			MongoDSN dsn = MongoExtension.getDSN( datasource.toLowerCase() );
+			if ( dsn == null )
+				throwException( _session, "Mongo datasource [" + datasource + "] could not be found.  Did you register it?" );
+
+			return dsn.getDatabase();
+		} catch ( Exception e ) {
+			throwException( _session, "Mongo datasource [" + datasource + "] " + e.getMessage() );
+			return null;
+		}
+	}
+
+
 	/**
 	 * Converts the java object into a BasicDBObject; recursive
-	 * @throws cfmRunTimeException 
+	 * 
+	 * @throws cfmRunTimeException
 	 */
-	protected BasicDBObject	convertToDBObject(cfData d) throws cfmRunTimeException{
-		if ( d.getDataType() == cfData.CFSTRUCTDATA ){
-			StringBuilder buffer = new StringBuilder(1024);
-			new serializejson().encodeJSON(buffer, d, false, serializejson.CaseType.MAINTAIN, serializejson.DateType.MONGO );
-			return (BasicDBObject)com.mongodb.util.JSON.parse(buffer.toString());
-		}else
-			return (BasicDBObject)com.mongodb.util.JSON.parse(d.getString());
+	protected Document getDocument( cfData d ) throws cfmRunTimeException {
+		if ( d.getDataType() == cfData.CFSTRUCTDATA ) {
+			StringBuilder buffer = new StringBuilder( 1024 );
+			new serializejson().encodeJSON( buffer, d, false, serializejson.CaseType.MAINTAIN, serializejson.DateType.MONGO );
+			return Document.parse( buffer.toString() );
+		} else
+			return Document.parse( d.getString() );
 	}
-	
-	
-	
-	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
-		
-		try{
-			List<String> names = db.getMongo().getDatabaseNames();
-			
-			cfArrayData	arr	= cfArrayData.createArray(1);
-			
-			Iterator<String>	it	= names.iterator();
-			while ( it.hasNext() ){
-				arr.addElement( new cfStringData( it.next() ) );
-			}
-			
+
+
+	public cfData execute( cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
+		MongoClient client = getMongoClient( _session, argStruct );
+
+		try {
+			cfArrayData arr = cfArrayData.createArray( 1 );
+
+			client.listDatabaseNames().forEach( new Block<String>() {
+
+				@Override
+				public void apply( final String st ) {
+					try {
+						arr.addElement( new cfStringData( st ) );
+					} catch ( cfmRunTimeException e ) {}
+				}
+			} );
+
 			return arr;
-		} catch (MongoException me){
-			throwException(_session, me.getMessage());
+		} catch ( MongoException me ) {
+			throwException( _session, me.getMessage() );
 			return null;
 		}
 	}

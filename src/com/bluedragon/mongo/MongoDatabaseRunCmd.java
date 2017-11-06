@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,14 +25,15 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoDatabaseRunCmd.java 1770 2011-11-05 11:50:08Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
+import java.util.Map;
+
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
@@ -53,7 +54,7 @@ public class MongoDatabaseRunCmd extends MongoDatabaseList {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Runs the given command against the database referenced by this datasource", 
@@ -61,21 +62,22 @@ public class MongoDatabaseRunCmd extends MongoDatabaseList {
 	}
 	
 	
+	@SuppressWarnings( "rawtypes" )
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase db	= getMongoDatabase( _session, argStruct );
 		cfData	cmdData	= getNamedParam(argStruct, "cmd", null );
 		if ( cmdData == null )
 			throwException(_session, "please specify the cmd parameter");
 		
 		try{
-			CommandResult cmr;
+			Document cmr;
 			
 			if ( cmdData.getDataType() == cfData.CFSTRUCTDATA )
-				cmr	= db.command( convertToDBObject( (cfStructData) cmdData ) );
+				cmr	= db.runCommand( getDocument( (cfStructData) cmdData ) );
 			else
-				cmr	= db.command( cmdData.getString() );
+				cmr	= db.runCommand( new Document( cmdData.getString(), true ) );
 			
-			return tagUtils.convertToCfData(cmr.toMap());
+			return tagUtils.convertToCfData((Map)cmr);
 		} catch (MongoException me){
 			throwException(_session, me.getMessage());
 			return null;

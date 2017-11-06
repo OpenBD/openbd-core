@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,15 +25,17 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionFindOne.java 2343 2013-03-12 01:41:47Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import java.util.Map;
+
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
@@ -54,15 +56,16 @@ public class MongoCollectionFindOne extends MongoCollectionInsert {
 		};
 	}
 
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Performs a query against Mongo returning the first document", 
 				ReturnType.STRUCTURE );
 	}
 
+	@SuppressWarnings( "rawtypes" )
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -75,19 +78,18 @@ public class MongoCollectionFindOne extends MongoCollectionInsert {
 		cfData fields	= getNamedParam(argStruct, "fields", null );
 		
 		try{
-			DBCollection col = db.getCollection(collection);
-			DBObject qry = convertToDBObject(query);
+			MongoCollection<Document> col = db.getCollection(collection);
+			
 			long start = System.currentTimeMillis();
-			DBObject r;
-
-			if ( fields != null ){
-				r = col.findOne( qry, convertToDBObject(fields) );
-			}else{
-				r = col.findOne( qry );
-			}
+			Document qry = getDocument(query);
+			
+			FindIterable<Document> cursor	= col.find( qry ).limit( 1 );
+			
+			if ( fields != null )
+				cursor = cursor.projection( getDocument(fields) );
 
 			_session.getDebugRecorder().execMongo(col, "findone", qry, System.currentTimeMillis()-start);
-			return tagUtils.convertToCfData( r );
+			return tagUtils.convertToCfData( (Map)cursor.first() );
 			
 		} catch (MongoException me){
 			throwException(_session, me.getMessage());

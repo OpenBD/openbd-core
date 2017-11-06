@@ -46,9 +46,12 @@ import com.naryx.tagfusion.cfm.engine.variableStore;
 public class SessionStorageMemcachedImpl extends SessionStorageBase implements SessionStorageInterface {
 
 	private MemcachedClient memcache	= null;
+	private final String uri;
 	
 	public SessionStorageMemcachedImpl(String appName, String _connectionUri) throws Exception {
 		super(appName);
+		
+		this.uri = _connectionUri;
 		
 		// Are they using a user/pass
 		String connectionUri	= _connectionUri.substring( _connectionUri.indexOf("//")+2 );
@@ -66,7 +69,7 @@ public class SessionStorageMemcachedImpl extends SessionStorageBase implements S
 		
 		// If the timeout is greater than 0, then lookup it from Mongo
 		if ( sessionTimeOut > 0 ){
-			Future<Object> future = memcache.asyncGet( sessionInfo.getTokenShort() );
+			Future<Object> future = memcache.asyncGet( appName + sessionInfo.getTokenShort() );
 			
 			try {
 				Object obj = future.get(3, TimeUnit.SECONDS);
@@ -102,7 +105,7 @@ public class SessionStorageMemcachedImpl extends SessionStorageBase implements S
 			return;
 		
 		Future<Boolean> status = null;
-		status = memcache.set( sessData.getStorageID(), (int)(sessData.getTimeOut()/1000), sessData );
+		status = memcache.set( appName + sessData.getStorageID(), (int)(sessData.getTimeOut()/1000), sessData );
 		
 		try{
 			status.get( 3, TimeUnit.SECONDS);
@@ -131,5 +134,9 @@ public class SessionStorageMemcachedImpl extends SessionStorageBase implements S
 	public void shutdown() {
 		if ( memcache != null )
 			memcache.shutdown();
+	}
+	
+	public String getURI(){
+		return uri;
 	}
 }

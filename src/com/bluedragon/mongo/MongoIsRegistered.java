@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoIsRegistered.java 2110 2012-06-07 23:50:53Z alan $
  */
 package com.bluedragon.mongo;
 
@@ -48,7 +46,7 @@ public class MongoIsRegistered extends functionBase {
 		};
 	}
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Determines if the Mongo datasource has been already been registered", 

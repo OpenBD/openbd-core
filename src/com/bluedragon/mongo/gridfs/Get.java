@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: Get.java 2394 2013-07-15 17:48:20Z alan $
  */
 package com.bluedragon.mongo.gridfs;
 
@@ -72,7 +70,7 @@ public class Get extends Add {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Downloads the given file from the Mongo GridFS bucket.  If successful and 'filepath' will return TRUE, otherwise FALSE if the file was not found.  If not using 'filepath', then the function will return the object.  You can get the file specifying either file name, _id or a query.  It multiple match, it will return the first one.", 
@@ -83,7 +81,7 @@ public class Get extends Add {
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
 		
 		// Get the necessary Mongo references
-		DB			db			= getDataSource(_session, argStruct);
+		DB			db			= getDB(_session, argStruct);
 		GridFS	gridfs	= getGridFS(_session, argStruct, db);
 		String filepath	= getNamedStringParam(argStruct, "filepath", null);
 		
@@ -102,7 +100,7 @@ public class Get extends Add {
 				
 				cfData mTmp	= getNamedParam(argStruct, "query", null);
 				if ( mTmp != null )
-					file = gridfs.findOne(convertToDBObject(mTmp));
+					file = gridfs.findOne(getDBObject(mTmp));
 			}
 		}
 

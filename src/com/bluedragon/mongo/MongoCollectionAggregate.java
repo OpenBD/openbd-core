@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2012 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,18 +25,19 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionAggregate.java 2343 2013-03-12 01:41:47Z alan $
  */
 package com.bluedragon.mongo;
 
-import java.lang.reflect.Method;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import com.mongodb.AggregationOutput;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+
+import com.mongodb.Block;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -57,7 +58,7 @@ public class MongoCollectionAggregate extends MongoCollectionInsert {
 		};
 	}
 
-	public java.util.Map getInfo(){
+	public java.util.Map<String, String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Performs an aggregated function against the given collection", 
@@ -65,7 +66,7 @@ public class MongoCollectionAggregate extends MongoCollectionInsert {
 	}
 
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -75,7 +76,8 @@ public class MongoCollectionAggregate extends MongoCollectionInsert {
 		if ( data == null )
 			throwException(_session, "please specify a pipeline");
 
-		Object[]	args	= new Object[2];
+		List<Bson>	pipelineList	= new ArrayList<Bson>();
+		
 		
 		if ( data.getDataType() == cfData.CFARRAYDATA ){
 			cfArrayData	arrData	= (cfArrayData)data;
@@ -83,41 +85,36 @@ public class MongoCollectionAggregate extends MongoCollectionInsert {
 			if ( arrData.size() == 0 )
 				throwException(_session, "please specify at least one pipeline");
 
-			args[0]	= convertToDBObject( arrData.getData(1) );
-			arrData.removeElementAt(1);
-			
-			DBObject[] dargs	= new DBObject[ arrData.size() ];
-			for ( int x=0; x < dargs.length; x++ )
-				dargs[x]	= (DBObject)convertToDBObject( arrData.getData(x+1) );
-			
-			args[1]	= dargs;
+			for ( int x=0; x < arrData.size(); x++ )
+				pipelineList.add( getDocument(arrData.getData(x+1)) );
+
 		}else{
-			args[0]	= convertToDBObject(data);
-			args[1]	= new DBObject[]{};
+			pipelineList.add( getDocument(data) );
 		}
 		
 		
 		try{
-			DBCollection col = db.getCollection(collection);
+			MongoCollection<Document> col = db.getCollection(collection);
 			long start = System.currentTimeMillis();
 			
-			Method agg	=	col.getClass().getMethod("aggregate", DBObject.class, DBObject[].class );
-
-			AggregationOutput aggOutput = (AggregationOutput)agg.invoke(col, args);
-
 			// Now we can run the query
 			cfArrayData	results	= cfArrayData.createArray(1);
-			Iterator<DBObject>	it	= aggOutput.results().iterator();
 			
-			while ( it.hasNext() )
-				results.addElement( tagUtils.convertToCfData(it.next().toMap()) );
+			col.aggregate( pipelineList ).forEach( new Block<Document>(){
 
+				@SuppressWarnings( "rawtypes" )
+				@Override
+				public void apply( Document doc ) {
+					try {
+						results.addElement( tagUtils.convertToCfData( (Map)doc ) );
+					} catch ( cfmRunTimeException e ) {}					
+				}
+				
+			});
+	
 			_session.getDebugRecorder().execMongo(col, "aggregate", null, System.currentTimeMillis()-start);
 			
 			return results;
-		} catch ( java.lang.reflect.InvocationTargetException ite ){
-			throwException(_session, ite.getTargetException().getMessage());
-			return null;
 		} catch (Exception e){
 			throwException(_session, e.getMessage());
 			return null;

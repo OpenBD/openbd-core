@@ -41,7 +41,7 @@ import com.bluedragon.plugin.Plugin;
 import com.bluedragon.plugin.PluginManager;
 import com.bluedragon.plugin.PluginManagerInterface;
 import com.bluedragon.plugin.RequestListener;
-import com.mongodb.DB;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfmBadFileException;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
@@ -64,7 +64,7 @@ public class MongoExtension implements Plugin, RequestListener, SystemClockEvent
 	}
 
 	@Override public String getPluginVersion() {
-		return "1.2011.11.4";
+		return "1.2015.9.27";
 	}
 
 	private static Map<String,MongoDSN>	dbPool	= new HashMap<String,MongoDSN>();
@@ -136,19 +136,17 @@ public class MongoExtension implements Plugin, RequestListener, SystemClockEvent
 		}
 	}
 
-	public static DB	get( String name ) throws Exception {
+	public static MongoDSN	getDSN( String name ) throws Exception {
 		synchronized( dbPool ){
 			MongoDSN	mdsn	= dbPool.get(name.toLowerCase());
 			mdsn.lastUsed = System.currentTimeMillis();
 
-			DB	db	= mdsn.getDB();
-
+			MongoDatabase	db	= mdsn.getDatabase();
 			if ( db == null ){
 				mdsn.open();
-				db = mdsn.getDB();
 			}
 
-			return db;
+			return mdsn;
 		}
 	}
 
@@ -167,7 +165,7 @@ public class MongoExtension implements Plugin, RequestListener, SystemClockEvent
 			while (it.hasNext() ){
 				MongoDSN mdsn = it.next();
 
-				if ( mdsn.getDB() != null && (System.currentTimeMillis()-mdsn.lastUsed) > DSN_TIMEOUT ){
+				if ( mdsn.getDatabase() != null && (System.currentTimeMillis()-mdsn.lastUsed) > DSN_TIMEOUT ){
 					mdsn.close();
 					PluginManager.getPlugInManager().log( "MongoDSN Removed: " + mdsn.getDBName() );
 				}

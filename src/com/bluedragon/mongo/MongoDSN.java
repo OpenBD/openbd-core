@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2000 - 2013 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 TagServlet Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *
@@ -25,7 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *
  *  http://openbd.org/
- *  $Id: MongoDSN.java 2426 2014-03-30 18:53:18Z alan $
  */
 package com.bluedragon.mongo;
 
@@ -40,20 +39,21 @@ import java.util.Map;
 
 import net.spy.memcached.AddrUtil;
 
-import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCredential;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
 
 public class MongoDSN extends Object {
 
 	private	static Map<String,MongoClientWrapper>	clientMongoMap = new HashMap<String,MongoClientWrapper>();
 
 	public long lastUsed;
-	private DB mdb;
+	private MongoDatabase mdb;
+	private MongoClient mongoclient;
 
 	private String server, user, pass, db, mongouri = null, ip;
 	private int port;
@@ -76,23 +76,23 @@ public class MongoDSN extends Object {
 
 
 	public synchronized void open() throws Exception {
-		MongoClient mongo;
+		
 
 		if ( mongouri == null ){
 
 			if ( clientMongoMap.containsKey( ip + port ) ){
-				mdb	= clientMongoMap.get( ip + port ).open().getDB( db );
+				mdb	= clientMongoMap.get( ip + port ).open().getDatabase( db );
 			}else{
-				mongo	= newClient( server + ":" + port, user, pass, db );
-				MongoClientWrapper mcw = new MongoClientWrapper(mongo);
+				mongoclient	= newClient( server + ":" + port, user, pass, db );
+				MongoClientWrapper mcw = new MongoClientWrapper(mongoclient);
 				clientMongoMap.put(  ip + port, mcw );
-				mdb	= mcw.open().getDB( db );
+				mdb	= mcw.open().getDatabase( db );
 			}
 
 		}else{
 			MongoClientURI clientURI = new MongoClientURI(mongouri);
-			mongo	= new MongoClient( clientURI );
-			mdb		= mongo.getDB( clientURI.getDatabase() );
+			mongoclient	= new MongoClient( clientURI );
+			mdb		= mongoclient.getDatabase( clientURI.getDatabase() );
 		}
 
 		lastUsed	= System.currentTimeMillis();
@@ -109,9 +109,10 @@ public class MongoDSN extends Object {
 					clientMongoMap.remove( ip + port );
 
 				mdb = null;
+				mongoclient = null;
 			}else{
-				mdb.getMongo().close();
-				mdb = null;
+				mongoclient.close();
+				mongoclient = null;
 			}
 
 		}
@@ -121,8 +122,12 @@ public class MongoDSN extends Object {
 		return db;
 	}
 
-	public DB	getDB(){
+	public MongoDatabase getDatabase(){
 		return mdb;
+	}
+	
+	public MongoClient getClient(){
+		return mongoclient;
 	}
 	
 	
@@ -144,7 +149,7 @@ public class MongoDSN extends Object {
 		
 		
 		if ( user != null ) {
-			MongoCredential cred = MongoCredential.createMongoCRCredential( user, db, pass.toCharArray() );
+			MongoCredential cred = MongoCredential.createCredential( user, db, pass.toCharArray() );
 			List<MongoCredential> creds = new ArrayList<MongoCredential>();
 			creds.add( cred );
 

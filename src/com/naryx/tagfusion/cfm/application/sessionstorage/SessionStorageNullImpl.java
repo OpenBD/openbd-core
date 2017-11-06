@@ -64,4 +64,7 @@ public class SessionStorageNullImpl implements SessionStorageInterface {
 	@Override
 	public final void shutdown() {}
 
+	public final String getURI(){ return null; }
+
+	
 }

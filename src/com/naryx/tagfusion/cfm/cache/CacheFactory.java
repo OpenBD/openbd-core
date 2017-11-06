@@ -109,7 +109,7 @@ public class CacheFactory extends Object {
 		else if ( type.equals("memorydisk") )
 			cacheinterface	= new MemoryDiskCacheImpl();
 		else if ( type.equals("memcached") )
-			cacheinterface	= new MemcachedCacheImpl();
+			cacheinterface	= MemcachedCacheImpl.getInstance( region.toLowerCase(), props.getData("server").getString() );
 		else if ( type.equals("mongo") )
 			cacheinterface	= new MongoCacheImpl();
 

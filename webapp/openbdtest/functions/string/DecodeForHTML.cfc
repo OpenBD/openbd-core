@@ -1,5 +1,6 @@
-/*
- *  Copyright (C) 2000 - 2015 aw2.0 Ltd
+<!---
+ *
+ *  Copyright (C) 2015 Aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *
@@ -24,43 +25,16 @@
  *  resulting work.
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *
- *  http://openbd.org/
- */
-package com.bluedragon.mongo;
+ *  http://www.openbd.org/
+ *
+--->
+<cfcomponent extends="openbdtest.common.TestCase">
 
-import com.bluedragon.plugin.PluginManager;
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoDatabase;
+	<cffunction name="testDecodeForHTML">
 
+		<cfset assertEquals(DecodeForHTML("&lt;Fran&ccedil;ais&gt;"), "<Français>" )>
+		<cfset assertEquals(DecodeForHTML("&gt;&zzzz;x"), ">&zzzz;x" )>
 
-public class MongoClientWrapper extends Object {
+	</cffunction>
 
-	private final MongoClient	mongoclient;
-	private int	usageCount = 0;
-
-	public MongoClientWrapper( MongoClient mongoclient ){
-		this.mongoclient	= mongoclient;
-	}
-
-	public synchronized MongoClientWrapper open(){
-		usageCount	+=	1;
-		return this;
-	}
-
-	public synchronized void close(){
-		usageCount	-= 1;
-
-		if ( usageCount == 0 ){
-			PluginManager.getPlugInManager().log( "MongoClientWrapper Server Connection Closed: " + this.mongoclient.getAddress().getHost() );
-			this.mongoclient.close();
-		}
-	}
-
-	public int	getUsageCount(){
-		return usageCount;
-	}
-
-	public MongoDatabase	getDatabase(String dbname){
-		return this.mongoclient.getDatabase( dbname );
-	}
-}
+</cfcomponent>

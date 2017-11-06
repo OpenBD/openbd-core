@@ -33,14 +33,15 @@ import java.util.Date;
 import org.aw20.io.ByteArrayOutputStreamRaw;
 import org.aw20.io.FileUtil;
 import org.aw20.security.MD5;
+import org.bson.Document;
 
 import com.bluedragon.mongo.MongoDSN;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
 import com.naryx.tagfusion.cfm.application.cfApplicationData;
 import com.naryx.tagfusion.cfm.application.cfSessionData;
 import com.naryx.tagfusion.cfm.application.sessionUtility;
@@ -51,12 +52,14 @@ import com.naryx.tagfusion.cfm.engine.variableStore;
 
 public class SessionStorageMongoImpl extends SessionStorageBase implements SessionStorageInterface {
 	private MongoClient	mongo = null;
-	private DB mdb = null;
-	private DBCollection col = null;
+	private MongoDatabase mdb = null;
+	private MongoCollection<Document> col = null;
 	private boolean indexes = false;
 	
+	private final String uri;
+	
 	/**
-	 * mongo://[a@b:]server1:port1,server2:port2/db
+	 * mongodb://[a@b:]server1:port1,server2:port2/db
 	 * 
 	 * @param appName
 	 * @param connectionUri
@@ -64,12 +67,13 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 	public SessionStorageMongoImpl(String appName, String _connectionUri) throws Exception {
 		super(appName);
 		
+		this.uri	= _connectionUri;
 		
 		if ( _connectionUri.startsWith("mongodb://") ){
 			
 			MongoClientURI clientURI = new MongoClientURI(_connectionUri);
 			mongo	= new MongoClient( clientURI );
-			mdb		= mongo.getDB( clientURI.getDatabase() );
+			mdb		= mongo.getDatabase( clientURI.getDatabase() == null ? "openbd" : clientURI.getDatabase() );
 
 		}else{
 		
@@ -99,7 +103,7 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 	
 			mongo	= MongoDSN.newClient( connectionUri, user, pass, db );
 			
-			mdb	= mongo.getDB( db );
+			mdb	= mongo.getDatabase( db );
 		}
 
 		
@@ -113,7 +117,7 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 	private void setIndexes(){
 		if ( !indexes ){
 			try{
-				col.createIndex( new BasicDBObject("et",true) );
+				col.createIndex( new Document("et",true) );
 				indexes = true;
 			}catch(Exception e){
 				cfEngine.log( appName + "; Exception: " + e );
@@ -143,14 +147,22 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 			// If the timeout is greater than 0, then lookup it from Mongo
 			if ( sessionTimeOut > 0 ){
 				setIndexes();
-				DBObject	keys	= new BasicDBObject( "_id", sessionInfo.getTokenShort() );
-				DBObject	dbo		= col.findOne(keys);
+				Document	keys	= new Document( "_id", appName + sessionInfo.getTokenShort() );
+				Document	doc		= col.find(keys).first();
 				
-				if ( dbo != null  ){
-					Date et	= (Date)dbo.get("et");
+				if ( doc != null  ){
+					Date et	= (Date)doc.get("et");
 					if ( et.getTime() > System.currentTimeMillis() ){
 						// Found a live one that we can use!!!
-						byte[]	buf	= (byte[])dbo.get("d");
+						
+						Object bufObj	= doc.get("d");
+						byte[]	buf;
+						if ( bufObj instanceof org.bson.types.Binary	){
+							buf = ( (org.bson.types.Binary) bufObj ).getData();
+						}else{ // should be byte []. Keep for backwards compatibility
+							buf = (byte[]) bufObj;
+						}
+						
 						sessData	= (cfSessionData)FileUtil.loadClass(buf, true);
 						sessData.setMD5( MD5.getDigest(buf) );
 					}
@@ -186,10 +198,8 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 			return;
 	
 		try{
-			String sessionId		= sessData.getStorageID();
-
-			DBObject	keys			= new BasicDBObject("_id", sessionId );
-			BasicDBObject	vals	= new BasicDBObject("et", new Date(System.currentTimeMillis() + sessData.getTimeOut() ) );
+			Document	keys	= new Document("_id", appName + sessData.getStorageID() );
+			Document	vals	= new Document("et", new Date(System.currentTimeMillis() + sessData.getTimeOut() ) );
 			
 			// Serialize the object
 			ByteArrayOutputStreamRaw	bos	= new ByteArrayOutputStreamRaw( 32000 );
@@ -197,13 +207,11 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 
 			byte[]	buf	= bos.toByteArray();
 
-			// Has it really changed
-			if ( MD5.getDigest(buf).equals( sessData.getMD5() ) ){
-				col.update( keys, new BasicDBObject("$set", vals), true, false );
-			}else{
+			// Has it really changed; we only update the last used date if it has
+			if ( !MD5.getDigest(buf).equals( sessData.getMD5() ) )
 				vals.append("d", buf);
-				col.update( keys, new BasicDBObject("$set", vals), true, false );
-			}
+			
+			col.updateOne( keys, new Document("$set", vals), new UpdateOptions().upsert(true) );
 
 		}catch(Exception e){
 			cfEngine.log( appName + "MongoDBException: " + e );
@@ -212,7 +220,7 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 
 
 	public void onExpireAll(cfApplicationData applicationData) {
-		col.remove( new BasicDBObject( "et", new BasicDBObject("$lte", new Date()) ) );
+		col.deleteMany( Filters.lte("et", new Date() ) );
 	}
 	
 	
@@ -229,5 +237,9 @@ public class SessionStorageMongoImpl extends SessionStorageBase implements Sessi
 	@Override
 	public SessionEngine getType() {
 		return SessionStorageFactory.SessionEngine.MONGO;
+	}
+	
+	public String getURI(){
+		return uri;
 	}
 }

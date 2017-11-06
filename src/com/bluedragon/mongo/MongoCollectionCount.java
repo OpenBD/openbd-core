@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 TagServlet Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,15 +25,14 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoCollectionCount.java 2343 2013-03-12 01:41:47Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfNumberData;
@@ -54,7 +53,7 @@ public class MongoCollectionCount extends MongoDatabaseList {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Counts the number of documents in a collection, filtering with the optional query", 
@@ -63,7 +62,7 @@ public class MongoCollectionCount extends MongoDatabaseList {
 	
 	
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
 		
 		String collection	= getNamedStringParam(argStruct, "collection", null);
 		if ( collection == null )
@@ -72,21 +71,21 @@ public class MongoCollectionCount extends MongoDatabaseList {
 		cfData	queryData	= getNamedParam(argStruct, "query", null );
 		
 		try{
-			DBObject qry = null;
+			Document qry = null;
 			int count = 0;
 			long start = System.currentTimeMillis();
-			DBCollection col = db.getCollection(collection);
+			MongoCollection<Document> col = db.getCollection(collection);
 			
 			if ( queryData != null ){
-				qry  	= convertToDBObject(queryData);
-				count	= (int)col.count(qry); 
+				qry  	= getDocument(queryData);
+				count	= (int)col.count( qry ); 
 			}else
 				count = (int)col.count();
 			
 			_session.getDebugRecorder().execMongo(col, "count", qry, System.currentTimeMillis()-start);
 
 			return new cfNumberData( count );
-			
+
 		} catch (MongoException me){
 			throwException(_session, me.getMessage());
 			return null;

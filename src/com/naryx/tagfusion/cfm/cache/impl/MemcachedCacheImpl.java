@@ -30,6 +30,7 @@
 package com.naryx.tagfusion.cfm.cache.impl;
 
 import java.net.SocketAddress;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -56,13 +57,39 @@ public class MemcachedCacheImpl implements CacheInterface {
 	private int	waitTimeSeconds	= 0;
 	private cfStructData props;
 	
+	private static HashMap<String,MemcachedCacheImpl> instances = new HashMap<>();
+
+	private MemcachedCacheImpl(){}
+
+	public static MemcachedCacheImpl getInstance( String _region, String _server ){
+		String cacheKey = getCacheKey( _region, _server );
+		MemcachedCacheImpl memcache = instances.get( cacheKey );
+		
+		if ( memcache == null ){
+			synchronized( instances ){
+				memcache = instances.get( cacheKey );
+				if ( memcache == null ){
+					memcache = new MemcachedCacheImpl();
+					instances.put( cacheKey, memcache );
+				}
+			}
+		}
+		
+		return memcache;
+	}
+	
+	
+	private static String getCacheKey( String _region, String _server ){
+		return _region + "|||" + _server;
+	}
+
 
 	@Override
 	public void setProperties(String region, cfStructData _props) throws Exception {
-		this.props	= _props;
-		
 		if ( memcache != null )
-			shutdown();
+			return;
+
+		this.props	= _props;
 
 		if ( !props.containsKey("server") )
 			throw new Exception("'server' does not exist. in format: server1:port1 server2:port2");

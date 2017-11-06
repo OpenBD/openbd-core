@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2014 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,8 +25,6 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoObjectId.java 2426 2014-03-30 18:53:18Z alan $
  */
 package com.bluedragon.mongo;
 
@@ -50,7 +48,7 @@ public class MongoObjectId extends MongoDatabaseList {
 	}
 	
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
 				"Creates a ObjectID function for use with Mongo generated ID's", 

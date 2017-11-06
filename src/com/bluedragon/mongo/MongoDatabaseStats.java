@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2000 - 2011 TagServlet Ltd
+ *  Copyright (C) 2000 - 2015 aw2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -25,14 +25,15 @@
  *  README.txt @ http://www.openbluedragon.org/license/README.txt
  *  
  *  http://openbd.org/
- *  
- *  $Id: MongoDatabaseStats.java 1770 2011-11-05 11:50:08Z alan $
  */
 package com.bluedragon.mongo;
 
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
+import java.util.Map;
+
+import org.bson.Document;
+
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoDatabase;
 import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
@@ -50,20 +51,21 @@ public class MongoDatabaseStats extends MongoDatabaseList {
 		};
 	}
 	
-	public java.util.Map getInfo(){
+	public java.util.Map<String,String> getInfo(){
 		return makeInfo(
 				"mongo", 
-				"Returns the database statistics", 
+				"Returns the server statistics, a wrapper to the command: db.dbStats()", 
 				ReturnType.STRUCTURE );
 	}
 	
 	
+	@SuppressWarnings( "rawtypes" )
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
-		DB	db	= getDataSource( _session, argStruct );
-		
+		MongoDatabase	db	= getMongoDatabase( _session, argStruct );
+
 		try{
-			CommandResult cmd = db.getStats();
-			return tagUtils.convertToCfData(cmd.toMap());	
+			Document result	= db.runCommand( new Document("dbStats",1) );
+			return tagUtils.convertToCfData((Map)result);	 	
 		} catch (MongoException me){
 			throwException(_session, me.getMessage());
 			return null;

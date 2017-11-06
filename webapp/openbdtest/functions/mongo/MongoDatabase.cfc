@@ -57,8 +57,9 @@ function testDatabaseStats(){
 	if ( !MongoIsValid(name="mongo") )
 		MongoRegister( name="mongo", server="127.0.0.1", db="openbd" );
 	var stats	= MongoDatabaseStats( "mongo" );
+
 	assertTrue( isStruct(stats) );
-	assertEquals("127.0.0.1:27017", stats.serverUsed );
+	assertEquals(1, stats.ok );
 	assertEquals("openbd", stats.db );
 }
 
@@ -67,11 +68,12 @@ function testDatabaseStats(){
 function testRunCommand(){
 	if ( !MongoIsValid(name="mongo") )
 		MongoRegister( name="mongo", server="127.0.0.1", db="openbd" );
+
 	var cmd	= MongoDatabaseRunCmd( "mongo", "ping" );
-	assertEquals("127.0.0.1:27017", cmd.serverUsed );
+	assertEquals( 1, cmd.ok );
 
 	var cmd	= MongoDatabaseRunCmd( "mongo", {"ping":1} );
-	assertEquals("127.0.0.1:27017", cmd.serverUsed );
+	assertEquals(1, cmd.ok );
 }
 
 // ---------------------------------------------------------------------------------
@@ -125,8 +127,9 @@ function testCollectionSave(){
 
 	obj.age	= 22;
 	MongoCollectionSave("mongo","mycoll",obj);
-
+	
 	obj	= MongoCollectionFindOne("mongo","mycoll",{age:22});
+	
 	assertEquals( 22, obj.age );
 }
 
