@@ -129,6 +129,7 @@
 		<!-- mongo plugin -->
 		<pathelement location="${webinf.jarpath}mongodb-driver-3.5.0.jar" />
 		<pathelement location="${webinf.jarpath}mongodb-driver-core-3.5.0.jar" />
+		<pathelement location="${webinf.jarpath}bson-3.5.0.jar" />
 
 		<!-- aw20 Org -->
 		<pathelement location="${webinf.jarpath}aw20org.jar" />
