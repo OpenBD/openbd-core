@@ -127,7 +127,8 @@
 		<pathelement location="${webinf.jarpath}shiro-core-1.1.0.jar" />
 
 		<!-- mongo plugin -->
-		<pathelement location="${webinf.jarpath}mongo-java-driver-3.0.4.jar" />
+		<pathelement location="${webinf.jarpath}mongodb-driver-3.5.0.jar" />
+		<pathelement location="${webinf.jarpath}mongodb-driver-core-3.5.0.jar" />
 
 		<!-- aw20 Org -->
 		<pathelement location="${webinf.jarpath}aw20org.jar" />
