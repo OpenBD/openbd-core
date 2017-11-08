@@ -77,6 +77,8 @@
 	<classpathentry kind="lib" path="build/lib/activation.jar"/>
 	<classpathentry kind="lib" path="build/lib/servlet-api-2.4.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/joda-time-2.8.1.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongo-java-driver-3.0.4.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/bson-3.5.0.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongodb-driver-3.5.0.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongodb-driver-core-3.5.0.jar"/>
 	<classpathentry kind="output" path="webapp/WEB-INF/classes"/>
 </classpath>
