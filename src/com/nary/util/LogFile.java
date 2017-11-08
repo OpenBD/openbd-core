@@ -144,6 +144,7 @@ public class LogFile extends Object implements SystemClockEvent {
 
 	private void writeToFile(String _line) throws IOException {
 		outWriter.write(_line);
+		outWriter.flush();
 		logFileSize += _line.length();
 	}
 
