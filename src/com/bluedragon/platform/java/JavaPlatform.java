@@ -391,6 +391,8 @@ public class JavaPlatform implements Platform {
 		functions.put("amazonetjobread", 									"org.alanwilliamson.amazon.transcoder.job.Read");
 		functions.put("amazonetjoblist", 									"org.alanwilliamson.amazon.transcoder.job.List");
 	
+		functions.put("amazonlambdaexecute",							"org.alanwilliamson.amazon.lambda.LambdaExecute");
+		functions.put("amazonlambdaexecuteasync",							"org.alanwilliamson.amazon.lambda.LambdaAsyncExecute");
 		
 		// IP related functions
 		functions.put("ipcount",													"com.naryx.tagfusion.expression.function.ext.ip.ipGetCount" );
