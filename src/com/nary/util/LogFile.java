@@ -73,6 +73,7 @@ public class LogFile extends Object implements SystemClockEvent {
 		outWriter = new OutputStreamWriter( fileWriter, _encoding );
 		logFileSize = new File( logPath ).length();
 		
+		prependTimeStamp = _PrependTimeStamp;
 		
 		SystemClock.setListenerDay( this );
 	}
@@ -145,6 +146,8 @@ public class LogFile extends Object implements SystemClockEvent {
 	private void writeToFile(String _line) throws IOException {
 		outWriter.write(_line);
 		outWriter.flush();
+		fileWriter.flush();
+		
 		logFileSize += _line.length();
 	}
 
