@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- added new AmazonLambdaExecute/AmazonLambdaExecuteAsync functions
 - upgraded Mongo driver to 3.5
 - fixed memcached query caching connection leakage
 - added support for queryall in salesforce query function

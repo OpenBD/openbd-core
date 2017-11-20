@@ -76,9 +76,9 @@
 		<pathelement location="${webinf.jarpath}commons-discovery.jar" />
 		<pathelement location="${webinf.jarpath}commons-io-1.4.jar" />
 
-		<pathelement location="${webinf.jarpath}httpclient-4.3.6.jar" />
+		<pathelement location="${webinf.jarpath}httpclient-4.5.2.jar" />
 		<pathelement location="${webinf.jarpath}httpclient-cache-4.3.6.jar" />
-		<pathelement location="${webinf.jarpath}httpcore-4.3.3.jar" />
+		<pathelement location="${webinf.jarpath}httpcore-4.4.4.jar" />
 		<pathelement location="${webinf.jarpath}httpmime-4.3.6.jar" />
 		<pathelement location="${webinf.jarpath}jakarta-oro-2.0.8.jar" />
 		<pathelement location="${webinf.jarpath}javolution.jar" />
@@ -151,8 +151,14 @@
 		<pathelement location="${webinf.jarpath}markdown4j-2.2.jar" />
 
 		<!-- For Amazon -->
-		<pathelement location="${webinf.jarpath}aws-java-sdk-1.9.14-openbd.jar" />
-		<pathelement location="${webinf.jarpath}jackson-annotations-2.3.0.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-core-1.11.221.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-elastictranscoder-1.11.221.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-lambda-1.11.221.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-s3-1.11.221.jar" />
+		<pathelement location="${webinf.jarpath}jackson-dataformat-cbor-2.6.7.jar" />
+		<pathelement location="${webinf.jarpath}jackson-databind-2.6.7.1.jar" />
+		<pathelement location="${webinf.jarpath}jackson-core-2.6.7.jar" />
+		<pathelement location="${webinf.jarpath}jackson-annotations-2.6.0.jar" />
 		<pathelement location="${webinf.jarpath}jackson-databind-2.3.2.jar" />
 
 	</path>
