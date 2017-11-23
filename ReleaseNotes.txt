@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- introduced Redis based implementation for caching
 - added new AmazonLambdaExecute/AmazonLambdaExecuteAsync functions
 - upgraded Mongo driver to 3.5
 - fixed memcached query caching connection leakage
