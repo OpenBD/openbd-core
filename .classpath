@@ -70,7 +70,6 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/yuicompressor-2.4.6.jar"/>
 	<classpathentry kind="lib" path="build/lib/activation.jar"/>
 	<classpathentry kind="lib" path="build/lib/servlet-api-2.4.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/joda-time-2.8.1.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/bson-3.5.0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongodb-driver-3.5.0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongodb-driver-core-3.5.0.jar"/>
@@ -83,7 +82,24 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-core-2.6.7.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-databind-2.6.7.1.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-dataformat-cbor-2.6.7.jar"/>
-	<classpathentry kind="var" path="JAVA_TOOLS"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/commons-pool2-2.4.2.jar"/>
+	<classpathentry kind="var" path="JDK_TOOLS"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/httpcore-4.4.4.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/HdrHistogram-2.1.8.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/joda-time-2.9.9.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/LatencyUtils-2.0.3.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/lettuce-core-5.0.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-buffer-4.1.15.Final.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-codec-4.1.15.Final.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-common-4.1.15.Final.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-handler-4.1.15.Final.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-resolver-4.1.15.Final.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-tcnative-1.1.33.Fork26-osx-x86_64.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-transport-4.1.15.Final.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-transport-native-epoll-4.1.15.Final-linux-x86_64.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-transport-native-kqueue-4.1.15.Final-osx-x86_64.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/netty-transport-native-unix-common-4.1.15.Final.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/reactive-streams-1.0.1.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/reactor-core-3.1.0.RELEASE.jar"/>
 	<classpathentry kind="output" path="webapp/WEB-INF/classes"/>
 </classpath>

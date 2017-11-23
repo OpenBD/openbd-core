@@ -160,6 +160,28 @@
 		<pathelement location="${webinf.jarpath}jackson-core-2.6.7.jar" />
 		<pathelement location="${webinf.jarpath}jackson-annotations-2.6.0.jar" />
 		<pathelement location="${webinf.jarpath}jackson-databind-2.3.2.jar" />
+		
+		
+		<!-- For Joda Time -->
+		<pathelement location="${webinf.jarpath}joda-time-2.9.9.jar" />
+		
+		<!-- For Lettuce (Redis Client) -->
+		<pathelement location="${webinf.jarpath}commons-pool2-2.4.2.jar" />
+		<pathelement location="${webinf.jarpath}HdrHistogram-2.1.8.jar" />
+		<pathelement location="${webinf.jarpath}LatencyUtils-2.0.3.jar" />
+		<pathelement location="${webinf.jarpath}netty-buffer-4.1.15.Final.jar" />
+		<pathelement location="${webinf.jarpath}netty-codec-4.1.15.Final.jar" />
+		<pathelement location="${webinf.jarpath}netty-common-4.1.15.Final.jar" />
+		<pathelement location="${webinf.jarpath}netty-handler-4.1.15.Final.jar" />
+		<pathelement location="${webinf.jarpath}netty-resolver-4.1.15.Final.jar" />
+		<pathelement location="${webinf.jarpath}netty-tcnative-1.1.33.Fork26-osx-x86_64.jar" />
+		<pathelement location="${webinf.jarpath}netty-transport-4.1.15.Final.jar" />
+		<pathelement location="${webinf.jarpath}netty-transport-native-epoll-4.1.15.Final-linux-x86_64.jar" />
+		<pathelement location="${webinf.jarpath}netty-transport-native-kqueue-4.1.15.Final-osx-x86_64.jar" />
+		<pathelement location="${webinf.jarpath}netty-transport-native-unix-common-4.1.15.Final.jar" />
+		<pathelement location="${webinf.jarpath}reactive-streams-1.0.1.jar" />
+		<pathelement location="${webinf.jarpath}reactor-core-3.1.0.RELEASE.jar" />
+		<pathelement location="${webinf.jarpath}lettuce-core-5.0.0.RELEASE.jar" />
 
 	</path>
 
