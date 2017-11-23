@@ -1,5 +1,5 @@
 /* 
- *  Copyright (C) 2017 CodeArcs Inc.
+ *  Copyright (C) 2017 AW 2.0 Ltd
  *
  *  This file is part of Open BlueDragon (OpenBD) CFML Server Engine.
  *  
@@ -73,8 +73,9 @@ public class Transcoder {
 
 			/*
 			 * We must to call close() on the GZIPOutputStream
-			 * For some reason the try / catch resource management is not enough.
+			 * The try / catch resource management is not enough as the close from try/catch runs after the code baos.toByteArray().
 			 * Deleting this close causes fromString to fail.
+			 * Flush would would not work, too.
 			 */
 			close( gzos );
 
