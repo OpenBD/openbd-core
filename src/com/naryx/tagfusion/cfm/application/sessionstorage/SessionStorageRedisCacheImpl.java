@@ -88,7 +88,7 @@ public class SessionStorageRedisCacheImpl extends SessionStorageBase implements 
 
 				String obj = future.get( 3, TimeUnit.SECONDS );
 
-				sessData = (cfSessionData) Transcoder.fromString( obj );
+				sessData = obj == null ? null : (cfSessionData) Transcoder.fromString( obj );
 
 			} catch ( Exception e ) {
 				cfEngine.log( "SessionStorageRedisCache get Failed: " + e.getMessage() );
