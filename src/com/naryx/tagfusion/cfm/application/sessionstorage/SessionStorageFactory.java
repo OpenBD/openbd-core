@@ -31,87 +31,105 @@ package com.naryx.tagfusion.cfm.application.sessionstorage;
 import com.naryx.tagfusion.cfm.engine.catchDataFactory;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 
+
 public class SessionStorageFactory {
 
 	public enum SessionEngine {
-		NONE, INTERNAL, J2EE, MONGO, MEMCACHED
+		NONE, INTERNAL, J2EE, MONGO, MEMCACHED, REDIS
 	};
 
 	public static SessionStorageInterface NULL_STORAGESESSION = new SessionStorageNullImpl();
 
-	public static SessionStorageInterface createStorage(String appName, SessionStorageInterface sessionStorage, boolean bSessionManagement, boolean bJ2EESessionManagement, String storage) throws cfmRunTimeException {
 
-		if (!bSessionManagement) {
+	public static SessionStorageInterface createStorage( String appName, SessionStorageInterface sessionStorage, boolean bSessionManagement, boolean bJ2EESessionManagement, String storage ) throws cfmRunTimeException {
 
-			if (sessionStorage != null && sessionStorage.getType() == SessionEngine.NONE)
+		if ( !bSessionManagement ) {
+
+			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.NONE )
 				return sessionStorage;
 			else {
 
-				if (sessionStorage != null)
+				if ( sessionStorage != null )
 					sessionStorage.shutdown();
 
 				return NULL_STORAGESESSION;
 			}
 
-		} else if (storage != null) {
+		} else if ( storage != null ) {
 
-			if (storage.startsWith("mongo")) {
+			if ( storage.startsWith( "mongo" ) ) {
 
-				if (sessionStorage != null && sessionStorage.getType() == SessionEngine.MONGO && sessionStorage.getURI().equals(storage))
+				if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.MONGO && sessionStorage.getURI().equals( storage ) )
 					return sessionStorage;
 				else {
 
-					if (sessionStorage != null)
+					if ( sessionStorage != null )
 						sessionStorage.shutdown();
 
 					try {
-						return new SessionStorageMongoImpl(appName, storage);
-					} catch (Exception e) {
-						throw new cfmRunTimeException(catchDataFactory.generalException("SessionStorageFactory", e.getMessage()));
+						return new SessionStorageMongoImpl( appName, storage );
+					} catch ( Exception e ) {
+						throw new cfmRunTimeException( catchDataFactory.generalException( "SessionStorageFactory", e.getMessage() ) );
 					}
 				}
 
-			} else if (storage.startsWith("memcached://")) {
+			} else if ( storage.startsWith( "memcached://" ) ) {
 
-				if (sessionStorage != null && sessionStorage.getType() == SessionEngine.MEMCACHED && sessionStorage.getURI().equals(storage))
+				if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.MEMCACHED && sessionStorage.getURI().equals( storage ) )
 					return sessionStorage;
 				else {
 
-					if (sessionStorage != null)
+					if ( sessionStorage != null )
 						sessionStorage.shutdown();
 
 					try {
-						return new SessionStorageMemcachedImpl(appName, storage);
-					} catch (Exception e) {
-						throw new cfmRunTimeException(catchDataFactory.generalException("SessionStorageFactory", e.getMessage()));
+						return new SessionStorageMemcachedImpl( appName, storage );
+					} catch ( Exception e ) {
+						throw new cfmRunTimeException( catchDataFactory.generalException( "SessionStorageFactory", e.getMessage() ) );
+					}
+				}
+
+			} else if ( storage.startsWith( "redis://" ) ) {
+
+				if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.REDIS && sessionStorage.getURI().equals( storage ) )
+					return sessionStorage;
+				else {
+
+					if ( sessionStorage != null )
+						sessionStorage.shutdown();
+
+					try {
+						return new SessionStorageRedisCacheImpl( appName, storage );
+					} catch ( Exception e ) {
+						throw new cfmRunTimeException( catchDataFactory.generalException( "SessionStorageFactory", e.getMessage() ) );
 					}
 				}
 
 			} else
-				throw new cfmRunTimeException(catchDataFactory.generalException("SessionStorageFactory", "unknown storage: [" + storage + "]"));
+				throw new cfmRunTimeException( catchDataFactory.generalException( "SessionStorageFactory", "unknown storage: [" + storage + "]" ) );
 
-		} else if (bJ2EESessionManagement) {
+		} else if ( bJ2EESessionManagement ) {
 
-			if (sessionStorage != null && sessionStorage.getType() == SessionEngine.J2EE)
+			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.J2EE )
 				return sessionStorage;
 			else {
 
-				if (sessionStorage != null)
+				if ( sessionStorage != null )
 					sessionStorage.shutdown();
 
-				return new SessionStorageJ2EEImpl(appName);
+				return new SessionStorageJ2EEImpl( appName );
 			}
 
 		} else {
 
-			if (sessionStorage != null && sessionStorage.getType() == SessionEngine.INTERNAL)
+			if ( sessionStorage != null && sessionStorage.getType() == SessionEngine.INTERNAL )
 				return sessionStorage;
 			else {
 
-				if (sessionStorage != null)
+				if ( sessionStorage != null )
 					sessionStorage.shutdown();
 
-				return new SessionStorageInternalImpl(appName);
+				return new SessionStorageInternalImpl( appName );
 			}
 
 		}
