@@ -57,7 +57,7 @@ public class cfPARAM extends cfTag implements Serializable
   private static final String USER_RE = "(([0-9a-zA-Z\\?:@&=$\\-_\\.+!*'(),])|(%[0-9A-Fa-f]+))+";
   private static final String HOST_RE = "([a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*)";
   private static final String PORT_RE = "(:[0-9]+)?";
-  public static final String EMAIL_RE = "[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@([a-zA-Z_0-9-]+\\.)+[a-zA-Z]{2,7}$"; 
+  public static final String EMAIL_RE = "[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@([a-zA-Z_0-9-]+\\.)+[a-zA-Z]{2,9}$"; 
   public static final String URL_RE = "^((http|ftp|https|ftps|sftp)://)(" + USER_RE + ":([a-zA-Z0-9$-_\\.+;?&=]+)?@)?" + HOST_RE + PORT_RE + "(/[a-zA-Z0-9\\&%_\\,\\'\\$\\./+\\?=~#\\-]*)?$";
   private static final String FSEGMENT_RE = "(([0-9a-zA-Z\\?:@&=$-_\\.+])|(%[0-9A-Fa-f]+)+)";
   private static final String FILE_URL_RE = "^file://" + HOST_RE + "?/" + FSEGMENT_RE + "*(/" + FSEGMENT_RE + "*)*$";
