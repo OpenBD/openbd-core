@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Fixed issue #34: isValid() not returning valid for .education
 - introduced Redis based implementation for caching
 - added new AmazonLambdaExecute/AmazonLambdaExecuteAsync functions
 - upgraded Mongo driver to 3.5
