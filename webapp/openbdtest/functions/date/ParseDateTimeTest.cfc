@@ -379,7 +379,7 @@
 		</cftry>
 	</cffunction>
 
-	<cffunction name="checkDate">
+	<cffunction name="checkDate" access="private">
 		<cfargument name="parsed">
 		<cfargument name="year">
 		<cfargument name="month">

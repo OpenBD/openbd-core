@@ -80,7 +80,7 @@ public class dateFormat extends functionBase {
 			// (refer to bug #1908)
 			cfmlFormatString = specifiedFormat.toLowerCase();
 			if (cfmlFormatString.equals("short")) {
-				cfmlFormatString = "m/d/y";
+				cfmlFormatString = "m/d/yy";
 			} else if (cfmlFormatString.equals("medium")) {
 				cfmlFormatString = "mmm d, yyyy";
 			} else if (cfmlFormatString.equals("long")) {
