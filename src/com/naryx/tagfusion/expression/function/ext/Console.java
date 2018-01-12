@@ -31,6 +31,7 @@
 package com.naryx.tagfusion.expression.function.ext;
 
 import java.util.List;
+import java.util.ListIterator;
 
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
@@ -49,7 +50,8 @@ public class Console extends functionBase {
 	protected static boolean	bConsoleOn = false;
 	
 	public Console() {
-		min = max = 1;
+		min = 1;
+		max = 10;
 	}
 
 	public String[] getParamInfo(){
@@ -61,15 +63,21 @@ public class Console extends functionBase {
 	public java.util.Map getInfo(){
 		return makeInfo(
 				"debugging", 
-				"If the console has been turned on, or the request is coming from 127.0.0.1 (local), will output the variable to the engine console", 
+				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output the variable(s) to the engine console", 
 				ReturnType.BOOLEAN );
 	}
 	
 	public cfData execute(cfSession _session, List<cfData> parameters) throws cfmRunTimeException {
 		if ( bConsoleOn || isLocalIP(_session.REQ.getRemoteAddr()) ){
-			cfData data = parameters.get(0);
+			List<cfData> dataParams = parameters;
+
+			ListIterator<cfData> li = dataParams.listIterator(dataParams.size());
 			
-			try{
+			// Not sure why, but it seems the items get here in reverse order
+			while(li.hasPrevious()) {
+				// moving cursor to previous element
+	            cfData data = (cfData)li.previous();
+	            
 				if ( cfData.isSimpleValue(data) ){
 					System.out.println( data.getString() );
 				} else if ( data.getDataType() == cfData.CFQUERYRESULTDATA ){
@@ -81,10 +89,8 @@ public class Console extends functionBase {
 				} else {
 					System.out.println( getString(data) );
 				}
-			}catch(Exception e){
-				System.out.println( "[ExceptionWithConsole] " + e.getMessage() );
 			}
-
+			
 		}
 
 		return cfBooleanData.TRUE;
