@@ -95,7 +95,7 @@ public class GetUrl extends AmazonBase {
   			else
   				expirationDate = new Date( System.currentTimeMillis() + (expired.getLong() * DateUtil.SECS_MS) );
   		}else{
-  			expirationDate = new Date( System.currentTimeMillis() + DateUtil.YEAR_MS*5 );
+  			expirationDate = new Date( System.currentTimeMillis() + DateUtil.DAY_MS*7 );
   		}
 
   		GeneratePresignedUrlRequest g = new GeneratePresignedUrlRequest(bucket, key);
