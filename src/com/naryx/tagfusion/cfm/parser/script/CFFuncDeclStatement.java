@@ -95,7 +95,7 @@ public class CFFuncDeclStatement extends CFParsedStatement implements java.io.Se
 				throw new ParseException(_name, "The attribute " + nextKey.toUpperCase() + " must have a constant value");
 			}
 
-			attributes.put(nextKey, ((CFLiteral) nextExpr).getStringImage());
+			attributes.put(nextKey.toLowerCase(), ((CFLiteral) nextExpr).getStringImage());
 		}
 
 	}
