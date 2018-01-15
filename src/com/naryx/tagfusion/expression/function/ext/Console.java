@@ -76,7 +76,7 @@ public class Console extends functionBase {
 			// Not sure why, but it seems the items get here in reverse order
 			while(li.hasPrevious()) {
 				// moving cursor to previous element
-	            cfData data = (cfData)li.previous();
+				cfData data = (cfData)li.previous();
 	            
 				if ( cfData.isSimpleValue(data) ){
 					System.out.println( data.getString() );
