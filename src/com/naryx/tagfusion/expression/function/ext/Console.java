@@ -92,7 +92,7 @@ public class Console extends functionBase {
 
 	
 	private boolean isLocalIP( String ip ){
-		if ( ip != null && ip.equals("127.0.0.1") )
+		if ( ip != null && (ip.equals("127.0.0.1") || ip.equals("0:0:0:0:0:0:0:1")) )
 			return true;
 		else
 			return false;
