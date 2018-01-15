@@ -5,6 +5,9 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Fixed #41: Returnformat in cfscript was case sensitive #41
+- Fixed #40: minor issue with htmlCodeFormat
+- Fixed #38: updated Console to output if running on localhost
 - Fixed output of year with DateFormat "short" mask
 - Fixed issue #34: isValid() not returning valid for .education
 - introduced Redis based implementation for caching
