@@ -31,10 +31,13 @@
 package com.naryx.tagfusion.expression.function.ext;
 
 import java.util.List;
+import java.util.ListIterator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
+import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfQueryResultData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStructData;
@@ -49,7 +52,8 @@ public class Console extends functionBase {
 	protected static boolean	bConsoleOn = false;
 	
 	public Console() {
-		min = max = 1;
+		min = 1;
+		max = 10;
 	}
 
 	public String[] getParamInfo(){
@@ -61,30 +65,60 @@ public class Console extends functionBase {
 	public java.util.Map getInfo(){
 		return makeInfo(
 				"debugging", 
-				"If the console has been turned on, or the request is coming from 127.0.0.1 (local), will output the variable to the engine console", 
+				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output the variable(s) to the engine console. If you have set <prettyconsole>true</prettyconsole> under <debugoutput> in the bluedragon.xml your complex data types will be output as pretty-printed json", 
 				ReturnType.BOOLEAN );
 	}
 	
 	public cfData execute(cfSession _session, List<cfData> parameters) throws cfmRunTimeException {
 		if ( bConsoleOn || isLocalIP(_session.REQ.getRemoteAddr()) ){
-			cfData data = parameters.get(0);
+			List<cfData> dataParams = parameters;
 			
-			try{
-				if ( cfData.isSimpleValue(data) ){
-					System.out.println( data.getString() );
-				} else if ( data.getDataType() == cfData.CFQUERYRESULTDATA ){
-					dumpQuery( (cfQueryResultData)data );
-				} else if ( data.getDataType() == cfData.CFARRAYDATA ){
-					dumpArray( (cfArrayData)data );
-				} else if ( data.getDataType() == cfData.CFSTRUCTDATA ){
-					dumpStruct( (cfStructData)data );
-				} else {
-					System.out.println( getString(data) );
+			// Loop all the console statements
+			ListIterator<cfData> li = dataParams.listIterator(dataParams.size());
+			while(li.hasPrevious()) {
+				try {
+					// moving cursor to previous element
+					cfData data = (cfData)li.previous();
+				
+					// If we have simple data, just output it
+					if ( cfData.isSimpleValue(data) ){
+						System.out.println( data.getString() );
+						
+					} else {
+						
+						// Pretty json output, if the option is set in the bluedragon.xml
+						if ( cfEngine.getConfig().getBoolean( "server.debugoutput.prettyconsole" , false ) ) {
+							if ( cfData.isSimpleValue(data) ){
+								System.out.println( data.getString() );
+							} else {
+								// We want pretty json console output
+								ObjectMapper mapper = new ObjectMapper();
+								String prettyJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(data);
+								prettyJson = prettyJson.replaceAll("(?ms)^(\\s+\\\"\\w+\\\")\\s:\\s(\\d+)\\.0(,?)$", "$1 : $2$3");
+								System.out.println(prettyJson);
+							}
+							
+						} else {
+							// Standard console outputs
+							if ( data.getDataType() == cfData.CFQUERYRESULTDATA ){
+								dumpQuery( (cfQueryResultData)data );
+							} else if ( data.getDataType() == cfData.CFARRAYDATA ){
+								dumpArray( (cfArrayData)data );
+							} else if ( data.getDataType() == cfData.CFSTRUCTDATA ){
+								dumpStruct( (cfStructData)data );
+							} else {
+								System.out.println( getString(data) );
+							}
+						}
+					}
+				
+				}catch(Exception e){
+					// If there's a problem, we print the error message
+					System.out.println( "[ExceptionWithConsole] " + e.getMessage() );
 				}
-			}catch(Exception e){
-				System.out.println( "[ExceptionWithConsole] " + e.getMessage() );
+	            
 			}
-
+			
 		}
 
 		return cfBooleanData.TRUE;
