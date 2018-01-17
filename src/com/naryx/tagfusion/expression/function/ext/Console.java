@@ -44,12 +44,16 @@ import com.naryx.tagfusion.cfm.engine.cfStructData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.cfm.engine.dataNotSupportedException;
 import com.naryx.tagfusion.expression.function.functionBase;
-
+import com.naryx.tagfusion.expression.function.string.serializejson;
+import com.naryx.tagfusion.expression.function.string.serializejson.CaseType;
+import com.naryx.tagfusion.expression.function.string.serializejson.DateType;
 
 public class Console extends functionBase {
 	private static final long serialVersionUID = 1L;
 
 	protected static boolean	bConsoleOn = false;
+	protected static boolean	bPrettyConsoleOn = false;
+	protected static boolean	bFirstRun = true;
 	
 	public Console() {
 		min = 1;
@@ -73,6 +77,14 @@ public class Console extends functionBase {
 		if ( bConsoleOn || isLocalIP(_session.REQ.getRemoteAddr()) ){
 			List<cfData> dataParams = parameters;
 			
+			// If this is the first time the function is run, grab the setting from bluedragon.xml
+			if (bFirstRun) {
+				bPrettyConsoleOn = cfEngine.getConfig().getBoolean( "server.debugoutput.prettyconsole" , false );
+				
+				bFirstRun = false;
+			}
+			
+			
 			// Loop all the console statements
 			ListIterator<cfData> li = dataParams.listIterator(dataParams.size());
 			while(li.hasPrevious()) {
@@ -87,27 +99,39 @@ public class Console extends functionBase {
 					} else {
 						
 						// Pretty json output, if the option is set in the bluedragon.xml
-						if ( cfEngine.getConfig().getBoolean( "server.debugoutput.prettyconsole" , false ) ) {
+						if ( bPrettyConsoleOn ) {
 							if ( cfData.isSimpleValue(data) ){
 								System.out.println( data.getString() );
+								
 							} else {
-								// We want pretty json console output
-								ObjectMapper mapper = new ObjectMapper();
-								String prettyJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(data);
-								prettyJson = prettyJson.replaceAll("(?ms)^(\\s+\\\"\\w+\\\")\\s:\\s(\\d+)\\.0(,?)$", "$1 : $2$3");
-								System.out.println(prettyJson);
+								// Pretty print json output if the data is a complex type
+								ObjectMapper mapper 				= new ObjectMapper();
+								StringBuilder buffer 			= new StringBuilder(5000);
+								serializejson jsonserializer 	= new serializejson();
+								DateType datetype 				= DateType.LONG;
+								CaseType caseConversion 			= CaseType.MAINTAIN;
+								
+								jsonserializer.encodeJSON(buffer, data, false, caseConversion, datetype);
+								
+								Object prettyJson = mapper.readValue(buffer.toString(), Object.class);
+								
+								System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(prettyJson));
 							}
 							
 						} else {
 							// Standard console outputs
 							if ( data.getDataType() == cfData.CFQUERYRESULTDATA ){
 								dumpQuery( (cfQueryResultData)data );
+								
 							} else if ( data.getDataType() == cfData.CFARRAYDATA ){
 								dumpArray( (cfArrayData)data );
+								
 							} else if ( data.getDataType() == cfData.CFSTRUCTDATA ){
 								dumpStruct( (cfStructData)data );
+								
 							} else {
 								System.out.println( getString(data) );
+								
 							}
 						}
 					}
