@@ -37,7 +37,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
-import com.naryx.tagfusion.cfm.engine.cfEngine;
 import com.naryx.tagfusion.cfm.engine.cfQueryResultData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStructData;
@@ -49,11 +48,10 @@ import com.naryx.tagfusion.expression.function.string.serializejson.CaseType;
 import com.naryx.tagfusion.expression.function.string.serializejson.DateType;
 
 public class Console extends functionBase {
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID 	= 1L;
 
-	protected static boolean	bConsoleOn = false;
-	protected static boolean	bPrettyConsoleOn = false;
-	protected static boolean	bFirstRun = true;
+	protected static boolean	bConsoleOn 			= false;
+	protected static boolean	bPrettyConsoleOn 	= false;
 	
 	public Console() {
 		min = 1;
@@ -69,21 +67,13 @@ public class Console extends functionBase {
 	public java.util.Map getInfo(){
 		return makeInfo(
 				"debugging", 
-				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output the variable(s) to the engine console. If you have set <prettyconsole>true</prettyconsole> under <debugoutput> in the bluedragon.xml your complex data types will be output as pretty-printed json", 
+				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output the variable(s) to the engine console.", 
 				ReturnType.BOOLEAN );
 	}
 	
 	public cfData execute(cfSession _session, List<cfData> parameters) throws cfmRunTimeException {
 		if ( bConsoleOn || isLocalIP(_session.REQ.getRemoteAddr()) ){
 			List<cfData> dataParams = parameters;
-			
-			// If this is the first time the function is run, grab the setting from bluedragon.xml
-			if (bFirstRun) {
-				bPrettyConsoleOn = cfEngine.getConfig().getBoolean( "server.debugoutput.prettyconsole" , false );
-				
-				bFirstRun = false;
-			}
-			
 			
 			// Loop all the console statements
 			ListIterator<cfData> li = dataParams.listIterator(dataParams.size());
@@ -107,6 +97,8 @@ public class Console extends functionBase {
 								// Pretty print json output if the data is a complex type
 								ObjectMapper mapper 				= new ObjectMapper();
 								StringBuilder buffer 			= new StringBuilder(5000);
+								
+								// Use the existing openbd json serializer
 								serializejson jsonserializer 	= new serializejson();
 								DateType datetype 				= DateType.LONG;
 								CaseType caseConversion 			= CaseType.MAINTAIN;
