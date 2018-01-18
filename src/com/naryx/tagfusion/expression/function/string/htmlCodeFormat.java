@@ -64,11 +64,13 @@ public class htmlCodeFormat extends functionBase {
 	public cfData execute(cfSession _session, cfArgStructData argStruct ) throws cfmRunTimeException {
 
 		String preAtt	= getNamedStringParam(argStruct, "attributes", "" );
+
+		preAtt = (preAtt.length() > 0) ? " " + preAtt : "";
 		
 		String str = getNamedStringParam(argStruct, "string", "");
 		str = com.nary.util.string.escapeHtml(str);
 		str = com.nary.util.string.replaceString(str, "\r", "");
 		
-		return new cfStringData("<pre " + preAtt + ">" + str + "</pre>");
+		return new cfStringData("<pre" + preAtt + ">" + str + "</pre>");
 	}
 }
