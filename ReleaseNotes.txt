@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- #43: support for pretty printing in Console() output
 - Fixed #42: S3GetUrl default expiration date updated for AWS signature v4
 - Fixed #39: Console function now supports up to 10 arguments
 - Fixed #41: Returnformat in cfscript was case sensitive #41
