@@ -29,8 +29,7 @@
 
 package com.naryx.tagfusion.expression.function.ext;
 
-import java.util.List;
-
+import com.naryx.tagfusion.cfm.engine.cfArgStructData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
@@ -41,7 +40,9 @@ public class ConsoleOutput extends Console {
 	private static final long serialVersionUID = 1L;
 	
 	public ConsoleOutput() {
-		min = max = 1;
+		min = 1;
+		max = 2;
+		setNamedParams( new String[]{ "output", "pretty" } );
 	}
 
 	public String[] getParamInfo(){
@@ -53,12 +54,13 @@ public class ConsoleOutput extends Console {
 	public java.util.Map getInfo(){
 		return makeInfo(
 				"debugging", 
-				"Turns on/off the output to the console for the Console() function", 
+				"Turns on/off the output to the console and turns on/off pretty printed json output for the Console() function", 
 				ReturnType.BOOLEAN );
 	}
 	
-	public cfData execute(cfSession _session, List<cfData> parameters) throws cfmRunTimeException {
-		bConsoleOn = parameters.get(0).getBoolean();
+	public cfData execute(cfSession _session, cfArgStructData argStruct) throws cfmRunTimeException {
+		bConsoleOn = getNamedBooleanParam(argStruct, "output", false);
+		bPrettyConsoleOn = getNamedBooleanParam(argStruct, "pretty", false);
 		return cfBooleanData.TRUE;
 	}
 }

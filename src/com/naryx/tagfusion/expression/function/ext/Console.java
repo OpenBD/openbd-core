@@ -33,6 +33,7 @@ package com.naryx.tagfusion.expression.function.ext;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naryx.tagfusion.cfm.engine.cfArrayData;
 import com.naryx.tagfusion.cfm.engine.cfBooleanData;
 import com.naryx.tagfusion.cfm.engine.cfData;
@@ -42,12 +43,15 @@ import com.naryx.tagfusion.cfm.engine.cfStructData;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.cfm.engine.dataNotSupportedException;
 import com.naryx.tagfusion.expression.function.functionBase;
-
+import com.naryx.tagfusion.expression.function.string.serializejson;
+import com.naryx.tagfusion.expression.function.string.serializejson.CaseType;
+import com.naryx.tagfusion.expression.function.string.serializejson.DateType;
 
 public class Console extends functionBase {
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID 	= 1L;
 
-	protected static boolean	bConsoleOn = false;
+	protected static boolean	bConsoleOn 			= false;
+	protected static boolean	bPrettyConsoleOn 	= false;
 	
 	public Console() {
 		min = 1;
@@ -63,32 +67,72 @@ public class Console extends functionBase {
 	public java.util.Map getInfo(){
 		return makeInfo(
 				"debugging", 
-				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output the variable(s) to the engine console", 
+				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output the variable(s) to the engine console.", 
 				ReturnType.BOOLEAN );
 	}
 	
 	public cfData execute(cfSession _session, List<cfData> parameters) throws cfmRunTimeException {
 		if ( bConsoleOn || isLocalIP(_session.REQ.getRemoteAddr()) ){
 			List<cfData> dataParams = parameters;
-
-			ListIterator<cfData> li = dataParams.listIterator(dataParams.size());
 			
-			// Not sure why, but it seems the items get here in reverse order
+			// Loop all the console statements
+			ListIterator<cfData> li = dataParams.listIterator(dataParams.size());
 			while(li.hasPrevious()) {
-				// moving cursor to previous element
-				cfData data = (cfData)li.previous();
-	            
-				if ( cfData.isSimpleValue(data) ){
-					System.out.println( data.getString() );
-				} else if ( data.getDataType() == cfData.CFQUERYRESULTDATA ){
-					dumpQuery( (cfQueryResultData)data );
-				} else if ( data.getDataType() == cfData.CFARRAYDATA ){
-					dumpArray( (cfArrayData)data );
-				} else if ( data.getDataType() == cfData.CFSTRUCTDATA ){
-					dumpStruct( (cfStructData)data );
-				} else {
-					System.out.println( getString(data) );
+				try {
+					// moving cursor to previous element
+					cfData data = (cfData)li.previous();
+				
+					// If we have simple data, just output it
+					if ( cfData.isSimpleValue(data) ){
+						System.out.println( data.getString() );
+						
+					} else {
+						
+						// Pretty json output, if the option is set in the bluedragon.xml
+						if ( bPrettyConsoleOn ) {
+							if ( cfData.isSimpleValue(data) ){
+								System.out.println( data.getString() );
+								
+							} else {
+								// Pretty print json output if the data is a complex type
+								ObjectMapper mapper 				= new ObjectMapper();
+								StringBuilder buffer 			= new StringBuilder(5000);
+								
+								// Use the existing openbd json serializer
+								serializejson jsonserializer 	= new serializejson();
+								DateType datetype 				= DateType.LONG;
+								CaseType caseConversion 			= CaseType.MAINTAIN;
+								
+								jsonserializer.encodeJSON(buffer, data, false, caseConversion, datetype);
+								
+								Object prettyJson = mapper.readValue(buffer.toString(), Object.class);
+								
+								System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(prettyJson));
+							}
+							
+						} else {
+							// Standard console outputs
+							if ( data.getDataType() == cfData.CFQUERYRESULTDATA ){
+								dumpQuery( (cfQueryResultData)data );
+								
+							} else if ( data.getDataType() == cfData.CFARRAYDATA ){
+								dumpArray( (cfArrayData)data );
+								
+							} else if ( data.getDataType() == cfData.CFSTRUCTDATA ){
+								dumpStruct( (cfStructData)data );
+								
+							} else {
+								System.out.println( getString(data) );
+								
+							}
+						}
+					}
+				
+				}catch(Exception e){
+					// If there's a problem, we print the error message
+					System.out.println( "[ExceptionWithConsole] " + e.getMessage() );
 				}
+	            
 			}
 			
 		}
@@ -98,7 +142,7 @@ public class Console extends functionBase {
 
 	
 	private boolean isLocalIP( String ip ){
-		if ( ip != null && (ip.equals("127.0.0.1") || ip.equals("0:0:0:0:0:0:0:1")) )
+		if ( ip != null && ip.equals("127.0.0.1") )
 			return true;
 		else
 			return false;
