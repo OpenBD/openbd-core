@@ -60,6 +60,15 @@ public class Console extends functionBase {
 
 	public String[] getParamInfo(){
 		return new String[]{
+			"object",
+			"object",
+			"object",
+			"object",
+			"object",
+			"object",
+			"object",
+			"object",
+			"object",
 			"object"
 		};
 	}
@@ -67,7 +76,7 @@ public class Console extends functionBase {
 	public java.util.Map getInfo(){
 		return makeInfo(
 				"debugging", 
-				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output the variable(s) to the engine console.", 
+				"If the console has been turned on, or the request is coming from 127.0.0.1/localhost (local), will output up to 10 objects to the engine console.", 
 				ReturnType.BOOLEAN );
 	}
 	
