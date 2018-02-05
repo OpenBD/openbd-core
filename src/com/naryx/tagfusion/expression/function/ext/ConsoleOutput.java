@@ -47,7 +47,8 @@ public class ConsoleOutput extends Console {
 
 	public String[] getParamInfo(){
 		return new String[]{
-				"boolean"
+				"boolean",
+				"boolean. Defaults to false. Determines if console() should output pretty printed JSON."
 		};
 	}
 	
