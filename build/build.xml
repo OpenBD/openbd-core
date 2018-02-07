@@ -182,6 +182,9 @@
 		<pathelement location="${webinf.jarpath}reactive-streams-1.0.1.jar" />
 		<pathelement location="${webinf.jarpath}reactor-core-3.1.0.RELEASE.jar" />
 		<pathelement location="${webinf.jarpath}lettuce-core-5.0.0.RELEASE.jar" />
+		
+		<!-- For JWT -->
+		<pathelement location="${webinf.jarpath}java-jwt-3.3.0.jar" />
 
 	</path>
 
