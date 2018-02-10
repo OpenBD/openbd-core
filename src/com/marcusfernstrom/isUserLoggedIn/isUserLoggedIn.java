@@ -1,4 +1,4 @@
-package com.marcusfernstrom;
+package com.marcusfernstrom.isUserLoggedIn;
 
 import java.util.List;
 import java.util.Map;
