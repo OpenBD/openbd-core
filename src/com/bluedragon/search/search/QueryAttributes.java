@@ -117,6 +117,10 @@ public class QueryAttributes extends Object {
 			query = new MatchAllDocsQuery();
 		else {
 			QueryParser qp = new QueryParser( DocumentWrap.CONTENTS, AnalyzerFactory.get( collectionsList.get(0).getLanguage() ) );
+			// we don't want to do this for all criteria as "this can produce very slow queries on big indexes" (from Lucene docs)
+			if ( _critera.charAt(0) == '*' || _critera.charAt(0) == '?' ) {
+				qp.setAllowLeadingWildcard( true );
+			}
 			query = qp.parse(_critera);
 		}
 		
