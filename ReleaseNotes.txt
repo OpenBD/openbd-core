@@ -5,7 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
-- Allow leading character wildcard in Lucene search
+- Added allowleadingwildcard to search function and cfsearch tag
 - Added support for creating, verifying, and decoding JWT (JSON Web Tokens)
 - #43: support for pretty printing in Console() output
 - Fixed #42: S3GetUrl default expiration date updated for AWS signature v4
