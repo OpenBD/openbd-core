@@ -101,7 +101,7 @@ public class QueryAttributes extends Object {
 		return collectionsList.iterator();
 	}
 	
-	public boolean setCriteria( String _critera, String type ) throws ParseException {
+	public boolean setCriteria( String _critera, String type, boolean _allowLeadingWildcard ) throws ParseException {
 		if ( _critera == null || _critera.length() == 0 )
 			return false;
 	
@@ -117,10 +117,7 @@ public class QueryAttributes extends Object {
 			query = new MatchAllDocsQuery();
 		else {
 			QueryParser qp = new QueryParser( DocumentWrap.CONTENTS, AnalyzerFactory.get( collectionsList.get(0).getLanguage() ) );
-			// we don't want to do this for all criteria as "this can produce very slow queries on big indexes" (from Lucene docs)
-			if ( _critera.charAt(0) == '*' || _critera.charAt(0) == '?' ) {
-				qp.setAllowLeadingWildcard( true );
-			}
+			qp.setAllowLeadingWildcard( _allowLeadingWildcard );
 			query = qp.parse(_critera);
 		}
 		
@@ -244,4 +241,5 @@ public class QueryAttributes extends Object {
 	public String getContextHighlightEnd(){
 		return ContextHighlightEnd;
 	}
+	
 }

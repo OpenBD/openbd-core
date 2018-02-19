@@ -44,8 +44,8 @@ public class SearchFunction extends functionBase {
 
 	public SearchFunction(){
 		min = 2;
-		max = 14;
-		setNamedParams( new String[]{ "collection", "criteria", "type", "minscore", "maxrows", "startrow", "category", "categorytree", "contextpassages", "contextbytes", "contexthighlightstart", "contexthighlightend", "contents", "uniquecolumn" } );
+		max = 15;
+		setNamedParams( new String[]{ "collection", "criteria", "type", "minscore", "maxrows", "startrow", "category", "categorytree", "contextpassages", "contextbytes", "contexthighlightstart", "contexthighlightend", "contents", "uniquecolumn", "allowleadingwildcard" } );
 	}
 	
   public String[] getParamInfo(){
@@ -65,7 +65,8 @@ public class SearchFunction extends functionBase {
 			"the end marker for the contextual piece",
 			
 			"flag to determine if the CONTENT column is return;  If you are storing the full body, this lets you return that full body or not in the query. defaults to true",
-			"name of the column that will be checked to see if it is unique before adding to the result query"
+			"name of the column that will be checked to see if it is unique before adding to the result query",
+			"set to true to allow the criteria to begin with a wildcard. Doing so will result in slow execution over a large index"
 		};
 	}
 	
@@ -85,7 +86,7 @@ public class SearchFunction extends functionBase {
 		
 		// Set the criteria		
 		try {
-			if ( !queryAttributes.setCriteria( getNamedStringParam(argStruct, "criteria", null), getNamedStringParam(argStruct, "type", null) ) )
+			if ( !queryAttributes.setCriteria( getNamedStringParam(argStruct, "criteria", null), getNamedStringParam(argStruct, "type", null), getNamedBooleanParam(argStruct, "allowleadingwildcard", false) ) )
 				throwException(_session, "must specify the criteria");
 
 			queryAttributes.setCategory( getNamedStringParam(argStruct, "category", null) );
@@ -104,7 +105,6 @@ public class SearchFunction extends functionBase {
 		queryAttributes.setStartRow( getNamedIntParam(argStruct, "startrow", 1 ) );
 		queryAttributes.setContentFlag( getNamedBooleanParam( argStruct, "contents", true ) );
 		queryAttributes.setUniqueColumn( getNamedStringParam(argStruct, "uniquecolumn", null ) );
-
 		// Run the query now
 		QueryRun	query	= new QueryRun(queryAttributes);
 		try {
