@@ -79,7 +79,6 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-s3-1.11.221.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/httpclient-4.5.2.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-annotations-2.6.0.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-core-2.6.7.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-databind-2.6.7.1.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-dataformat-cbor-2.6.7.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/commons-pool2-2.4.2.jar"/>
