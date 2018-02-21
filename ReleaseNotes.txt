@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Restored support for YES/NO in deserializejson removed in AmazonLambda function addition
 - Added allowleadingwildcard to search function and cfsearch tag
 - Added support for creating, verifying, and decoding JWT (JSON Web Tokens)
 - #43: support for pretty printing in Console() output
