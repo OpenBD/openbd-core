@@ -4,14 +4,13 @@ if: tag IS blank
 
 after_success:
   # Set up git user name and tag this commit
-  - echo "after_success started"
   - git config --local user.name "openbdbuild"
   - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
-  - echo "after_success completed"
 deploy:
   provider: releases
   api_key: "$GITHUB_OAUTH_TOKEN"
-  file: "build/targets/*"
+  file: build/targets/*
   skip_cleanup: true
   on:
     tags: false
+    branch: master
