@@ -1,2 +1,10 @@
 language: java
 script: ant -buildfile build/build.xml clean war-with-manual
+
+deploy:
+  provider: releases
+  api_key: "$GITHUB_OAUTH_TOKEN"
+  file: "build/targets/openbd.war"
+  skip_cleanup: true
+  on:
+    tags: false
