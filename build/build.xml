@@ -39,6 +39,7 @@
 	<property file="${antfiles.dir}/user.properties" />
 	
 	<property name="remote.zip.manual" value="https://github.com/OpenBD/openbd-manual/archive/master.zip" />
+	<property name="remote.zip.admin" value="https://github.com/aw20/openbd-administrator/archive/master.zip" />
 
 	<!-- set global properties for this build -->
 	<property name="build" value="./build/classes/" />
@@ -385,6 +386,18 @@
 	
 	<target name="war-with-manual" depends="war">
 
+		<delete file="${dist}admin.zip" />
+		<get src="${remote.zip.admin}" dest="${dist}admin.zip"/>
+		
+		<unzip src="${dist}admin.zip" dest="${warbuild}" />
+		<move todir="${warbuild}/bluedragon/">
+			<fileset dir="${warbuild}/openbd-administrator-master/bluedragon/"/>
+		</move>
+		<delete dir="${warbuild}/openbd-administrator-master" />
+
+		<delete file="${dist}admin.zip" />
+
+		
 		<delete file="${dist}manual.zip" />
 		<get src="${remote.zip.manual}" dest="${dist}manual.zip"/>
 		
