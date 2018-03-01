@@ -1,10 +1,15 @@
 language: java
 script: ant -buildfile build/build.xml clean war-with-manual
 
+before_deploy:
+      # Set up git user name and tag this commit
+      - git config --local user.name "TravisBuild"
+      - git config --local user.email "builds@openbd.org"
+      - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
 deploy:
   provider: releases
   api_key: "$GITHUB_OAUTH_TOKEN"
   file: "build/targets/openbd.war"
   skip_cleanup: true
   on:
-    tags: false
+    tags: true
