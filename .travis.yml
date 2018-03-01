@@ -1,5 +1,6 @@
 language: java
 script: ant -buildfile build/build.xml clean war-with-manual
+if: tag IS blank
 
 after_success:
   # Set up git user name and tag this commit
