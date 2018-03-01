@@ -1,2 +1,2 @@
 language: java
-script: ant -buildfile build/build.xml clean build
+script: ant -buildfile build/build.xml clean war-with-manual
