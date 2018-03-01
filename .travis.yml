@@ -10,8 +10,8 @@ deploy:
   provider: releases
   api_key: "$GITHUB_OAUTH_TOKEN"
   file: 
-  - build/targets/*.war
-  - build/targets/*.jar
+  - build/targets/openbd.war
+  - build/targets/OpenBlueDragon.jar
   skip_cleanup: true
   on:
     tags: false
