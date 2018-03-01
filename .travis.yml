@@ -7,7 +7,7 @@ after_success:
   - git config --local user.name "openbdbuild"
   - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
   - git remote add origin-token https://$GITHUB_OAUTH_TOKEN@github.com/OpenBD/openbd-core.git
-  - git push origin origin-token --tags
+  - git push --set-upstream origin-token --tags
   - echo "after_success completed"
 deploy:
   provider: releases
