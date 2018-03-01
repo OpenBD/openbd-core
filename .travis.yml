@@ -9,7 +9,9 @@ after_success:
 deploy:
   provider: releases
   api_key: "$GITHUB_OAUTH_TOKEN"
-  file: build/targets/*
+  file: 
+  - build/targets/*.war
+  - build/targets/*.jar
   skip_cleanup: true
   on:
     tags: false
