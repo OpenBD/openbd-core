@@ -6,6 +6,7 @@ before_deploy:
   - git config --local user.name "TravisBuild"
   - git config --local user.email "builds@openbd.org"
   - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+  - git push origin master --tags
 deploy:
   provider: releases
   api_key: "$GITHUB_OAUTH_TOKEN"
