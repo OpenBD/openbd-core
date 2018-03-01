@@ -50,8 +50,8 @@ public class CollectionCreateFunction extends functionBase {
 
 	public CollectionCreateFunction(){
 		min = 1;
-		max = 5;
-		setNamedParams( new String[]{ "collection", "storebody", "language", "path", "relative" } );
+		max = 6;
+		setNamedParams( new String[]{ "collection", "storebody", "language", "path", "relative", "onexists" } );
 	}
 	
 	
@@ -61,7 +61,8 @@ public class CollectionCreateFunction extends functionBase {
 			"a flag to determine if the body is stored as a whole in the index.  For large collections this can take up a lot of space. defaults to false",
 			"language this collection is using. defaults to 'english'. Valid: english, german, russian, brazilian, korean, chinese, japanese, czech, greek, french, dutch, danish, finnish, italian, norwegian, portuguese, spanish, swedish",
 			"path to where the collection will be created.  If omitted then it will be created in the working directory under the 'cfcollection' directory",
-			"a flag to determine if the 'path' attribute, if presented, is relative to the web path"
+			"a flag to determine if the 'path' attribute, if presented, is relative to the web path",
+			"define what to do if the collection already exists or the path contains an existing index. Valid options are ERROR (default) and SKIP"
 		};
   }
 	
@@ -79,8 +80,16 @@ public class CollectionCreateFunction extends functionBase {
 		if ( name == null )
 			throwException(_session, "please specifiy the 'collection' attribute" );
 		
-		if ( CollectionFactory.isCollection(name) )
-			throwException(_session, "collection, " + name + ", already exists");
+		String onExists =  getNamedStringParam(argStruct, "onexists", "ERROR" ).toUpperCase();
+		boolean errorOnExists = onExists.equals("ERROR");
+		
+		if ( CollectionFactory.isCollection(name) ) {
+			if ( errorOnExists ) {
+				throwException(_session, "collection, " + name + ", already exists");
+			}else {
+				return cfBooleanData.TRUE;
+			}
+		}
 		
 		boolean bStoreBody	= getNamedBooleanParam(argStruct, "storebody", false );
 		String language			= getNamedStringParam(argStruct, "language", "english" );
@@ -102,7 +111,7 @@ public class CollectionCreateFunction extends functionBase {
 			
 			col.setDirectory(path);
 
-			col.create();
+			col.create( errorOnExists );
 			CollectionFactory.addCollection(col);
 
 			// update the xmlconfig

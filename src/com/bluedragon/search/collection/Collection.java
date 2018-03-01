@@ -223,11 +223,18 @@ public class Collection extends Object {
 	/**
 	 * Creates an empty collection to get it up and running
 	 */
-	public synchronized void create() throws IOException {
+	public synchronized void create( boolean _errorOnExists ) throws IOException {
 		setDirectory();
 		
-		if ( directory.listAll().length > 2 )
-			throw new IOException( "directory not empty; possible collection already present" );
+		if ( directory.listAll().length > 2 ) {
+			if ( _errorOnExists ) {
+				throw new IOException( "directory not empty; possible collection already present" );
+			}else {
+				if ( DirectoryReader.indexExists( directory ) ) {
+					return;
+				}// otherwise an index doesn't exist so allow the creation code to execute
+			}
+		}
 
 		IndexWriterConfig iwc = new IndexWriterConfig( AnalyzerFactory.get(language) );
 		iwc.setOpenMode( OpenMode.CREATE );
