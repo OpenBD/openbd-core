@@ -39,11 +39,13 @@
 	<property file="${antfiles.dir}/user.properties" />
 	
 	<property name="remote.zip.manual" value="https://github.com/OpenBD/openbd-manual/archive/master.zip" />
-	<property name="remote.zip.admin" value="https://github.com/aw20/openbd-administrator/archive/master.zip" />
+	<property name="remote.zip.admin" value="https://github.com/OpenBD/openbd-administrator/archive/master.zip" />
+	<property name="remote.zip.ready2run" value="https://github.com/OpenBD/openbd-ready2run/archive/master.zip" />
 
 	<!-- set global properties for this build -->
 	<property name="build" value="./build/classes/" />
 	<property name="warbuild" value="./build/war/" />
+	<property name="ready2runbuild" value="./build/ready2run/" />
 	<property name="dist" value="./build/targets/" />
 	
 	<property name="src" value="./src/" />
@@ -383,6 +385,21 @@
 
 	</target>
 
+	<target name="ready2run" depends="war-with-manual">
+		<delete file="${dist}ready2run.zip" />
+		<get src="${remote.zip.ready2run}" dest="${dist}ready2run.zip"/>
+		
+		<unzip src="${dist}ready2run.zip" dest="${ready2runbuild}" />
+		<copy todir="${ready2runbuild}/openbd-ready2run-master/jetty/www/">
+			<fileset dir="${warbuild}/"/>
+		</copy>
+		<zip destfile="${dist}jetty-openbd.zip" basedir="${ready2runbuild}/openbd-ready2run-master/jetty/" />
+
+		<delete dir="${ready2runbuild}/openbd-ready2run-master" />
+
+		<delete file="${dist}ready2run.zip" /> 
+
+	</target>
 	
 	<target name="war-with-manual" depends="war">
 
