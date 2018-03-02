@@ -1,5 +1,5 @@
 language: java
-script: ant -buildfile build/build.xml clean war-with-manual
+script: ant -buildfile build/build.xml clean war-with-manual ready2run
 if: tag IS blank
 
 after_success:
@@ -12,6 +12,7 @@ deploy:
   file: 
   - build/targets/openbd.war
   - build/targets/OpenBlueDragon.jar
+  - build/targets/jetty-openbd.zip
   skip_cleanup: true
   on:
     tags: false
