@@ -120,6 +120,46 @@ public class cfcServlet extends AxisServlet {
 		}
 
 	}
+	
+	public void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// Ensure that Axis honors this setting when generating WSDL
+		if (!TypeMappingImpl.dotnet_soapenc_bugfix)
+			TypeMappingImpl.dotnet_soapenc_bugfix = true;
+
+		String ct = request.getContentType();
+
+		// If the content type is "application/x-www-form-urlencoded" then we need
+		// to invoke the CFC method
+		// as if it was directly invoked by a cfinvoke tag. This fixes bug #1488.
+		// We also need to invoke it if the request is a POST but no SoapAction header is specified
+		if ( ( (ct != null) && (ct.indexOf("application/x-www-form-urlencoded") == 0 ) )
+				|| request.getHeader( "soapaction" ) == null )
+			cfEngine.serviceCfcMethod(request, response);
+		else{
+			super.doPut(request, response);
+		}
+
+	}
+	
+	public void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// Ensure that Axis honors this setting when generating WSDL
+		if (!TypeMappingImpl.dotnet_soapenc_bugfix)
+			TypeMappingImpl.dotnet_soapenc_bugfix = true;
+
+		String ct = request.getContentType();
+
+		// If the content type is "application/x-www-form-urlencoded" then we need
+		// to invoke the CFC method
+		// as if it was directly invoked by a cfinvoke tag. This fixes bug #1488.
+		// We also need to invoke it if the request is a POST but no SoapAction header is specified
+		if ( ( (ct != null) && (ct.indexOf("application/x-www-form-urlencoded") == 0 ) )
+				|| request.getHeader( "soapaction" ) == null )
+			cfEngine.serviceCfcMethod(request, response);
+		else{
+			super.doDelete(request, response);
+		}
+
+	}
 
 	/**
 	 * when we get an exception or an axis fault in a GET, we handle it almost
