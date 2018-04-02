@@ -69,6 +69,7 @@ public class LogFile extends Object implements SystemClockEvent {
 
 	private LogFile(String logPath, String _encoding, boolean _PrependTimeStamp) throws Exception {
 		filename = logPath;
+		encoding = _encoding;
 		fileWriter = new FileOutputStream(logPath,true);
 		outWriter = new OutputStreamWriter( fileWriter, _encoding );
 		logFileSize = new File( logPath ).length();
