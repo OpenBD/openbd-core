@@ -5,7 +5,6 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
-- Added support for HTTP verbs PUT and DELETE in components
 - Added onexists parameter/attribute to collectioncreate()/CFCOLLECTION
 - Restored support for YES/NO in deserializejson removed in AmazonLambda function addition
 - Added allowleadingwildcard to search function and cfsearch tag
