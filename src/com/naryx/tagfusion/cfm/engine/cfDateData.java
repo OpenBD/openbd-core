@@ -281,5 +281,21 @@ public class cfDateData extends cfJavaObjectData implements java.io.Serializable
 		else
 			out.write("</dateTime>");
 	}
+	
+	@Override
+	public Object getUnderlyingInstance()
+	{
+		if ( instance == null ){
+			// may be null because it has been read in out of a cache (i.e. serialized)
+			synchronized( this ){
+				if ( instance == null ){
+					instance = new java.util.Date( time );
+				}
+			}
+		}
+		
+		return instance;
+	}
+
 
 }
