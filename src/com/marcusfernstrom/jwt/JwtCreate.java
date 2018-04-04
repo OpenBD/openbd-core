@@ -45,7 +45,7 @@ public class JwtCreate extends functionBase {
 	public java.util.Map getInfo(){
 		return makeInfo(
 				"security", 
-				"Create JWT tokens. See <a href=\"https://jwt.io/\" target=\"_blank\">jwt.io/</a> for information about JWT's. ", 
+				"Create JWT tokens. See jwt.io for information about JWT's. ", 
 				ReturnType.BOOLEAN );
 	}
 	

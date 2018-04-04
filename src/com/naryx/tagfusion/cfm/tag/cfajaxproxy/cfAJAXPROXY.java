@@ -63,7 +63,8 @@ public class cfAJAXPROXY extends cfTag implements java.io.Serializable {
 				createAttInfo("ATTRIBUTECOLLECTION", 	"A structure containing the tag attributes", 	"", false ),
 				createAttInfo("CFC", 									"The path of where the CFC you wish to call is, as seen by the client (for example browser), not the server.  Functions marked as 'remote' are exposed as Javascript functions", "", true), 
 				createAttInfo("JSCLASSNAME", 					"The name of the Javascript object that will be available in the page", "", true),
-				createAttInfo("INLINE", 							"Do you wish this Javacript block to be rendered inline, or as a remote URL resource", "false", false)
+				createAttInfo("INLINE", 							"Do you wish this Javacript block to be rendered inline, or as a remote URL resource", "false", false),
+				createAttInfo("SITEROOT", 						"Should the path start from the site root", "false", false)
 		};
 	}
 
@@ -92,7 +93,7 @@ public class cfAJAXPROXY extends cfTag implements java.io.Serializable {
 		parseTagHeader( _tag );
 	
 		if ( !containsAttribute("CFC") )
-			throw newBadFileException("Missing Attribute", "You must provide either a CFC");
+			throw newBadFileException("Missing Attribute", "You must provide a CFC");
 				
 		if ( !containsAttribute("JSCLASSNAME") )
 			throw newBadFileException("Missing Attribute", "You must provide JSCLASSNAME when using a CFC");
@@ -107,15 +108,19 @@ public class cfAJAXPROXY extends cfTag implements java.io.Serializable {
 		if ( containsAttribute(attributes, "INLINE") )
 			inline	= getDynamic(attributes, _Session, "INLINE").getBoolean();
 		
+		boolean siteroot = false;
+		if ( containsAttribute(attributes, "SITEROOT") )
+			siteroot = getDynamic(attributes, _Session, "SITEROOT").getBoolean();
+		
 		manageCoreJavascriptLibrary( _Session, inline );
 		
-		String CFC 			=	getDynamic(attributes, _Session, "CFC" ).getString();
+		String CFC 		=	getDynamic(attributes, _Session, "CFC" ).getString();
 		String JSNAME 	= getDynamic(attributes, _Session, "JSCLASSNAME" ).getString();
 		
 		cfSession offlineSession 	= new cfSession( _Session, false );
-		cfComponentData component = new cfComponentData( offlineSession, CFC );
+		cfComponentData component 	= new cfComponentData( offlineSession, CFC );
 
-		String fileJS = "cfc" + getHashCode( component ) + ".js";
+		String fileJS 	= "cfc" + getHashCode( component, siteroot ) + ".js";
 		File tmpFile 	= new File( jsTempDirectory, fileJS );
 		
 		if ( !inline ){
@@ -131,6 +136,11 @@ public class cfAJAXPROXY extends cfTag implements java.io.Serializable {
 		javascript.append( JSNAME );
 		javascript.append( " = function(){\r\n");
 		javascript.append( " this.remoteCFC = '" );
+		
+		if(siteroot) {
+			javascript.append( "/" );
+		}
+		
 		javascript.append( CFC.replace('.', '/') );
 		javascript.append( ".cfc';\r\n" );
 
@@ -189,13 +199,14 @@ public class cfAJAXPROXY extends cfTag implements java.io.Serializable {
 	 * This will allow us to cache the javascript that is produced and not have
 	 * to redo it every time
 	 */
-	private long getHashCode( cfComponentData component ){
+	private long getHashCode( cfComponentData component, boolean siteroot ){
 		long hk = component.getComponentHash();
 		cfComponentData superComponent = component.getSuperComponent();
 		while ( superComponent != null ){
 			hk += superComponent.getComponentHash();
 			superComponent = superComponent.getSuperComponent();
 		}
+		hk += siteroot == true ? 1 : 2;
 		return hk;
 	}
 	
