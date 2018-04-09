@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Added optional parameter to CFAJAXPROXY to start CFC path from site root
 - Fixed #58: NPE when serializejson ran on query result containing date pulled from Memcached
 - Fix nullpointer when rotating logfiles
 - Added onexists parameter/attribute to collectioncreate()/CFCOLLECTION
