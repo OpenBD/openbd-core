@@ -72,6 +72,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -496,8 +497,10 @@ public class cfHttpConnection implements cfHttpConnectionI {
 			return new HttpOptions();
 		} else if ( method.equals( "PUT" ) ) {
 			return new HttpPut();
+		} else if ( method.equals( "PATCH" ) ) {
+			return new HttpPatch();
 		}
-		throw newRunTimeException( "Unsupported METHOD value [" + method + "]. Valid METHOD values are GET, POST, HEAD, TRACE, DELETE, OPTIONS and PUT." );
+		throw newRunTimeException( "Unsupported METHOD value [" + method + "]. Valid METHOD values are GET, POST, HEAD, TRACE, DELETE, OPTIONS, PATCH and PUT." );
 	}
 
 
@@ -567,7 +570,7 @@ public class cfHttpConnection implements cfHttpConnectionI {
 		Iterator<String> keys = formData.keySet().iterator();
 		String nextKey;
 
-		if ( message.getMethod().equalsIgnoreCase( "POST" ) ) {
+		if ( message.getMethod().equalsIgnoreCase( "POST" ) || message.getMethod().equalsIgnoreCase( "PATCH" ) ) {
 
 			if ( isMultipart || httpData.getFiles().size() > 0 ) {
 
@@ -627,6 +630,16 @@ public class cfHttpConnection implements cfHttpConnectionI {
 					FileInputStream fileIn = new FileInputStream( nextFile.getFile() );
 					InputStreamEntity entity = new InputStreamEntity( fileIn, nextFile.getFile().length(), ContentType.create( nextFile.getMimeType() ) );
 					( ( HttpPut )message ).setEntity( entity );
+				} catch ( FileNotFoundException e ) {
+					throw newRunTimeException( "Failed to locate file " + nextFile.getFile().getAbsolutePath() );
+				}
+
+			}  else if ( message instanceof HttpPatch ) {
+				fileDescriptor nextFile = files.get( 0 ); // just use the first file specified
+				try {
+					FileInputStream fileIn = new FileInputStream( nextFile.getFile() );
+					InputStreamEntity entity = new InputStreamEntity( fileIn, nextFile.getFile().length(), ContentType.create( nextFile.getMimeType() ) );
+					( ( HttpPatch )message ).setEntity( entity );
 				} catch ( FileNotFoundException e ) {
 					throw newRunTimeException( "Failed to locate file " + nextFile.getFile().getAbsolutePath() );
 				}
@@ -741,7 +754,7 @@ public class cfHttpConnection implements cfHttpConnectionI {
 
 
 	public void setBody() throws cfmRunTimeException {
-		// if there is a request body set and this is a PUT or POST
+		// if there is a request body set and this is a PUT, PATCH or POST
 		if ( httpData.isBodySet() ) {
 			try {
 				if ( message instanceof HttpPost ) {
@@ -759,6 +772,14 @@ public class cfHttpConnection implements cfHttpConnectionI {
 					}
 
 				}
+				 else if ( message instanceof HttpPatch ) {
+						if ( this.charset == null ) {
+							( (HttpPatch) message ).setEntity( new StringEntity( httpData.getBody() ) );
+						} else {
+							( (HttpPatch) message ).setEntity( new StringEntity( httpData.getBody(), this.charset ) );
+						}
+
+					}
 			} catch ( UnsupportedEncodingException | UnsupportedCharsetException e ) {
 				throw newRunTimeException( "Failed due to UnsupportedEncoding while setting body: " + e.getMessage() );
 			}

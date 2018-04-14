@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Added support for PATCH http verb to CFHTTP and http()
 - Fixed #58: NPE when serializejson ran on query result containing date pulled from Memcached
 - Fix nullpointer when rotating logfiles
 - Added onexists parameter/attribute to collectioncreate()/CFCOLLECTION
