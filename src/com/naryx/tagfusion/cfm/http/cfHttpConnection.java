@@ -60,6 +60,7 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
@@ -624,22 +625,12 @@ public class cfHttpConnection implements cfHttpConnectionI {
 					multipartEntityBuilder.addPart( nextFile.getName(), new FileBody( nextFile.getFile(), ContentType.create( nextFile.getMimeType() ), nextFile.getFile().getName() ) );
 				}
 
-			} else if ( message instanceof HttpPut ) {
+			} else if ( message instanceof HttpPut || message instanceof HttpPatch ) {
 				fileDescriptor nextFile = files.get( 0 ); // just use the first file specified
 				try {
 					FileInputStream fileIn = new FileInputStream( nextFile.getFile() );
 					InputStreamEntity entity = new InputStreamEntity( fileIn, nextFile.getFile().length(), ContentType.create( nextFile.getMimeType() ) );
-					( ( HttpPut )message ).setEntity( entity );
-				} catch ( FileNotFoundException e ) {
-					throw newRunTimeException( "Failed to locate file " + nextFile.getFile().getAbsolutePath() );
-				}
-
-			}  else if ( message instanceof HttpPatch ) {
-				fileDescriptor nextFile = files.get( 0 ); // just use the first file specified
-				try {
-					FileInputStream fileIn = new FileInputStream( nextFile.getFile() );
-					InputStreamEntity entity = new InputStreamEntity( fileIn, nextFile.getFile().length(), ContentType.create( nextFile.getMimeType() ) );
-					( ( HttpPatch )message ).setEntity( entity );
+					( ( HttpEntityEnclosingRequest )message ).setEntity( entity );
 				} catch ( FileNotFoundException e ) {
 					throw newRunTimeException( "Failed to locate file " + nextFile.getFile().getAbsolutePath() );
 				}
