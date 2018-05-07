@@ -26,7 +26,6 @@
  *  
  *  http://www.openbluedragon.org/
  */
-
 package com.naryx.tagfusion.cfm.tag.io;
 
 import java.io.BufferedReader;
@@ -45,190 +44,154 @@ import com.nary.util.string;
 import com.naryx.tagfusion.cfm.engine.cfEngine;
 
 public class cfEXECUTECommandRunner extends Thread implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	String command = null;
-	String args = null;
-	String output = null;
-	String error = null;
-	File outFile = null;
-	File errFile = null;
+    private static final long serialVersionUID = 1L;
 
-	Exception problem = null;
+    String[] commandPlusArgs = null;
+    String command = null;
+    String output = null;
+    String error = null;
+    File outFile = null;
+    File errFile = null;
 
-	public cfEXECUTECommandRunner(String[] commandPlusArgs, File _outFile, File _errFile) {
-		command = commandPlusArgs[0];
-		args = commandPlusArgs[1];
-		outFile = _outFile;
-		errFile = _errFile;
-	}
+    Exception problem = null;
 
-	public void run() {
-		InputStream in = null;
-		OutputStream out = null;
-		InputStream errIn = null;
-		try {
-			// Process command line to preserve blanks in quoted strings.
-			List<String> tokens = string.split(args);
-			int tCnt = tokens.size();
-			String[] cmd = new String[1 + tCnt];
-			cmd[0] = command;
-			int i = 1;
-			StringBuilder tok = new StringBuilder(128);
-			String tok2 = null;
-			boolean done = false;
+    public cfEXECUTECommandRunner(String[] _commandPlusArgs, File _outFile, File _errFile) {
+        commandPlusArgs = _commandPlusArgs;
+        command = _commandPlusArgs[0];
+        outFile = _outFile;
+        errFile = _errFile;
+    }
 
-			// If token starts with double-quote("), then combine remaining tokens
-			// until
-			// the matching double-quote is found. Don't forget to check the current
-			// token for match.
-			int tokenIndx = 0;
-			while (tokenIndx < tokens.size()) {
-				tok.append(tokens.get(tokenIndx++).toString());
-				if ((tok.charAt(0) == '"') && (tok.toString().indexOf("\"", 1) < 0)) {
-					while (!done && tokenIndx < tokens.size()) {
-						tok2 = tokens.get(tokenIndx++).toString();
-						if (tok2.indexOf("\"") >= 0) {
-							done = true;
-						}
-						tok.append(" " + tok2);
-					}
-				}
+    public void run() {
 
-				cmd[i] = tok.toString();
-				i++;
-				tok.setLength(0);
-				done = false;
-			}
+        InputStream in = null;
+        OutputStream out = null;
+        InputStream errIn = null;
+        try {
+            // --[ get runtime object
+            Runtime RT = Runtime.getRuntime();
+            Process PR = RT.exec(commandPlusArgs);
+            in = PR.getInputStream();
+            errIn = PR.getErrorStream();
+            out = PR.getOutputStream();
 
-			// We could set the remaining args to " " but that doesn't always work
-			// (see bug #2525)
-			// so if we've come across any quote delimited args we'll need to copy to
-			// a smaller array
-			if (i <= tCnt) {
-				String[] tmp = new String[i];
-				for (int c = 0; c < i; c++) {
-					tmp[c] = cmd[c];
-				}
-				cmd = tmp;
-			}
+            StreamConsumer inConsumer = new StreamConsumer(in, outFile);
+            StreamConsumer errConsumer = new StreamConsumer(errIn, errFile);
 
-			// --[ get runtime object
-			Runtime RT = Runtime.getRuntime();
-			Process PR = RT.exec(cmd);
-			in = PR.getInputStream();
-			errIn = PR.getErrorStream();
-			out = PR.getOutputStream();
+            inConsumer.start();
+            errConsumer.start();
 
-			StreamConsumer inConsumer = new StreamConsumer(in, outFile);
-			StreamConsumer errConsumer = new StreamConsumer(errIn, errFile);
+            PR.waitFor();
 
-			inConsumer.start();
-			errConsumer.start();
+            // Wait for the consumer threads to complete
+            inConsumer.join();
+            errConsumer.join();
 
-			PR.waitFor();
+            output = inConsumer.getOutput();
+            error = errConsumer.getOutput();
 
-			// Wait for the consumer threads to complete
-			inConsumer.join();
-			errConsumer.join();
+        } catch (Exception e) {
+            handleProblem(e);
+        } finally {
+            // the StreamConsumer classes will close the other streams
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }// end run()
 
-			output = inConsumer.getOutput();
-			error = errConsumer.getOutput();
+    public String getOutput() {
+        return output;
+    }
 
-		} catch (Exception e) {
-			handleProblem(e);
-		} finally {
-			// the StreamConsumer classes will close the other streams
-			if (out != null)
-				try {
-					out.close();
-				} catch (IOException ignored) {
-				}
-		}
-	}// end run()
+    public String getError() {
+        return error;
+    }
 
-	public String getOutput() {
-		return output;
-	}
+    /**
+     * This method and it's use is part of the fix for bug #2115
+     *
+     */
+    private void handleProblem(Exception e) {
+        cfEngine.log("CFEXECUTE failed for: " + command + "; " + e.getMessage());
+        problem = e;
+    }
 
-	public String getError() {
-		return error;
-	}
+    public Exception getProblem() {
+        return problem;
+    }
 
-	/**
-	 * This method and it's use is part of the fix for bug #2115
-	 * 
-	 */
-	private void handleProblem(Exception e) {
-		cfEngine.log("CFEXECUTE failed for: " + command + "; " + e.getMessage());
-		problem = e;
-	}
+    class StreamConsumer extends Thread {
 
-	public Exception getProblem() {
-		return problem;
-	}
+        private InputStream in;
 
-	class StreamConsumer extends Thread {
-		private InputStream in;
+        private String output;
 
-		private String output;
+        private File outFile;
 
-		private File outFile;
+        StreamConsumer(InputStream _in, File _file) {
+            in = _in;
+            outFile = _file;
+        }
 
-		StreamConsumer(InputStream _in, File _file) {
-			in = _in;
-			outFile = _file;
-		}
+        public String getOutput() {
+            return output;
+        }
 
-		public String getOutput() {
-			return output;
-		}
+        public void run() {
+            InputStreamReader iReader = null;
+            BufferedReader bReader = null;
+            String lineIn;
+            Writer writer = null;
+            try {
+                if (outFile == null) {
+                    writer = new StringWriter();
+                } else {
+                    writer = new FileWriter(outFile);
+                }
+                iReader = new InputStreamReader(in);
+                bReader = new BufferedReader(iReader);
+                while ((lineIn = bReader.readLine()) != null) {
+                    writer.append(lineIn);
+                    writer.append("\r\n");
+                }
 
-		public void run() {
-			InputStreamReader iReader = null;
-			BufferedReader bReader = null;
-			String lineIn;
-			Writer writer = null;
-			try {
-				if (outFile == null) {
-					writer = new StringWriter();
-				} else {
-					writer = new FileWriter(outFile);
-				}
-				iReader = new InputStreamReader(in);
-				bReader = new BufferedReader(iReader);
-				while ((lineIn = bReader.readLine()) != null) {
-					writer.append(lineIn);
-					writer.append("\r\n");
-				}
+                if (outFile == null) {
+                    output = ((StringWriter) writer).toString();
+                }
+            } catch (IOException e) {
+                handleProblem(e);
+            } finally {
+                if (bReader != null) {
+                    try {
+                        bReader.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (iReader != null) {
+                    try {
+                        iReader.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
 
-				if (outFile == null)
-					output = ((StringWriter) writer).toString();
-			} catch (IOException e) {
-				handleProblem(e);
-			} finally {
-				if (bReader != null)
-					try {
-						bReader.close();
-					} catch (Exception ignored) {
-					}
-				if (iReader != null)
-					try {
-						iReader.close();
-					} catch (Exception ignored) {
-					}
-				if (in != null)
-					try {
-						in.close();
-					} catch (Exception ignored) {
-					}
-				if (writer != null)
-					try {
-						writer.close();
-					} catch (Exception ignored) {
-					}
-			}
-		}
-
-	}
+    }
 }
