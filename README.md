@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="openBD_logo_788x150px.png">
+</p>
+
 OpenBD is the worlds first truly open source and free GPLv3.0 Java CFML runtime.   OpenBD has a long legacy, first created in 2000, it is still going strong with active additions and fixes.
 
 ### Official Website
