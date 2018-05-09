@@ -33,7 +33,7 @@
 			</div>
 			
 			<div id="requests-panel" class="panel">
-				<cfinclude template="_requests_all2.cfm">
+				<cfinclude template="_requests_all.cfm">
 			</div>
 		</cfif>
 	</div><!--- end content --->
