@@ -26,6 +26,8 @@
  *  
  *  http://www.openbluedragon.org/
  *  $Id: convert.java 2374 2013-06-10 22:14:24Z alan $
+ *  
+ *  dump() added by Marcus Fernstrom on May 9, 2018.
  */
 package org.alanwilliamson.lang.javascript;
 
@@ -50,13 +52,14 @@ import com.naryx.tagfusion.cfm.engine.cfQueryResultData;
 import com.naryx.tagfusion.cfm.engine.cfSession;
 import com.naryx.tagfusion.cfm.engine.cfStructData;
 import com.naryx.tagfusion.cfm.file.cfFile;
+import com.naryx.tagfusion.cfm.tag.cfDUMP;
 import com.naryx.tagfusion.cfm.tag.tagUtils;
 
 public class convert extends Object {
 
 	public static Context getJavaScriptContextForSession(cfSession _Session, HashMap<String, JavascriptDefinedFunction>	functions ) throws Exception {
 		Context cx = (Context) _Session.getDataBin("jscontext");
-
+		
 		if (cx == null) {
 			cx = Context.enter();
 			cx.setOptimizationLevel(-1);
@@ -77,10 +80,13 @@ public class convert extends Object {
 			ScriptableObject.putProperty(scope, "client", 			convert.cfDataConvert(_Session.getData("client")));
 
 			
-			/* Add in the Global methods load, sync, print */
+			/* Add in the Global methods load, sync, print, dump */
 			Class[] signature = new Class[] {Context.class,Scriptable.class,Object[].class,Function.class};
 			FunctionObject f = new FunctionObject( "print", convert.class.getMethod("print", signature ), scope );
 			ScriptableObject.defineProperty(scope, "print", f, ScriptableObject.DONTENUM);
+			
+			f = new FunctionObject( "dump", convert.class.getMethod("dump", signature ), scope );
+			ScriptableObject.defineProperty(scope, "dump", f, ScriptableObject.DONTENUM);
 			
 			f = new FunctionObject( "console", convert.class.getMethod("console", signature ), scope );
 			ScriptableObject.defineProperty(scope, "console", f, ScriptableObject.DONTENUM);
@@ -126,6 +132,26 @@ public class convert extends Object {
 		thisSession.forceWrite( String.valueOf(args[0]) );
 		return Context.getUndefinedValue();
 	}
+	
+	
+	/*
+	 * The output follows cfml writeDump for complex values and js print() for simple values
+	 */
+	public static Object dump( Context cx, Scriptable thisObj, Object[] args, Function funObj) throws Exception{
+		cfSession thisSession = (cfSession)cx.getThreadLocal("cfsession");
+		
+		if ( args[0] instanceof IdScriptableObject ) {
+			cfData dat = convert.jsConvert2cfData( (IdScriptableObject) args[0] );
+			String out = cfDUMP.dumpSession(thisSession, dat, null, "", 9999, false, false );
+			thisSession.forceWrite( out );
+			
+		} else {
+			thisSession.forceWrite( (String) "" + args[0] );
+		}
+		
+		return Context.getUndefinedValue();
+	}
+	
 
 	public static Object console( Context cx, Scriptable thisObj, Object[] args, Function funObj){
 		System.out.println( args[0] );
@@ -136,7 +162,7 @@ public class convert extends Object {
 	 * Converts Javascript NativeObject into CFML; recursive call
 	 */
 	public static cfData jsConvert2cfData(IdScriptableObject obj) throws Exception {
-
+		
 		if (obj instanceof NativeObject) {
 			cfStructData struct = new cfStructData();
 
