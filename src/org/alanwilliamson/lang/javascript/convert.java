@@ -26,6 +26,8 @@
  *  
  *  http://www.openbluedragon.org/
  *  $Id: convert.java 2374 2013-06-10 22:14:24Z alan $
+ *  
+ *  dump() added by Marcus Fernstrom on May 9, 2018.
  */
 package org.alanwilliamson.lang.javascript;
 
@@ -133,18 +135,17 @@ public class convert extends Object {
 	
 	
 	/*
-	 * This feels super hacky. Someone with better JavaFu, please show me a better way.
-	 * The output follows writeDump for complex values and print() for simple values
+	 * The output follows cfml writeDump for complex values and js print() for simple values
 	 */
 	public static Object dump( Context cx, Scriptable thisObj, Object[] args, Function funObj) throws Exception{
 		cfSession thisSession = (cfSession)cx.getThreadLocal("cfsession");
 		
-		try {
+		if ( args[0] instanceof IdScriptableObject ) {
 			cfData dat = convert.jsConvert2cfData( (IdScriptableObject) args[0] );
 			String out = cfDUMP.dumpSession(thisSession, dat, null, "", 9999, false, false );
 			thisSession.forceWrite( out );
 			
-		} catch( Exception e ) {
+		} else {
 			thisSession.forceWrite( (String) "" + args[0] );
 		}
 		
