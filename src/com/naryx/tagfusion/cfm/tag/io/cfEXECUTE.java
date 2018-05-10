@@ -216,25 +216,34 @@ public class cfEXECUTE extends cfTag implements Serializable {
      */
     private String[] getCommand(cfStructData attributes, cfSession _Session) throws cfmRunTimeException {
         ArrayList<String> list = new ArrayList<String>();
+        // Populate ArrayList with command and all arguments
         String cmd = getDynamic(attributes, _Session, "NAME").getString();
         list.add(cmd);
         if (containsAttribute(attributes, "ARGUMENTS")) {
             cfData args = getDynamic(attributes, _Session, "ARGUMENTS");
             if (args.getDataType() == cfData.CFARRAYDATA) {
+                /**
+                 * ARGUMENTS is an Array, so we just add all elements to the ArrayLst
+                 * Note we have to start with 1 because cfArrayData's getElement method subtracts 1
+                 */
                 cfArrayData cfArray = ((cfArrayData) args);
                 int size = cfArray.size();
                 for (int i = 1; i <= size; i++) {
                     list.add(cfArray.getElement(i).getString());
                 }
             } else {
+                // when ARGUMENTS is not an Array, it should be a String with arguments separated by space. We need to take care of quotes.
                 String str = args.getString();
                 StringBuffer sb = new StringBuffer();
                 boolean quoting = false;
                 StringBuffer strBuffer = new StringBuffer((String) str);
-                for (int i = 0; i < strBuffer.length(); ++i) {
+                // analyze ARGUMENTS character by character
+                for (int i = 0; i < strBuffer.length(); i++) {
                     char c = strBuffer.charAt(i);
+                    // Look for a quote. Is it the first or do we look for the closing?
                     if (c == '\"' && (sb.length() == 0 || quoting)) {
                         if (quoting) {
+                            // This is a closing quote, add argument to list and prepare StringBuffer for next
                             list.add(sb.toString());
                             sb = new StringBuffer();
                         }
@@ -242,15 +251,19 @@ public class cfEXECUTE extends cfTag implements Serializable {
                         continue;
                     }
                     if (c == ' ' && !quoting) {
-                        if (sb.length() <= 0) {
+                        if (sb.length() == 0) {
+                            // ignore space if argument length is still zero
                             continue;
                         }
+                        // This is a separator space, add argument to list and prepare StringBuffer for next
                         list.add(sb.toString());
                         sb = new StringBuffer();
                         continue;
                     }
+                    // append character to our argument buffer
                     sb.append(c);
                 }
+                // after parsing ARGUMENTS string, add argument if StringBuffer has content
                 if (sb.length() > 0) {
                     list.add(sb.toString());
                 }
