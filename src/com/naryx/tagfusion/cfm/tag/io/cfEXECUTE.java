@@ -26,7 +26,6 @@
  *
  *  http://www.openbluedragon.org/
  */
-
 package com.naryx.tagfusion.cfm.tag.io;
 
 import java.io.File;
@@ -44,191 +43,232 @@ import com.naryx.tagfusion.cfm.engine.cfmBadFileException;
 import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.cfm.tag.cfTag;
 import com.naryx.tagfusion.cfm.tag.cfTagReturnType;
+import java.util.ArrayList;
 
 public class cfEXECUTE extends cfTag implements Serializable {
-	static final long serialVersionUID = 1;
 
-	public String getEndMarker() {
-		return "</CFEXECUTE>";
-	}
+    static final long serialVersionUID = 1;
 
-  @SuppressWarnings("unchecked")
-	public java.util.Map getInfo(){
-  	return createInfo("system", "Executes a shell command on the local server");
-  }
-  
-  @SuppressWarnings("unchecked")
-  public java.util.Map[] getAttInfo(){
-  	return new java.util.Map[] {
-   			createAttInfo( "ATTRIBUTECOLLECTION", "A structure containing the tag attributes", 	"", false ),
-   			createAttInfo( "NAME", "The full path to the executable you wish to run", 	"", true ),
-   			createAttInfo( "ARGUMENTS", "An array of command line arguments to pass into the executable", 	"", true ),
-   			createAttInfo( "OUTPUTFILE", "The name of the file to store the output of the command.  Cannot be used when VARIABLE is specified", 	"", false ),
-   			createAttInfo( "VARIABLE", "The name of the variable to store the output of the command.  Cannot be used when FILE is specified", 	"", false ),
-   			createAttInfo( "ERRORFILE", "The name of the file where the error stream is sent to", 	"", false ),
-   			createAttInfo( "ERRORVARIABLE", "The name of the variable where the error stream is sent to", 	"", false ),
-   			createAttInfo( "TIMEOUT", "The timeout to wait for the command to complete.  If 0, then it will wait indefinitely for the command to finish", 	"0", false ),
-   			createAttInfo( "URIDIRECTORY", "Is the path to the file relative to the document root", 	"false", false ),
-   					
-  	};
-  }
-  	
-	
-	protected void defaultParameters(String _tag) throws cfmBadFileException {
-		defaultAttribute("NAME", "");
-		defaultAttribute("TIMEOUT", 0);
-		defaultAttribute("URIDIRECTORY", "NO");
+    public String getEndMarker() {
+        return "</CFEXECUTE>";
+    }
 
-		parseTagHeader(_tag);
-		if (containsAttribute("ATTRIBUTECOLLECTION"))
-			return;
-		
+    @SuppressWarnings("unchecked")
+    public java.util.Map getInfo() {
+        return createInfo("system", "Executes a shell command on the local server");
+    }
 
-		if (!containsAttribute("NAME"))
-			throw newBadFileException("Missing Attribute", "You need to specify the NAME of the process you wish to run");
+    @SuppressWarnings("unchecked")
+    public java.util.Map[] getAttInfo() {
+        return new java.util.Map[]{
+            createAttInfo("ATTRIBUTECOLLECTION", "A structure containing the tag attributes", "", false),
+            createAttInfo("NAME", "The full path to the executable you wish to run", "", true),
+            createAttInfo("ARGUMENTS", "An array of command line arguments to pass into the executable", "", true),
+            createAttInfo("OUTPUTFILE", "The name of the file to store the output of the command.  Cannot be used when VARIABLE is specified", "", false),
+            createAttInfo("VARIABLE", "The name of the variable to store the output of the command.  Cannot be used when FILE is specified", "", false),
+            createAttInfo("ERRORFILE", "The name of the file where the error stream is sent to", "", false),
+            createAttInfo("ERRORVARIABLE", "The name of the variable where the error stream is sent to", "", false),
+            createAttInfo("TIMEOUT", "The timeout to wait for the command to complete.  If 0, then it will wait indefinitely for the command to finish", "0", false),
+            createAttInfo("URIDIRECTORY", "Is the path to the file relative to the document root", "false", false),};
+    }
 
-		if (containsAttribute("OUTPUTFILE") && containsAttribute("VARIABLE"))
-			throw newBadFileException("Attribute Validatation Error", "You cannot specify both the \'outputFile\' attribute and the \'variable\' attribute");
-	}
-	
-  
-	protected cfStructData setAttributeCollection(cfSession _Session) throws cfmRunTimeException {
-		cfStructData attributes = super.setAttributeCollection(_Session);
+    protected void defaultParameters(String _tag) throws cfmBadFileException {
+        defaultAttribute("NAME", "");
+        defaultAttribute("TIMEOUT", 0);
+        defaultAttribute("URIDIRECTORY", "NO");
 
-		if (!containsAttribute(attributes,"NAME"))
-			throw newBadFileException("Missing Attribute", "You need to specify the NAME of the process you wish to run");
+        parseTagHeader(_tag);
+        if (containsAttribute("ATTRIBUTECOLLECTION")) {
+            return;
+        }
 
-		if (containsAttribute(attributes,"OUTPUTFILE") && containsAttribute(attributes,"VARIABLE"))
-			throw newBadFileException("Attribute Validatation Error", "You cannot specify both the \'outputFile\' attribute and the \'variable\' attribute");
+        if (!containsAttribute("NAME")) {
+            throw newBadFileException("Missing Attribute", "You need to specify the NAME of the process you wish to run");
+        }
 
-		return	attributes;
-	}
+        if (containsAttribute("OUTPUTFILE") && containsAttribute("VARIABLE")) {
+            throw newBadFileException("Attribute Validatation Error", "You cannot specify both the \'outputFile\' attribute and the \'variable\' attribute");
+        }
+    }
 
+    protected cfStructData setAttributeCollection(cfSession _Session) throws cfmRunTimeException {
+        cfStructData attributes = super.setAttributeCollection(_Session);
 
-	public cfTagReturnType render(cfSession _Session) throws cfmRunTimeException {
-  	cfStructData attributes = setAttributeCollection(_Session);
+        if (!containsAttribute(attributes, "NAME")) {
+            throw newBadFileException("Missing Attribute", "You need to specify the NAME of the process you wish to run");
+        }
 
-  	int timeOut 		= getDynamic(attributes,_Session, "TIMEOUT").getInt();
-		boolean uriDir 	= getDynamic(attributes,_Session, "URIDIRECTORY").getBoolean();
-		File outFile 		= getFile(attributes,_Session, "OUTPUTFILE", uriDir);
-		File errFile 		= getFile(attributes,_Session, "ERRORFILE", uriDir);
+        if (containsAttribute(attributes, "OUTPUTFILE") && containsAttribute(attributes, "VARIABLE")) {
+            throw newBadFileException("Attribute Validatation Error", "You cannot specify both the \'outputFile\' attribute and the \'variable\' attribute");
+        }
 
-		// --[ create new process
-		cfEXECUTECommandRunner commandRunner = new cfEXECUTECommandRunner(formatCommand(attributes,_Session), outFile, errFile);
-		commandRunner.start();
+        return attributes;
+    }
 
-		if (timeOut > 0) {
-			try {
-				commandRunner.join(timeOut * 1000);
-			} catch (InterruptedException ignore) {
-			}
-		}
+    public cfTagReturnType render(cfSession _Session) throws cfmRunTimeException {
+        cfStructData attributes = setAttributeCollection(_Session);
 
-		Exception problem = commandRunner.getProblem(); // using "problem" here is part of the fix for bug #2115
-		if (problem != null) {
-			cfCatchData rtException = new cfCatchData(_Session);
-			cfStringData rtExceptionType = cfCatchData.TYPE_ANY;
-			String msg = problem.getMessage();
-			if (msg != null) {
-				msg = msg.toLowerCase() + " : " + problem.toString();
-			} else {
-				msg = problem.toString();
-			}
+        int timeOut = getDynamic(attributes, _Session, "TIMEOUT").getInt();
+        boolean uriDir = getDynamic(attributes, _Session, "URIDIRECTORY").getBoolean();
+        File outFile = getFile(attributes, _Session, "OUTPUTFILE", uriDir);
+        File errFile = getFile(attributes, _Session, "ERRORFILE", uriDir);
 
-			/*
-			 * On Windows, the Exception message contains either error=2 or error=5.
-			 * On RHEL 3.0, the Exception message does not contain those strings, and
-			 * instead contains either "not found" or "cannot execute".
-			 */
-			if (msg.indexOf("error=2") != -1 || msg.indexOf("not found") != -1) {
-				rtExceptionType = cfCatchData.TYPE_APPLICATION;
-				rtException.setDetail("File Not Found");
-			} else if (msg.indexOf("error=5") != -1 || msg.indexOf("cannot execute") != -1) {
-				rtExceptionType = cfCatchData.TYPE_SECURITY;
-			}
+	// --[ create new process
+        cfEXECUTECommandRunner commandRunner = new cfEXECUTECommandRunner(getCommand(attributes, _Session), outFile, errFile);
+        commandRunner.start();
 
-			rtException.setType(rtExceptionType);
-			rtException.setMessage(msg);
-			rtException.setDetail("Check bluedragon.log for additional information");
-			rtException.setJavaException(problem);
+        if (timeOut > 0) {
+            try {
+                commandRunner.join(timeOut * 1000);
+            } catch (InterruptedException ignore) {
+            }
+        }
 
-			throw new cfmRunTimeException(rtException);
-		}
+        Exception problem = commandRunner.getProblem(); // using "problem" here is part of the fix for bug #2115
+        if (problem != null) {
+            cfCatchData rtException = new cfCatchData(_Session);
+            cfStringData rtExceptionType = cfCatchData.TYPE_ANY;
+            String msg = problem.getMessage();
+            if (msg != null) {
+                msg = msg.toLowerCase() + " : " + problem.toString();
+            } else {
+                msg = problem.toString();
+            }
 
-		String output = commandRunner.getOutput();
+            /*
+             * On Windows, the Exception message contains either error=2 or error=5.
+             * On RHEL 3.0, the Exception message does not contain those strings, and
+             * instead contains either "not found" or "cannot execute".
+             */
+            if (msg.indexOf("error=2") != -1 || msg.indexOf("not found") != -1) {
+                rtExceptionType = cfCatchData.TYPE_APPLICATION;
+                rtException.setDetail("File Not Found");
+            } else if (msg.indexOf("error=5") != -1 || msg.indexOf("cannot execute") != -1) {
+                rtExceptionType = cfCatchData.TYPE_SECURITY;
+            }
 
-		if (output != null && outFile == null) {
-			if (containsAttribute(attributes,"VARIABLE")) {
-				// expose the output to the page using the variable name that was specified
-				String variableName = getDynamic(attributes,_Session, "VARIABLE").getString();
-				_Session.setData(variableName, new cfStringData(output)); 
-			} else {
-				_Session.write(output);
-			}
-		}
+            rtException.setType(rtExceptionType);
+            rtException.setMessage(msg);
+            rtException.setDetail("Check bluedragon.log for additional information");
+            rtException.setJavaException(problem);
 
-		String error = commandRunner.getError();
-		if (error != null && errFile == null && containsAttribute("ERRORVARIABLE")) {
-			String errVar = getDynamic(attributes,_Session, "ERRORVARIABLE").getString();
-			_Session.setData(errVar, new cfStringData(error));
-		}
+            throw new cfmRunTimeException(rtException);
+        }
 
-		return cfTagReturnType.NORMAL;
-	}
+        String output = commandRunner.getOutput();
 
-	private File getFile(cfStructData attributes, cfSession _Session, String _attrib, boolean _uriDir) throws cfmRunTimeException {
-		File outFile = null;
-		if (containsAttribute(attributes,_attrib)) {
-			String outputfile = getDynamic(attributes,_Session, _attrib).getString();
+        if (output != null && outFile == null) {
+            if (containsAttribute(attributes, "VARIABLE")) {
+                // expose the output to the page using the variable name that was specified
+                String variableName = getDynamic(attributes, _Session, "VARIABLE").getString();
+                _Session.setData(variableName, new cfStringData(output));
+            } else {
+                _Session.write(output);
+            }
+        }
 
-			if (_uriDir)
-				outFile = com.nary.io.FileUtils.getRealFile(_Session.REQ, outputfile);
-			else
-				outFile = new File(outputfile);
+        String error = commandRunner.getError();
+        if (error != null && errFile == null && containsAttribute("ERRORVARIABLE")) {
+            String errVar = getDynamic(attributes, _Session, "ERRORVARIABLE").getString();
+            _Session.setData(errVar, new cfStringData(error));
+        }
 
-			if (!outFile.isAbsolute()) {
-				outFile = new File(cfEngine.thisPlatform.getFileIO().getTempDirectory(), outputfile);
-			}
+        return cfTagReturnType.NORMAL;
+    }
 
-			if (!outFile.exists()) {
-				try {
-					File parent = outFile.getParentFile();
-					if (parent != null && !parent.exists()) {
-						parent.mkdirs();
-					}
-					outFile.createNewFile();
-				} catch (IOException e) {
-					throw newRunTimeException(e.toString());
-				}
-			}
-		}
-		return outFile;
-	}
+    private File getFile(cfStructData attributes, cfSession _Session, String _attrib, boolean _uriDir) throws cfmRunTimeException {
+        File outFile = null;
+        if (containsAttribute(attributes, _attrib)) {
+            String outputfile = getDynamic(attributes, _Session, _attrib).getString();
 
-	
-	
-	/**
-	 * 
-	 * @param _Session
-	 * @return a String array of length = 2. The 1st element is the command, the
-	 *         2nd will either be null or a String representing any arguments that
-	 *         were specified by the "arguments" attribute.
-	 * @throws cfmRunTimeException
-	 */
-	private String[] formatCommand(cfStructData attributes, cfSession _Session) throws cfmRunTimeException {
-		String cmd = getDynamic(attributes,_Session, "NAME").getString();
-		String argsAsString = "";
+            if (_uriDir) {
+                outFile = com.nary.io.FileUtils.getRealFile(_Session.REQ, outputfile);
+            } else {
+                outFile = new File(outputfile);
+            }
 
-		if (containsAttribute(attributes,"ARGUMENTS")) {
-			cfData args = getDynamic(attributes,_Session, "ARGUMENTS");
+            if (!outFile.isAbsolute()) {
+                outFile = new File(cfEngine.thisPlatform.getFileIO().getTempDirectory(), outputfile);
+            }
 
-			if (args.getDataType() == cfData.CFARRAYDATA)
-				argsAsString = ((cfArrayData) args).createList(" ", "\"");
-			else
-				argsAsString = args.getString();
-		}
+            if (!outFile.exists()) {
+                try {
+                    File parent = outFile.getParentFile();
+                    if (parent != null && !parent.exists()) {
+                        parent.mkdirs();
+                    }
+                    outFile.createNewFile();
+                } catch (IOException e) {
+                    throw newRunTimeException(e.toString());
+                }
+            }
+        }
+        return outFile;
+    }
 
-		String[] commandPlusArgs = { cmd, argsAsString };
-		return commandPlusArgs;
-	}
+    /**
+     *
+     * @param _Session
+     * @return a String array. The 1st element is the command, the remaining
+     * represent any arguments that were
+     * specified by the "arguments" attribute.
+     * @throws cfmRunTimeException
+     */
+    private String[] getCommand(cfStructData attributes, cfSession _Session) throws cfmRunTimeException {
+        ArrayList<String> list = new ArrayList<String>();
+        // Populate ArrayList with command and all arguments
+        String cmd = getDynamic(attributes, _Session, "NAME").getString();
+        list.add(cmd);
+        if (containsAttribute(attributes, "ARGUMENTS")) {
+            cfData args = getDynamic(attributes, _Session, "ARGUMENTS");
+            if (args.getDataType() == cfData.CFARRAYDATA) {
+                /**
+                 * ARGUMENTS is an Array, so we just add all elements to the ArrayLst
+                 * Note we have to start with 1 because cfArrayData's getElement method subtracts 1
+                 */
+                cfArrayData cfArray = ((cfArrayData) args);
+                int size = cfArray.size();
+                for (int i = 1; i <= size; i++) {
+                    list.add(cfArray.getElement(i).getString());
+                }
+            } else {
+                // when ARGUMENTS is not an Array, it should be a String with arguments separated by space. We need to take care of quotes.
+                String str = args.getString();
+                StringBuffer sb = new StringBuffer();
+                boolean quoting = false;
+                StringBuffer strBuffer = new StringBuffer((String) str);
+                // analyze ARGUMENTS character by character
+                for (int i = 0; i < strBuffer.length(); i++) {
+                    char c = strBuffer.charAt(i);
+                    // Look for a quote. Is it the first or do we look for the closing?
+                    if (c == '\"' && (sb.length() == 0 || quoting)) {
+                        if (quoting) {
+                            // This is a closing quote, add argument to list and prepare StringBuffer for next
+                            list.add(sb.toString());
+                            sb = new StringBuffer();
+                        }
+                        quoting = !quoting;
+                        continue;
+                    }
+                    if (c == ' ' && !quoting) {
+                        if (sb.length() == 0) {
+                            // ignore space if argument length is still zero
+                            continue;
+                        }
+                        // This is a separator space, add argument to list and prepare StringBuffer for next
+                        list.add(sb.toString());
+                        sb = new StringBuffer();
+                        continue;
+                    }
+                    // append character to our argument buffer
+                    sb.append(c);
+                }
+                // after parsing ARGUMENTS string, add argument if StringBuffer has content
+                if (sb.length() > 0) {
+                    list.add(sb.toString());
+                }
+            }
+        }
+        return list.toArray(new String[0]);
+    }
 }
