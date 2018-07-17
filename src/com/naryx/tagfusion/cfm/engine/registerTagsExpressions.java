@@ -276,7 +276,6 @@ public class registerTagsExpressions extends java.lang.Object {
     functions.put( "getfunctionlist",	     "com.naryx.tagfusion.expression.function.getFunctionList" );
     functions.put( "gettimezoneinfo",	     "com.naryx.tagfusion.expression.function.getTimeZoneInfo" );
     functions.put( "hash",	               "com.naryx.tagfusion.expression.function.hash" );
-
     functions.put( "structappend",	       "com.naryx.tagfusion.expression.function.struct.structAppend" );
     functions.put( "structfindkey",	       "com.naryx.tagfusion.expression.function.struct.structFindKey" );
     functions.put( "getcurrenttemplatepath","com.naryx.tagfusion.expression.function.getCurrentTemplatePath" );
