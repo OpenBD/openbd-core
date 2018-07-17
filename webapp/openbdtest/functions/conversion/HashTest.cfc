@@ -47,5 +47,11 @@
 			<cfset assertEquals ("5B296E6FD483DE7C5A3E55385E59C5FE" ,	Hash( encoding="CFMX_COMPAT", algorithm="MD5" ,data=bin ) )>
 
 	</cffunction>
+	
+	
+	<cffunction name="testPBKDF2">
+		<!--- Test PBKDF2  with string input --->
+		<cfset assertEquals ("DB99349E0FA3C4E14B41A318C72771CBD1AAABF69B9F103B3652BDF670E6A107A0368E3B2330DF8F7042148AA6FC5C0B4B449EAE7C7A0E2FC429AF0EDC0BC827" , hash( "someUserPassword", "pbkdf2", "utf-8", 100000, "someReallyLongAndGeneratedSaltThatNoDevShouldEverSee", "SHA512", 512 ))>
+	</cffunction>
 
 </cfcomponent>

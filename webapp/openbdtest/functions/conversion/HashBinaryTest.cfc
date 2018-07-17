@@ -41,5 +41,10 @@
 		<cfset assertEquals ("5B296E6FD483DE7C5A3E55385E59C5FE"  , Hashbinary( bin )  )>
 
 	</cffunction>
+	
+	<cffunction name="testPBKDF2Hash">
+		<!--- Test PBKDF2  with binary input --->
+		<cfset assertEquals ("847EE5FC46B0CBF031CAB25ECAEB7877BD6541809AA8026117B1897527BCD160984C9076406D5754E23A3B386A564E8CC3D2BFD2E6A150647B59889545FCDD09" , hash( toBinary( "someUserPassword" ), "pbkdf2", "utf-8", 100000, "someReallyLongAndGeneratedSaltThatNoDevShouldEverSee", "SHA512", 512 ))>
+	</cffunction>
 
 </cfcomponent>
