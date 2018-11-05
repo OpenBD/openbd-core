@@ -34,8 +34,10 @@ import java.io.StringReader;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.tomcat.jni.Time;
 import org.aw20.util.StringUtil;
 import org.joda.time.Instant;
 
@@ -63,11 +65,11 @@ import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.output.KeyValueStreamingChannel;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.DirContextDnsResolver;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 
-public class RedisCacheImpl implements CacheInterface {
+public class RedisCacheImpl implements CacheInterface { 
 
 	// One day in milliseconds, used as TTL if one within one day is not provided
 	private static long DAY_MS = 24 * 60 * 60 * 1000;
@@ -83,6 +85,12 @@ public class RedisCacheImpl implements CacheInterface {
 
 	// A structure containing all the properties
 	private cfStructData props;
+	
+	// Region data store prefix
+	private static final String REGION_PREFIX = "cache:region:";
+	
+	// TTLS data store prefix
+	private static final String TTLS_PREFIX = "cache:ttls:";
 
 	// The region for this cache instance
 	private String region;
@@ -602,8 +610,8 @@ public class RedisCacheImpl implements CacheInterface {
 		if ( region == null ) {
 			throw new Exception( "'region' can not be null" );
 		} else {
-			this.region = "cache:region:" + region;
-			this.ttls = "cache:ttls:" + region;
+			this.region = REGION_PREFIX + region;
+			this.ttls = TTLS_PREFIX + region;
 		}
 
 		this.props = validateAndParseProps( props );
@@ -618,6 +626,7 @@ public class RedisCacheImpl implements CacheInterface {
 	 */
 	@Override
 	public void shutdown() {
+		
 
 		if ( connection != null ) {
 			connection.close();
@@ -661,79 +670,108 @@ public class RedisCacheImpl implements CacheInterface {
 
 	/*
 	 * Auxiliary method to start a cleanup scheduler in background,
-	 * which operates only in the region for this cache instance.
+	 * which operates across all regions in the Redis instance.
 	 * 
 	 * For complete documentation on Flux and Lettuce reactive API see:
 	 * https://lettuce.io/core/milestone/reference/
 	 * 
 	 */
-	@SuppressWarnings( "unused" )
-	private void runRegionCleanupScheduler() {
-
-		// Emit a tick each 6 milliseconds
+	private void runGlobalCleanupScheduler() {
+		
+		final String logPrefix = getName() + ":" + region + ":" + server + " => runGlobalCleanupScheduler";
+		
+		// Get a unique identifier for the current thread's lock
+		String currentLockIdentifier = logPrefix + UUID.randomUUID().toString();
+		
+		// Emit a tick every 10 seconds
 		Flux
-				.interval( Duration.ofMillis( 6000 ), Schedulers.newParallel( "redisScheduler:" + region + server ) )
+				.interval( Duration.ofMillis( 10000 ))
 				.doOnNext( tick -> {
-					// System.out.println( "\ntick: " + tick );
-					long nowSecs = Instant.now().getMillis() / 1000;
-					double nowTtl = getDecimalTtl( nowSecs );
-					// On each tick get all the keys with expired ttls
-					reactiveCommands.zrangebyscore( ttls, Range.create( 0.0, nowTtl ) )
-							.doOnNext( key -> {
-								// System.out.println( "\nFound expired key: " + key );
-								reactiveCommands.multi()
-										.doOnSuccess( s -> {
-											// On each expired key atomically delete the key and its ttl
-											reactiveCommands.zrem( ttls, key ).subscribe();
-											reactiveCommands.hdel( region, key ).subscribe();
-											// System.out.println( "\nRemoved expired key from " + ttls + ":" + key );
-											// System.out.println( "\nDeleted expired key from " + region + ": " + key );
-										} ).flatMap( s -> reactiveCommands.exec() )
-										.doOnError( error -> {
-											if ( cfEngine.thisPlatform != null ) {
-												cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-											}
-										} )
-										.subscribe();
-							} )
-							.doOnError( error -> {
+								
+					/* 
+					 * Only one scan per Redis server instance will be executing a clean up of the data store
+					 * If multiple RedisCacheImpl instances map to the same Redis server, only one will run a scan
+					 * This is valid even if such RedisCacheImpl instances are running in different machines
+					 * 
+					 * The logic behind the distributed lock implemented here is described at
+					 * https://redislabs.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-2-distributed-locking/
+					 * 
+					 */
+					reactiveCommands.setnx("cache:scan:lock", currentLockIdentifier)
+						.doOnNext( setnxResponse -> {						
+							if(setnxResponse) {
+								
 								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
+									cfEngine.log( logPrefix + "Locked at Tick: " + tick );
 								}
-							} )
-							.subscribeOn( Schedulers.newParallel( "redisScheduler:" + region + server ) )
-							.subscribe();
+								
+								reactiveCommands.expire("cache:scan:lock", 10).subscribe();	
+								// On each tick if the lock was acquired start a scan
+								runScan( ScanCursor.INITIAL, currentLockIdentifier );
+							} else {								
+								reactiveCommands.ttl("cache:scan:lock")
+									.doOnNext( ttl -> {
+										if(ttl < 0 ) {
+											reactiveCommands.expire("cache:scan:lock", 10).subscribe();
+										}
+									})
+									.subscribe();																	
+							}
+						})
+						.doOnError( error -> {
+							if ( cfEngine.thisPlatform != null ) {
+								cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
+							}
+						} )
+						.subscribe();
+
+			
 				} )
 				.doOnError( error -> {
 					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
+						cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
 					}
 				} )
 				.subscribe();
+	
 	}
 
-
-	private void runScan( ScanCursor cursor ) {
+	private void runScan( ScanCursor cursor, String currentLockIdentifier ) {
+		
+		final String logPrefix = getName() + ":" + region + ":" + server + " => runScan";		
+		
+		if ( cfEngine.thisPlatform != null ) {
+			cfEngine.log( logPrefix + " ScanCursor = " + cursor.getCursor() );
+		}
 
 		/*
 		 * Scan 500 keys starting from the given cursor,
 		 * triggering a clean up region and the next scan in parallel
 		 */
-		reactiveCommands.scan( cursor, ScanArgs.Builder.matches( "*" ).limit( 500 ) )
+		reactiveCommands.scan( cursor, ScanArgs.Builder.matches( REGION_PREFIX + "*" ).limit( 500 ) )
 				.doOnNext( next -> {
-					// System.out.println( "Clean up region" );
-
-					// For each key representing a region, clean up region
+					
 					List<String> keys = next.getKeys();
-					Flux.fromIterable( keys ).filter( key -> !key.startsWith( ttls ) && key.startsWith( "cache:" ) )
+					
+					if ( cfEngine.thisPlatform != null ) {
+						cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " keys" );
+					}
+					
+					// For each key representing a region, clean up region
+					Flux.fromIterable( keys )
 							.doOnNext( region -> {
+								
+								if ( cfEngine.thisPlatform != null ) {
+									cfEngine.log( logPrefix + "Command 'filter' returned " + region );
+								}
+								
 								// Clean up the given region
 								cleanUpRegion( region );
 							} )
 							.doOnError( error -> {
 								// log error
 								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
+									cfEngine.log( logPrefix + " Command 'filter' Failed: " + error.getMessage() );
 								}
 							} )
 							.subscribe();
@@ -741,19 +779,35 @@ public class RedisCacheImpl implements CacheInterface {
 				} )
 				.doOnNext( next -> {
 					// Trigger next scan
-					// System.out.println( "Scan again" );
 					if ( !next.isFinished() ) {
-						runScan( ScanCursor.of( next.getCursor() ) );
+						runScan( ScanCursor.of( next.getCursor() ), currentLockIdentifier );
 					} else {
-						// System.out.println( "Scan completed" );
+						cfEngine.log( logPrefix + " Scan completed" );
+						
+							// Rest. This code is to be enhanced.
+							try {
+								Thread.sleep(10000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							
+							reactiveCommands.watch("cache:scan:lock").subscribe();
+							reactiveCommands
+								.get("cache:scan:lock")
+								.filter( lockIdentifier -> lockIdentifier.equals(currentLockIdentifier))
+								.doOnNext( lockIdentifier -> {
+									reactiveCommands.del("cache:scan:lock").subscribe();
+								})
+								.subscribe();
+							reactiveCommands.unwatch().subscribe();
+						
 					}
 				} )
 				.doOnError( error -> {
 					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
+						cfEngine.log( logPrefix + "Command 'scan' Failed: " + error.getMessage() );
 					}
 				} )
-				.subscribeOn( Schedulers.newParallel( "redisScheduler:" + region + server ) )
 				.subscribe();
 
 	}
@@ -763,59 +817,50 @@ public class RedisCacheImpl implements CacheInterface {
 	 * Auxiliary method to clean up a region.
 	 * Gets all the keys that are expired and deletes their ttls and key-value pairs.
 	 */
-	private void cleanUpRegion( String region ) {
+	private void cleanUpRegion( String regionName ) {
+
+		final String logPrefix = getName() + ":" + regionName + ":" + server + " => cleanUpRegion";	
+		
+		if ( cfEngine.thisPlatform != null ) {
+			cfEngine.log( logPrefix + " Region = " + regionName );
+		}
+		
+		// Determine the name of the TTLS data store for this region
+		final String regionTtls = TTLS_PREFIX + regionName.replaceFirst(REGION_PREFIX, "");
 
 		long nowSecs = Instant.now().getMillis() / 1000;
 		double nowTtl = getDecimalTtl( nowSecs );
-		reactiveCommands.zrangebyscore( ttls, Range.create( 0.0, nowTtl ) )
+		reactiveCommands.zrangebyscore( regionTtls, Range.create( 0.0, nowTtl ) )
 				.doOnNext( key -> {
-					// System.out.println( "\nFound expired key: " + key );
+					
+					if ( cfEngine.thisPlatform != null ) {
+						cfEngine.log( logPrefix + " Command 'zrangebyscore' Found expired key =" + key );
+					}
+					
 					reactiveCommands.multi()
-							.doOnSuccess( s -> {
-								reactiveCommands.zrem( ttls, key ).subscribe();
-								reactiveCommands.hdel( region, key ).subscribe();
-								// System.out.println( "\nRemoved expired key from " + ttls + ":" + key );
-								// System.out.println( "\nDeleted expired key from " + region + ": " + key );
+							.doOnSuccess( multiResponse -> {
+								
+								reactiveCommands.zrem( regionTtls, key ).subscribe();
+								reactiveCommands.hdel( regionName, key ).subscribe();
+								reactiveCommands.exec().subscribe();
+								
+								if ( cfEngine.thisPlatform != null ) {
+									cfEngine.log( logPrefix + " Queued Command 'zrem' to Remove expired key from " + regionTtls + ":" + key );
+									cfEngine.log( logPrefix + " Queued Command 'hdel' to Delete expired key from " + regionName + ":" + key );
+									cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key + " & "  + regionName + ":" + key );
+								}
+								
 							} )
-							.flatMap( s -> reactiveCommands.exec() )
 							.doOnError( error -> {
 								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
+									cfEngine.log( logPrefix + "Command 'multi' Failed: " + error.getMessage() );
 								}
 							} )
 							.subscribe();
 				} )
 				.doOnError( error -> {
 					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-					}
-				} )
-				.subscribe();
-
-	}
-
-
-	/*
-	 * Auxiliary method to start a cleanup scheduler in background,
-	 * which operates across all regions in the Redis instance.
-	 * 
-	 * For complete documentation on Flux and Lettuce reactive API see:
-	 * https://lettuce.io/core/milestone/reference/
-	 * 
-	 */
-	private void runGlobalCleanupScheduler() {
-
-		// Emit a tick every 6 seconds
-		Flux
-				.interval( Duration.ofMillis( 6000 ), Schedulers.newParallel( "redisScheduler:" + region + server ) )
-				.doOnNext( tick -> {
-					// System.out.println( "\ntick: " + tick );
-					// On each tick start a scan
-					runScan( ScanCursor.INITIAL );
-				} )
-				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
+						cfEngine.log( logPrefix + "Command 'zrangebyscore' Failed: " + error.getMessage() );
 					}
 				} )
 				.subscribe();

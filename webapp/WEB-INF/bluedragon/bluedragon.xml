@@ -10,13 +10,13 @@
     <whitespacecomp>false</whitespacecomp>
     <nativelibdir>/WEB-INF/bin</nativelibdir>
     <missingtemplatehandler></missingtemplatehandler>
-    <lastfile>C:\_data\github\openbd-core\webapp\WEB-INF\bluedragon\bluedragon.xml.bak.1</lastfile>
+    <lastfile>P:\openbd-core\webapp\WEB-INF\bluedragon\bluedragon.xml.bak.1</lastfile>
     <journalignoreuri>/journal</journalignoreuri>
     <errorhandler></errorhandler>
     <buffersize>0</buffersize>
     <password>admin</password>
     <cfoutputshorthand>true</cfoutputshorthand>
-    <lastupdated>05/Apr/2015 14:46.27</lastupdated>
+    <lastupdated>04/Nov/2018 19:32.11</lastupdated>
     <defaultcharset>utf-8</defaultcharset>
   </system>
   <file>
