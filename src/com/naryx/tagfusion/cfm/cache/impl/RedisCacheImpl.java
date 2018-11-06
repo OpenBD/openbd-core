@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.tomcat.jni.Time;
 import org.aw20.util.StringUtil;
 import org.joda.time.Instant;
 
@@ -65,7 +64,6 @@ import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.output.KeyValueStreamingChannel;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.DirContextDnsResolver;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
 
@@ -213,7 +211,8 @@ public class RedisCacheImpl implements CacheInterface {
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " deleteAllFailed: " + e.getMessage() );
+				cfEngine.log( getName() + ":" + region +":" + server + " => deleteAll Failed: "
+						+ "exception=" + e.toString() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
 			}
 			if ( future != null ) {
 				future.cancel( false );
@@ -371,7 +370,8 @@ public class RedisCacheImpl implements CacheInterface {
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " get Failed: " + e.getMessage() );
+				cfEngine.log( getName() + ":" + region +":" + server + " => get Failed: "
+						+ "exception=" + e.toString() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
 			}
 			if ( future != null ) {
 				future.cancel( true );
@@ -396,7 +396,9 @@ public class RedisCacheImpl implements CacheInterface {
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " get Failed: " + e.getMessage() );
+				cfEngine.log( getName() + ":" + region +":" + server + " => getAllIds Failed: "
+						+ "exception=" + e.toString() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
+
 			}
 		}
 
@@ -538,7 +540,9 @@ public class RedisCacheImpl implements CacheInterface {
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " set Failed: " + e.getMessage() );
+				cfEngine.log( getName() + ":" + region +":" + server + " => set Failed: "
+						+ "exception=" + e.toString() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
+
 			}
 			if ( futureHset != null ) {
 				futureHset.cancel( true );
@@ -683,9 +687,9 @@ public class RedisCacheImpl implements CacheInterface {
 		// Get a unique identifier for the current thread's lock
 		String currentLockIdentifier = logPrefix + UUID.randomUUID().toString();
 		
-		// Emit a tick every 10 seconds
+		// Emit a tick every 30 seconds
 		Flux
-				.interval( Duration.ofMillis( 10000 ))
+				.interval( Duration.ofMillis( 30000 ))
 				.doOnNext( tick -> {
 								
 					/* 
@@ -705,14 +709,14 @@ public class RedisCacheImpl implements CacheInterface {
 									cfEngine.log( logPrefix + "Locked at Tick: " + tick );
 								}
 								
-								reactiveCommands.expire("cache:scan:lock", 10).subscribe();	
+								reactiveCommands.expire("cache:scan:lock", 30).subscribe();	
 								// On each tick if the lock was acquired start a scan
 								runScan( ScanCursor.INITIAL, currentLockIdentifier );
 							} else {								
 								reactiveCommands.ttl("cache:scan:lock")
 									.doOnNext( ttl -> {
 										if(ttl < 0 ) {
-											reactiveCommands.expire("cache:scan:lock", 10).subscribe();
+											reactiveCommands.expire("cache:scan:lock", 30).subscribe();
 										}
 									})
 									.subscribe();																	
@@ -746,7 +750,8 @@ public class RedisCacheImpl implements CacheInterface {
 
 		/*
 		 * Scan 500 keys starting from the given cursor,
-		 * triggering a clean up region and the next scan in parallel
+		 * Matching any key that is a region
+		 * Triggering a clean up region and the next scan in parallel
 		 */
 		reactiveCommands.scan( cursor, ScanArgs.Builder.matches( REGION_PREFIX + "*" ).limit( 500 ) )
 				.doOnNext( next -> {
@@ -754,7 +759,7 @@ public class RedisCacheImpl implements CacheInterface {
 					List<String> keys = next.getKeys();
 					
 					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " keys" );
+						cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " regions" );
 					}
 					
 					// For each key representing a region, clean up region
@@ -784,22 +789,32 @@ public class RedisCacheImpl implements CacheInterface {
 					} else {
 						cfEngine.log( logPrefix + " Scan completed" );
 						
-							// Rest. This code is to be enhanced.
-							try {
-								Thread.sleep(10000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
+							//---- Start Release Lock  ----//
+						
+							/*
+							 * Note: 
+							 * Since we are using a lock with time out we do not have to release the lock after a scan as it will expire anyway.
+							 * We must release the lock if we decide that we want another scan to be able to start immediately after this one
+							 * even in the case where the scan took much less than the timeout.
+							 * For example when the data store is empty the scan can take just a few microseconds to complete. 
+							 * In this case deleting the lock after the scan completes may mean that as many scans as regions will happen at each tick,
+							 * as all clients could unlock before the next tick.
+							 * These scans could be useless as they would be looking for expired keys in a empty data store.
+							 */
+						
+//							// Check and verify that we still have the lock
+//							reactiveCommands.watch("cache:scan:lock").subscribe();
+//							reactiveCommands
+//								.get("cache:scan:lock")
+//								.filter( lockIdentifier -> lockIdentifier.equals(currentLockIdentifier))
+//								.doOnNext( lockIdentifier -> {
+//									// Release the lock
+//									reactiveCommands.del("cache:scan:lock").subscribe();
+//								})
+//								.subscribe();
+//							reactiveCommands.unwatch().subscribe();
 							
-							reactiveCommands.watch("cache:scan:lock").subscribe();
-							reactiveCommands
-								.get("cache:scan:lock")
-								.filter( lockIdentifier -> lockIdentifier.equals(currentLockIdentifier))
-								.doOnNext( lockIdentifier -> {
-									reactiveCommands.del("cache:scan:lock").subscribe();
-								})
-								.subscribe();
-							reactiveCommands.unwatch().subscribe();
+							//---- End Release Lock ----//
 						
 					}
 				} )

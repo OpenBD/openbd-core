@@ -10,14 +10,14 @@
     <whitespacecomp>false</whitespacecomp>
     <nativelibdir>/WEB-INF/bin</nativelibdir>
     <missingtemplatehandler></missingtemplatehandler>
-    <lastfile>P:\openbd-core\webapp\WEB-INF\bluedragon\bluedragon.xml.bak.1</lastfile>
     <journalignoreuri>/journal</journalignoreuri>
+    <lastfile>P:\openbd-core\webapp\WEB-INF\bluedragon\bluedragon.xml.bak.1</lastfile>
     <errorhandler></errorhandler>
-    <buffersize>0</buffersize>
     <password>admin</password>
+    <buffersize>0</buffersize>
     <cfoutputshorthand>true</cfoutputshorthand>
-    <lastupdated>04/Nov/2018 19:32.11</lastupdated>
     <defaultcharset>utf-8</defaultcharset>
+    <lastupdated>05/Nov/2018 17:26.33</lastupdated>
   </system>
   <file>
     <maxfiles>1000</maxfiles>
@@ -33,18 +33,17 @@
     <cache>true</cache>
   </cfquery>
   <debugoutput>
-    <enabled>false</enabled>
     <executiontimes>
       <show>true</show>
       <highlight>250</highlight>
     </executiontimes>
+    <enabled>false</enabled>
     <exceptions>
       <show>true</show>
     </exceptions>
     <database>
       <show>true</show>
     </database>
-    <ipaddresses></ipaddresses>
     <variables>
       <url>true</url>
       <form>true</form>
@@ -53,15 +52,16 @@
       <client>true</client>
       <server>true</server>
       <request>true</request>
-      <application>true</application>
       <session>true</session>
+      <application>true</application>
       <show>false</show>
       <variables>true</variables>
     </variables>
+    <ipaddresses></ipaddresses>
   </debugoutput>
   <cfapplication>
-    <enabled>true</enabled>
     <clientstorage>cookie</clientstorage>
+    <enabled>true</enabled>
     <sessiontimeout>#CreateTimeSpan(0,0,20,0)#</sessiontimeout>
     <applicationtimeout>#CreateTimeSpan(2,0,0,0)#</applicationtimeout>
     <j2eesession>true</j2eesession>
@@ -69,8 +69,8 @@
   <cfmail>
     <smtpserver>127.0.0.1</smtpserver>
     <threads>1</threads>
-    <charset>UTF-8</charset>
     <smtpport>25</smtpport>
+    <charset>UTF-8</charset>
   </cfmail>
   <cfmlcustomtags>
     <mapping name="cf">
