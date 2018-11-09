@@ -92,6 +92,9 @@ public class RedisCacheImpl implements CacheInterface {
 	
 	// TTLS data store prefix
 	private static final String TTLS_PREFIX = "cache:ttls:";
+	
+	// Logs prefix
+	private String logPrefix = "RedisCache";
 
 	// The region for this cache instance
 	private String region;
@@ -107,8 +110,6 @@ public class RedisCacheImpl implements CacheInterface {
 
 	// Reactive commands for the connection in this cache instance
 	RedisReactiveCommands<String, String> reactiveCommands;
-
-	private String logPrefix = getName() + ":" + region +":" + server;
 
 	// A collection of mappings from a cache keys to cache instances.
 	private static HashMap<String, RedisCacheImpl> instances = new HashMap<>();
@@ -340,11 +341,10 @@ public class RedisCacheImpl implements CacheInterface {
 	@Override
 	public cfData get( String key ) {
 		try {
-			
 			// Calculate the time now, represented as a decimal
 			long nowSecs = Instant.now().getMillis() / 1000;
 			double nowTtl = getDecimalTtl( nowSecs );
-			
+
 			List<RedisFuture<?>> futures = new ArrayList<RedisFuture<?>>();
 
 			RedisFuture<Double> zscoreFuture = asyncCommands.zscore( ttls, key ); // Time complexity: O(1);
@@ -366,8 +366,12 @@ public class RedisCacheImpl implements CacheInterface {
 					// Set the value to be returned, when the TTL is not expired
 					base64value = hgetFuture.get();
 				}
-
-			} 				
+			}
+			
+			if ( cfEngine.thisPlatform != null ) {
+				cfEngine.log( logPrefix  + " >> get returned " + (base64value == null ? 0 : base64value.length()) );
+			}
+			
 			return base64value == null ? null : (cfData) Transcoder.fromString( base64value );
 
 
@@ -695,9 +699,11 @@ public class RedisCacheImpl implements CacheInterface {
 		
 		// Emit a tick every 30 seconds
 		Flux
-				.interval( Duration.ofMillis( 30000 ))
+				.interval( Duration.ofMillis( 1000 ))
 				.doOnNext( tick -> {
 								
+					// System.out.println(tick);
+					
 					/* 
 					 * Only one scan per Redis server instance will be executing a clean up of the data store
 					 * If multiple RedisCacheImpl instances map to the same Redis server, only one will run a scan
@@ -750,9 +756,11 @@ public class RedisCacheImpl implements CacheInterface {
 		
 		final String logPrefix = getName() + ":" + region + ":" + server + " => runScan";		
 		
+		/*
 		if ( cfEngine.thisPlatform != null ) {
 			cfEngine.log( logPrefix + " ScanCursor = " + cursor.getCursor() );
 		}
+		*/
 
 		/*
 		 * Scan 500 keys starting from the given cursor,
@@ -764,17 +772,21 @@ public class RedisCacheImpl implements CacheInterface {
 					
 					List<String> keys = next.getKeys();
 					
+					/*
 					if ( cfEngine.thisPlatform != null ) {
 						cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " regions" );
 					}
+					*/
 					
 					// For each key representing a region, clean up region
 					Flux.fromIterable( keys )
 							.doOnNext( region -> {
 								
+								/*
 								if ( cfEngine.thisPlatform != null ) {
 									cfEngine.log( logPrefix + "Command 'filter' returned " + region );
 								}
+								*/
 								
 								// Clean up the given region
 								cleanUpRegion( region );
@@ -843,7 +855,7 @@ public class RedisCacheImpl implements CacheInterface {
 		final String logPrefix = getName() + ":" + regionName + ":" + server + " => cleanUpRegion";	
 		
 		if ( cfEngine.thisPlatform != null ) {
-			cfEngine.log( logPrefix + " Region = " + regionName );
+			cfEngine.log( logPrefix + ", region = " + regionName );
 		}
 		
 		// Determine the name of the TTLS data store for this region
@@ -854,9 +866,11 @@ public class RedisCacheImpl implements CacheInterface {
 		reactiveCommands.zrangebyscore( regionTtls, Range.create( 0.0, nowTtl ) )
 				.doOnNext( key -> {
 					
+					/*
 					if ( cfEngine.thisPlatform != null ) {
 						cfEngine.log( logPrefix + " Command 'zrangebyscore' Found expired key = " + key );
 					}
+					*/
 					
 					reactiveCommands.multi()
 							.doOnSuccess( multiResponse -> {
@@ -866,8 +880,10 @@ public class RedisCacheImpl implements CacheInterface {
 								reactiveCommands.exec().subscribe();
 								
 								if ( cfEngine.thisPlatform != null ) {
+									/*
 									cfEngine.log( logPrefix + " Queued Command 'zrem' to Remove expired key from " + regionTtls + ":" + key );
 									cfEngine.log( logPrefix + " Queued Command 'hdel' to Delete expired key from " + regionName + ":" + key );
+									*/
 									cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key + " & "  + regionName + ":" + key );
 								}
 								
@@ -908,6 +924,9 @@ public class RedisCacheImpl implements CacheInterface {
 
 		waitTimeSeconds = StringUtil.toInteger( props.getData( "waittimeseconds" ).getInt(), 5 );
 		server = props.getData( "server" ).getString();
+		
+		logPrefix += ":" + region + ":" + server;
+
 
 		return props;
 	}
