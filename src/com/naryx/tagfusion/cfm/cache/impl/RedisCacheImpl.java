@@ -32,11 +32,13 @@ package com.naryx.tagfusion.cfm.cache.impl;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.aw20.util.StringUtil;
 import org.joda.time.Instant;
 
@@ -50,6 +52,7 @@ import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.cfm.engine.dataNotSupportedException;
 import com.naryx.tagfusion.util.Transcoder;
 
+import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.Range;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisFuture;
@@ -89,6 +92,9 @@ public class RedisCacheImpl implements CacheInterface {
 	
 	// TTLS data store prefix
 	private static final String TTLS_PREFIX = "cache:ttls:";
+	
+	// Logs prefix
+	private String logPrefix = "RedisCache";
 
 	// The region for this cache instance
 	private String region;
@@ -335,49 +341,47 @@ public class RedisCacheImpl implements CacheInterface {
 	@Override
 	public cfData get( String key ) {
 
-		// Calculate the time now, represented as a decimal
-		long nowSecs = Instant.now().getMillis() / 1000;
-		double nowTtl = getDecimalTtl( nowSecs );
-
-		RedisFuture<TransactionResult> future = null;
-		TransactionResult transactionResult = null;
 		try {
-			if ( key == null ) {
-				throw new Exception( "'key' cannot be null" );
-			}
+			// Calculate the time now, represented as a decimal
+			long nowSecs = Instant.now().getMillis() / 1000;
+			double nowTtl = getDecimalTtl( nowSecs );
 
-			/*
-			 * Atomic transaction (MULTI/EXEC) to check get the key and its ttl in one round.
-			 * 
-			 * (see https://redis.io/commands/multi)
+			List<RedisFuture<?>> futures = new ArrayList<RedisFuture<?>>();
+
+			RedisFuture<Double> zscoreFuture = asyncCommands.zscore( ttls, key ); // Time complexity: O(1);
+			futures.add(zscoreFuture ); 
+			
+			RedisFuture<String> hgetFuture = asyncCommands.hget( region, key ); // Time complexity: O(1);
+			futures.add(hgetFuture ); 
+			
+			/* Wait until futures are complete or the supplied timeout is reached. 
+			 * Commands are not cancelled (in contrast to awaitOrCancel(RedisFuture, long, TimeUnit)) when the timeout expires.
 			 */
-			asyncCommands.multi();
-			asyncCommands.zscore( ttls, key ); // Time complexity: O(1)
-			asyncCommands.hget( region, key ); // Time complexity: O(1)
-			future = asyncCommands.exec();
-
-			transactionResult = future.get( waitTimeSeconds, TimeUnit.SECONDS );
-
-			// Get the result of the 'ZSCORE' command, the TTL for the given key
-			Double keyTtl = transactionResult.get( 0 );
+			boolean allDone = LettuceFutures.awaitAll(Duration.ofSeconds(waitTimeSeconds), futures.toArray(new RedisFuture[futures.size()]));
+			
 			String base64value = null;
-			if ( keyTtl > nowTtl ) {
-				// Set the value to be returned, when the TTL is not expired
-				base64value = transactionResult.get( 1 );
-			}
+			if(allDone) {
+				// Get the result of the 'ZSCORE' command, the TTL for the given key
+				Double keyTtl = zscoreFuture.get();
+				if ( keyTtl != null && keyTtl > nowTtl ) {
+					// Set the value to be returned, when the TTL is not expired
+					base64value = hgetFuture.get();
+				}
 
+			}
+			
+			if ( cfEngine.thisPlatform != null ) {
+				cfEngine.log( logPrefix  + " >> get returned " + (base64value == null ? 0 : base64value.length()) );
+			}
+			
 			return base64value == null ? null : (cfData) Transcoder.fromString( base64value );
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + ":" + region +":" + server + " => get Failed: "
-						+ "exception=" + e.toString() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
+				cfEngine.log( logPrefix  + " >> get Failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
-			if ( future != null ) {
-				future.cancel( true );
-			}
+			return null;
 		}
-		return null;
 	}
 
 
@@ -689,9 +693,11 @@ public class RedisCacheImpl implements CacheInterface {
 		
 		// Emit a tick every 30 seconds
 		Flux
-				.interval( Duration.ofMillis( 30000 ))
+				.interval( Duration.ofMillis( 1000 ))
 				.doOnNext( tick -> {
 								
+					// System.out.println(tick);
+					
 					/* 
 					 * Only one scan per Redis server instance will be executing a clean up of the data store
 					 * If multiple RedisCacheImpl instances map to the same Redis server, only one will run a scan
@@ -744,9 +750,11 @@ public class RedisCacheImpl implements CacheInterface {
 		
 		final String logPrefix = getName() + ":" + region + ":" + server + " => runScan";		
 		
+		/*
 		if ( cfEngine.thisPlatform != null ) {
 			cfEngine.log( logPrefix + " ScanCursor = " + cursor.getCursor() );
 		}
+		*/
 
 		/*
 		 * Scan 500 keys starting from the given cursor,
@@ -758,17 +766,21 @@ public class RedisCacheImpl implements CacheInterface {
 					
 					List<String> keys = next.getKeys();
 					
+					/*
 					if ( cfEngine.thisPlatform != null ) {
 						cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " regions" );
 					}
+					*/
 					
 					// For each key representing a region, clean up region
 					Flux.fromIterable( keys )
 							.doOnNext( region -> {
 								
+								/*
 								if ( cfEngine.thisPlatform != null ) {
 									cfEngine.log( logPrefix + "Command 'filter' returned " + region );
 								}
+								*/
 								
 								// Clean up the given region
 								cleanUpRegion( region );
@@ -837,7 +849,7 @@ public class RedisCacheImpl implements CacheInterface {
 		final String logPrefix = getName() + ":" + regionName + ":" + server + " => cleanUpRegion";	
 		
 		if ( cfEngine.thisPlatform != null ) {
-			cfEngine.log( logPrefix + " Region = " + regionName );
+			cfEngine.log( logPrefix + ", region = " + regionName );
 		}
 		
 		// Determine the name of the TTLS data store for this region
@@ -848,9 +860,11 @@ public class RedisCacheImpl implements CacheInterface {
 		reactiveCommands.zrangebyscore( regionTtls, Range.create( 0.0, nowTtl ) )
 				.doOnNext( key -> {
 					
+					/*
 					if ( cfEngine.thisPlatform != null ) {
 						cfEngine.log( logPrefix + " Command 'zrangebyscore' Found expired key =" + key );
 					}
+					*/
 					
 					reactiveCommands.multi()
 							.doOnSuccess( multiResponse -> {
@@ -860,8 +874,10 @@ public class RedisCacheImpl implements CacheInterface {
 								reactiveCommands.exec().subscribe();
 								
 								if ( cfEngine.thisPlatform != null ) {
+									/*
 									cfEngine.log( logPrefix + " Queued Command 'zrem' to Remove expired key from " + regionTtls + ":" + key );
 									cfEngine.log( logPrefix + " Queued Command 'hdel' to Delete expired key from " + regionName + ":" + key );
+									*/
 									cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key + " & "  + regionName + ":" + key );
 								}
 								
@@ -902,6 +918,9 @@ public class RedisCacheImpl implements CacheInterface {
 
 		waitTimeSeconds = StringUtil.toInteger( props.getData( "waittimeseconds" ).getInt(), 5 );
 		server = props.getData( "server" ).getString();
+		
+		logPrefix += ":" + region + ":" + server;
+
 
 		return props;
 	}
