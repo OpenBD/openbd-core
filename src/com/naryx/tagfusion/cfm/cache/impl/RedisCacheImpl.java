@@ -64,6 +64,7 @@ import io.lettuce.core.ZAddArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
+import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.output.KeyValueStreamingChannel;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.DirContextDnsResolver;
@@ -348,10 +349,10 @@ public class RedisCacheImpl implements CacheInterface {
 			List<RedisFuture<?>> futures = new ArrayList<RedisFuture<?>>();
 
 			RedisFuture<Double> zscoreFuture = asyncCommands.zscore( ttls, key ); // Time complexity: O(1);
-			futures.add(zscoreFuture ); 
+			futures.add(zscoreFuture); 
 			
 			RedisFuture<String> hgetFuture = asyncCommands.hget( region, key ); // Time complexity: O(1);
-			futures.add(hgetFuture ); 
+			futures.add(hgetFuture); 
 			
 			/* Wait until futures are complete or the supplied timeout is reached. 
 			 * Commands are not cancelled (in contrast to awaitOrCancel(RedisFuture, long, TimeUnit)) when the timeout expires.
@@ -393,15 +394,19 @@ public class RedisCacheImpl implements CacheInterface {
 	public cfArrayData getAllIds() {
 
 		try {
+			
+			RedisFuture<List<String>> hkeysFuture = asyncCommands.hkeys( region ); // Time complexity: O(N) where N is the size of the hash.
+			List<String> keys = LettuceFutures.awaitOrCancel(hkeysFuture, waitTimeSeconds, TimeUnit.SECONDS);
+			
+			if ( cfEngine.thisPlatform != null ) {
+				cfEngine.log( logPrefix  + " >> getAllIds returned " + (keys == null ? 0 : keys.size() ) );
+			}
 
-			List<String> keys = asyncCommands.hkeys( region ).get( 5, TimeUnit.SECONDS ); // Time complexity: O(N) where N is the size of the hash.
 			return buildCfArrayData( keys );
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + ":" + region +":" + server + " >> getAllIds Failed: "
-						+ "exception=" + e.toString() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
-
+				cfEngine.log( logPrefix  + " >> getAllIds Failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 
@@ -502,66 +507,42 @@ public class RedisCacheImpl implements CacheInterface {
 	@Override
 	public void set( String key, cfData data, long ageMS, long idleTime ) {
 
-		// Convert the ageMs, tll in milliseconds, to ageSecs, ttl in seconds.
-		long ageSecs;
-		if ( ageMS < 1 || ageMS > DAY_MS ) {
-			ageSecs = DAY_MS / 1000;
-		} else {
-			ageSecs = ageMS / 1000;
-		}
-
-		// Get the time now in seconds plus the ageSecs in seconds
-		long nowSecs = Instant.now().getMillis() / 1000 + ageSecs;
-
-		// Convert the time now in seconds to a decimal
-		double ttl = getDecimalTtl( nowSecs );
-
-		RedisFuture<TransactionResult> future = null;
-		RedisFuture<Boolean> futureHset = null;
-		RedisFuture<Long> futureZadd = null;
-
-		TransactionResult transactionResult = null;
 		try {
-			if ( key == null ) {
-				throw new Exception( "'key' cannot be null" );
+			
+			// Convert the ageMs, tll in milliseconds, to ageSecs, ttl in seconds.
+			long ageSecs;
+			if ( ageMS < 1 || ageMS > DAY_MS ) {
+				ageSecs = DAY_MS / 1000;
+			} else {
+				ageSecs = ageMS / 1000;
 			}
 
-			if ( data == null ) {
-				throw new Exception( "'data' cannot be null" );
-			}
+			// Get the time now in seconds plus the ageSecs in seconds
+			long nowSecs = Instant.now().getMillis() / 1000 + ageSecs;
+	
+			// Convert the time now in seconds to a decimal
+			double ttl = getDecimalTtl( nowSecs );
+
+			LettuceAssert.notNull(key, "'key' cannot be null");
+			LettuceAssert.notNull(data, "'data' cannot be null" );
 
 			String base64value = Transcoder.toString( data );
+						
+			RedisFuture<Boolean> futureHset = asyncCommands.hset( region, key, base64value ); // Time complexity: O(1)
+			RedisFuture<Long> futureZadd = asyncCommands.zadd( ttls, ttl, key ); // O(log(N)) for each key added, where N is the number of keys in the sorted set.
+			
+			List<RedisFuture<?>> futures = new ArrayList<RedisFuture<?>>();
+			futures.add(futureHset); 
+			futures.add(futureZadd); 
 
-			if(asyncCommands == null ) {
-				throw new Exception( "'asyncCommands' cannot be null" );
-			}
-			
-			/*
-			 * Atomic transaction (MULTI/EXEC) to set the key and its ttl.
-			 * 
-			 * (see https://redis.io/commands/multi)
+			/* Wait until futures are complete or the supplied timeout is reached. 
+			 * Commands are not cancelled (in contrast to awaitOrCancel(RedisFuture, long, TimeUnit)) when the timeout expires.
 			 */
-			asyncCommands.multi();
-			futureHset = asyncCommands.hset( region, key, base64value ); // Time complexity: O(1)
-			futureZadd = asyncCommands.zadd( ttls, ttl, key ); // O(log(N)) for each key added, where N is the number of keys in the sorted set.
-			future = asyncCommands.exec();
-			
-			transactionResult = future.get( waitTimeSeconds, TimeUnit.SECONDS );
+			LettuceFutures.awaitAll(Duration.ofSeconds(waitTimeSeconds), futures.toArray(new RedisFuture[futures.size()]));
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + ":" + region +":" + server + " >> set Failed: "
-						+ "exception=" + e.toString() + ", cause=" + e.getCause() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
-
-			}
-			if ( futureHset != null ) {
-				futureHset.cancel( true );
-			}
-			if ( futureZadd != null ) {
-				futureZadd.cancel( true );
-			}
-			if ( future != null ) {
-				future.cancel( true );
+				cfEngine.log( logPrefix  + " >> set Failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 	}
