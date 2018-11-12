@@ -59,7 +59,6 @@ import io.lettuce.core.RedisFuture;
 import io.lettuce.core.ScanArgs;
 import io.lettuce.core.ScanCursor;
 import io.lettuce.core.StreamScanCursor;
-import io.lettuce.core.TransactionResult;
 import io.lettuce.core.ZAddArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
@@ -114,6 +113,12 @@ public class RedisCacheImpl implements CacheInterface {
 
 	// A collection of mappings from a cache keys to cache instances.
 	private static HashMap<String, RedisCacheImpl> instances = new HashMap<>();
+	
+	// Controls the logging output
+	@SuppressWarnings("unused")
+	private boolean logStackTraces = true;
+	@SuppressWarnings("unused")
+	private boolean logSuccessCases = true;
 
 
 	/* Returns a cache key representing a mapping from the given region to the given server */
@@ -164,7 +169,7 @@ public class RedisCacheImpl implements CacheInterface {
 				data.addElement( new cfStringData( key ) );
 			} catch ( cfmRunTimeException e ) {
 				if ( cfEngine.thisPlatform != null ) {
-					cfEngine.log( getName() + " buildCfArrayData Failed: " + e.getMessage() );
+					cfEngine.log( logPrefix  + " buildCfArrayData failed:\n" + ExceptionUtils.getStackTrace(e));
 				}
 			}
 		}
@@ -188,6 +193,10 @@ public class RedisCacheImpl implements CacheInterface {
 		} else {
 			deleteExactFalse( key );
 		}
+		
+		if ( cfEngine.thisPlatform != null ) {
+			cfEngine.log( getName() + ":" + region +":" + server + " >> delete");
+		}
 	}
 
 
@@ -200,29 +209,24 @@ public class RedisCacheImpl implements CacheInterface {
 	@Override
 	public void deleteAll() {
 
-		RedisFuture<TransactionResult> future = null;
 		try {
 
 			/*
-			 * Atomic transaction (MULTI/EXEC) to delete the data store for the region,
-			 * and the respective ttls data store.
+			 * Delete the data store for the region,
+			 * and the respective ttls data store,
+			 * in a fire&forget fashion.
 			 * 
-			 * (see https://redis.io/commands/multi)
 			 */
-			asyncCommands.multi();
 			asyncCommands.del( region );
 			asyncCommands.del( ttls );
-			future = asyncCommands.exec();
-			future.get( waitTimeSeconds, TimeUnit.SECONDS );
-
+			
+			if ( cfEngine.thisPlatform != null ) {
+				cfEngine.log( getName() + ":" + region +":" + server + " >> deleteAll" );
+			}
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + ":" + region +":" + server + " >> deleteAll Failed: "
-						+ "exception=" + e.toString() + ", line=" + e.getStackTrace()[0].getLineNumber() + ", message=" + e.getMessage() );
-			}
-			if ( future != null ) {
-				future.cancel( false );
+				cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 	}
@@ -285,8 +289,7 @@ public class RedisCacheImpl implements CacheInterface {
 			}
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " deleteAllFailed: " + e.getMessage() );
-			}
+				cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));			}
 			if ( futureScan != null ) {
 				futureScan.cancel( false );
 			}
@@ -306,28 +309,21 @@ public class RedisCacheImpl implements CacheInterface {
 	 */
 	private void deleteExactTrue( String key ) {
 
-		RedisFuture<TransactionResult> futureDel = null;
-
 		try {
 
 			/*
-			 * Atomic transaction (MULTI/EXEC) to delete the key from the region data store,
-			 * and the respective ttl from the ttls data store for this region.
+			 * Delete the key from the region data store,
+			 * and the respective ttl from the ttls data store for this region,
+			 * in a fire&forget fashion.
 			 * 
-			 * (see https://redis.io/commands/multi)
 			 */
-			asyncCommands.multi();
 			asyncCommands.zrem( ttls, key );
 			asyncCommands.hdel( region, key );
-			futureDel = asyncCommands.exec();
-			futureDel.get( waitTimeSeconds, TimeUnit.SECONDS );
+
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " deleteExactFalse: " + e.getMessage() );
-			}
-			if ( futureDel != null ) {
-				futureDel.cancel( false );
+				cfEngine.log( logPrefix  + " deleteExactFalse failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 
@@ -370,7 +366,7 @@ public class RedisCacheImpl implements CacheInterface {
 			}
 			
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " >> get returned " + (base64value == null ? 0 : base64value.length()) );
+				cfEngine.log( logPrefix  + " GET returned " + (base64value == null ? 0 : base64value.length()) );
 			}
 			
 			return base64value == null ? null : (cfData) Transcoder.fromString( base64value );
@@ -378,7 +374,7 @@ public class RedisCacheImpl implements CacheInterface {
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " >> get Failed:\n" + ExceptionUtils.getStackTrace(e));
+				cfEngine.log( logPrefix  + " get failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 			return null;
 		}
@@ -426,7 +422,7 @@ public class RedisCacheImpl implements CacheInterface {
 			type = data != null ? data.getString() : null;
 		} catch ( dataNotSupportedException e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " getName: " + e.getMessage() );
+				cfEngine.log( logPrefix  + " getName failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 		return type;
@@ -476,7 +472,7 @@ public class RedisCacheImpl implements CacheInterface {
 
 		} catch ( Exception e ) {
 			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " getStats Failed: " + e.getMessage() );
+				cfEngine.log( logPrefix  + " getStats failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 			if ( future != null ) {
 				future.cancel( false );
@@ -906,7 +902,7 @@ public class RedisCacheImpl implements CacheInterface {
 		waitTimeSeconds = StringUtil.toInteger( props.getData( "waittimeseconds" ).getInt(), 5 );
 		server = props.getData( "server" ).getString();
 		
-		logPrefix += ":" + region + ":" + server;
+		logPrefix += "." + region + "@" + server.replace("redis://", "");
 
 
 		return props;
