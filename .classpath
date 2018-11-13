@@ -73,10 +73,10 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/bson-3.5.0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongodb-driver-3.5.0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/mongodb-driver-core-3.5.0.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-core-1.11.221.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-elastictranscoder-1.11.221.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-lambda-1.11.221.jar"/>
-	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-s3-1.11.221.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-core-1.11.448.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-elastictranscoder-1.11.448.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-lambda-1.11.448.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aws-java-sdk-s3-1.11.448.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/httpclient-4.5.2.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-annotations-2.6.0.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/jackson-databind-2.6.7.1.jar"/>

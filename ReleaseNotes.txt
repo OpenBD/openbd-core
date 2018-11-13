@@ -5,6 +5,8 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Updated supported AWS regions to latest
+- Updated AWS sdk jars
 - Added support for PBKDF2 algorithm in Hash() function
 - Added Dump() to cfscript language JavaScript
 - Added support for PATCH http verb to CFHTTP and http()

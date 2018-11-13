@@ -76,6 +76,8 @@ public class AmazonKey extends Object implements Serializable {
 	public com.amazonaws.services.s3.model.Region getAmazonRegion() {
 		if (amzRegion.equalsIgnoreCase("us-east") || amzRegion.equalsIgnoreCase("us-standard"))
 			return com.amazonaws.services.s3.model.Region.US_Standard;
+		else if (amzRegion.equalsIgnoreCase("us-east-2"))
+			return com.amazonaws.services.s3.model.Region.US_East_2;
 		else if (amzRegion.equalsIgnoreCase("us-west-1"))
 			return com.amazonaws.services.s3.model.Region.US_West;
 		else if (amzRegion.equalsIgnoreCase("us-west-2"))
@@ -86,12 +88,26 @@ public class AmazonKey extends Object implements Serializable {
 			return com.amazonaws.services.s3.model.Region.EU_Ireland;
 		else if (amzRegion.equalsIgnoreCase("eu_frankfurt"))
 			return com.amazonaws.services.s3.model.Region.EU_Frankfurt;
+		else if (amzRegion.equalsIgnoreCase("eu-west-2"))
+			return com.amazonaws.services.s3.model.Region.EU_London;
+		else if (amzRegion.equalsIgnoreCase("eu-west-3"))
+			return com.amazonaws.services.s3.model.Region.EU_Paris;
+		else if (amzRegion.equalsIgnoreCase("ap-south-1"))
+			return com.amazonaws.services.s3.model.Region.AP_Mumbai;
 		else if (amzRegion.equalsIgnoreCase("ap-southeast-1") || amzRegion.equalsIgnoreCase("ap-singapore"))
 			return com.amazonaws.services.s3.model.Region.AP_Singapore;
-		else if (amzRegion.equalsIgnoreCase("ap-sydney"))
+		else if (amzRegion.equalsIgnoreCase("ap-southeast-2") || amzRegion.equalsIgnoreCase("ap-sydney"))
 			return com.amazonaws.services.s3.model.Region.AP_Sydney;
 		else if (amzRegion.equalsIgnoreCase("ap-northeast-1") || amzRegion.equalsIgnoreCase("ap-tokyo"))
 			return com.amazonaws.services.s3.model.Region.AP_Tokyo;
+		else if (amzRegion.equalsIgnoreCase("ap-northeast-2"))
+			return com.amazonaws.services.s3.model.Region.AP_Seoul;
+		// else if (amzRegion.equalsIgnoreCase("ap-northeast-3"))
+		// 	return com.amazonaws.services.s3.model.Region.AP_Northeast_3;
+		else if (amzRegion.equalsIgnoreCase("ca-central-1"))
+			return com.amazonaws.services.s3.model.Region.CA_Central;
+		else if (amzRegion.equalsIgnoreCase("cn-northwest-1"))
+			return com.amazonaws.services.s3.model.Region.CN_Northwest_1;
 		else if (amzRegion.equalsIgnoreCase("sa-east-1") || amzRegion.equalsIgnoreCase("sa-saopaulo"))
 			return com.amazonaws.services.s3.model.Region.SA_SaoPaulo;
 		else
@@ -101,20 +117,36 @@ public class AmazonKey extends Object implements Serializable {
 	public String getS3Host() {
 		if (amzRegion.equals("us-east") || amzRegion.equals("us-standard"))
 			return "https://s3.amazonaws.com/";
+		else if (amzRegion.equals("us-east-2"))
+			return "https://s3-us-east-2.amazonaws.com/";
 		else if (amzRegion.equals("us-west-1"))
 			return "https://s3-us-west-1.amazonaws.com/";
 		else if (amzRegion.equals("us-west-2"))
 			return "https://s3-us-west-2.amazonaws.com/";
 		else if (amzRegion.equals("eu"))
 			return "https://s3-eu-west-1.amazonaws.com/";
+		else if (amzRegion.equals("ap-south-1"))
+			return "https://s3-ap-south-1.amazonaws.com/";
 		else if (amzRegion.equals("ap-southeast-1"))
 			return "https://s3-ap-southeast-1.amazonaws.com/";
 		else if (amzRegion.equals("ap-southeast-2"))
 			return "https://s3-ap-southeast-2.amazonaws.com/";
 		else if (amzRegion.equals("ap-northeast-1"))
 			return "https://s3-ap-northeast-1.amazonaws.com/";
+		else if (amzRegion.equals("ap-northeast-2"))
+			return "https://s3-ap-northeast-2.amazonaws.com/";
+		else if (amzRegion.equals("ap-northeast-3"))
+			return "https://s3-ap-northeast-3.amazonaws.com/";
 		else if (amzRegion.equals("sa-east-1"))
 			return "https://s3-sa-east-1.amazonaws.com/";
+		else if (amzRegion.equals("ca-central-1"))
+			return "https://s3-ca-central-1.amazonaws.com/";
+		else if (amzRegion.equals("cn-northwest-1"))
+			return "https://s3-cn-northwest-1.amazonaws.com/";
+		else if (amzRegion.equals("eu-west-2"))
+			return "https://s3-eu-west-2.amazonaws.com/";
+		else if (amzRegion.equals("eu-west-3"))
+			return "https://s3-eu-west-3.amazonaws.com/";
 		else
 			return amzRegion;
 	}
@@ -122,6 +154,8 @@ public class AmazonKey extends Object implements Serializable {
 	public String getSimpleDBHost() {
 		if (amzRegion.equals("us-east") || amzRegion.equals("us-standard"))
 			return "https://sdb.amazonaws.com";
+		else if (amzRegion.equals("us-east-2"))
+			return "https://sdb.us-east-2.amazonaws.com";
 		else if (amzRegion.equals("us-west-1"))
 			return "https://sdb.us-west-1.amazonaws.com";
 		else if (amzRegion.equals("us-west-2"))
@@ -143,6 +177,8 @@ public class AmazonKey extends Object implements Serializable {
 	public String getSQSHost() {
 		if (amzRegion.equalsIgnoreCase("us-east") || amzRegion.equalsIgnoreCase("us-standard"))
 			return "https://sqs.us-east-1.amazonaws.com";
+		else if (amzRegion.equalsIgnoreCase("us-east-2"))
+			return "https://sqs.us-east-2.amazonaws.com";
 		else if (amzRegion.equalsIgnoreCase("us-west-1"))
 			return "https://sqs.us-west-1.amazonaws.com";
 		else if (amzRegion.equalsIgnoreCase("us-west-2"))
