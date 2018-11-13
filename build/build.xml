@@ -154,10 +154,10 @@
 		<pathelement location="${webinf.jarpath}markdown4j-2.2.jar" />
 
 		<!-- For Amazon -->
-		<pathelement location="${webinf.jarpath}aws-java-sdk-core-1.11.447.jar" />
-		<pathelement location="${webinf.jarpath}aws-java-sdk-elastictranscoder-1.11.447.jar" />
-		<pathelement location="${webinf.jarpath}aws-java-sdk-lambda-1.11.447.jar" />
-		<pathelement location="${webinf.jarpath}aws-java-sdk-s3-1.11.447.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-core-1.11.448.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-elastictranscoder-1.11.448.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-lambda-1.11.448.jar" />
+		<pathelement location="${webinf.jarpath}aws-java-sdk-s3-1.11.448.jar" />
 		<pathelement location="${webinf.jarpath}jackson-dataformat-cbor-2.6.7.jar" />
 		<pathelement location="${webinf.jarpath}jackson-databind-2.6.7.1.jar" />
 		<pathelement location="${webinf.jarpath}jackson-core-2.6.7.jar" />
