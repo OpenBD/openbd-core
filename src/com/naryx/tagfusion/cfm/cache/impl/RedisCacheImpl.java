@@ -815,7 +815,7 @@ public class RedisCacheImpl implements CacheInterface {
 					/* 
 					 * For each expired key issue a Redis transaction that:
 					 * - Removes the key and its ttl from the TTLs datastore for this region
-					 * - Removes the key and its ttl from the TTLs datastore for this region
+					 * - Removes the key and its value from the data datastore for this region
 					 * 
 					 * Ref. 
 					 * - https://redis.io/commands/multi
