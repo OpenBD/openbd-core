@@ -168,9 +168,7 @@ public class RedisCacheImpl implements CacheInterface {
 			try {
 				data.addElement( new cfStringData( key ) );
 			} catch ( cfmRunTimeException e ) {
-				if ( cfEngine.thisPlatform != null ) {
-					cfEngine.log( logPrefix  + " buildCfArrayData failed:\n" + ExceptionUtils.getStackTrace(e));
-				}
+				cfEngine.log( logPrefix  + " buildCfArrayData failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 
@@ -194,9 +192,8 @@ public class RedisCacheImpl implements CacheInterface {
 			deleteExactFalse( key );
 		}
 		
-		if ( cfEngine.thisPlatform != null ) {
-			cfEngine.log( getName() + ":" + region +":" + server + " >> delete");
-		}
+		cfEngine.log( getName() + ":" + region +":" + server + " >> delete");
+		
 	}
 
 
@@ -220,14 +217,10 @@ public class RedisCacheImpl implements CacheInterface {
 			asyncCommands.del( region );
 			asyncCommands.del( ttls );
 			
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + ":" + region +":" + server + " >> deleteAll" );
-			}
+			cfEngine.log( getName() + ":" + region +":" + server + " >> deleteAll" );
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));
-			}
+			cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -288,8 +281,7 @@ public class RedisCacheImpl implements CacheInterface {
 
 			}
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));			}
+			cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));
 			if ( futureScan != null ) {
 				futureScan.cancel( false );
 			}
@@ -322,9 +314,7 @@ public class RedisCacheImpl implements CacheInterface {
 
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " deleteExactFalse failed:\n" + ExceptionUtils.getStackTrace(e));
-			}
+			cfEngine.log( logPrefix  + " deleteExactFalse failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 	}
@@ -365,17 +355,13 @@ public class RedisCacheImpl implements CacheInterface {
 				}
 			}
 			
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " GET returned " + (base64value == null ? 0 : base64value.length()) );
-			}
+			cfEngine.log( logPrefix  + " GET returned " + (base64value == null ? 0 : base64value.length()) );
 			
 			return base64value == null ? null : (cfData) Transcoder.fromString( base64value );
 
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " get failed:\n" + ExceptionUtils.getStackTrace(e));
-			}
+			cfEngine.log( logPrefix  + " get failed:\n" + ExceptionUtils.getStackTrace(e));
 			return null;
 		}
 	}
@@ -394,16 +380,12 @@ public class RedisCacheImpl implements CacheInterface {
 			RedisFuture<List<String>> hkeysFuture = asyncCommands.hkeys( region ); // Time complexity: O(N) where N is the size of the hash.
 			List<String> keys = LettuceFutures.awaitOrCancel(hkeysFuture, waitTimeSeconds, TimeUnit.SECONDS);
 			
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " >> getAllIds returned " + (keys == null ? 0 : keys.size() ) );
-			}
+			cfEngine.log( logPrefix  + " >> getAllIds returned " + (keys == null ? 0 : keys.size() ) );
 
 			return buildCfArrayData( keys );
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " >> getAllIds Failed:\n" + ExceptionUtils.getStackTrace(e));
-			}
+			cfEngine.log( logPrefix  + " >> getAllIds Failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return null;
@@ -421,9 +403,7 @@ public class RedisCacheImpl implements CacheInterface {
 			cfData data = props.getData( "type" );
 			type = data != null ? data.getString() : null;
 		} catch ( dataNotSupportedException e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " getName failed:\n" + ExceptionUtils.getStackTrace(e));
-			}
+			cfEngine.log( logPrefix  + " getName failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 		return type;
 	}
@@ -471,9 +451,8 @@ public class RedisCacheImpl implements CacheInterface {
 			}
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " getStats failed:\n" + ExceptionUtils.getStackTrace(e));
-			}
+			cfEngine.log( logPrefix  + " getStats failed:\n" + ExceptionUtils.getStackTrace(e));
+			
 			if ( future != null ) {
 				future.cancel( false );
 			}
@@ -537,9 +516,7 @@ public class RedisCacheImpl implements CacheInterface {
 			LettuceFutures.awaitAll(Duration.ofSeconds(waitTimeSeconds), futures.toArray(new RedisFuture[futures.size()]));
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( logPrefix  + " >> set Failed:\n" + ExceptionUtils.getStackTrace(e));
-			}
+			cfEngine.log( logPrefix  + " >> set Failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -654,8 +631,7 @@ public class RedisCacheImpl implements CacheInterface {
 		 */
 		runGlobalCleanupScheduler();
 
-		if ( cfEngine.thisPlatform != null )
-			cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
+		cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
 	}
 
 
@@ -669,7 +645,8 @@ public class RedisCacheImpl implements CacheInterface {
 	 */
 	private void runGlobalCleanupScheduler() {
 		
-		final String logPrefix = getName() + ":" + region + ":" + server + " => runGlobalCleanupScheduler";
+		// Log prefix for the logs within this method
+		final String logPrefix = this.logPrefix + " => runGlobalCleanupScheduler";
 		
 		// Get a unique identifier for the current thread's lock
 		String currentLockIdentifier = logPrefix + UUID.randomUUID().toString();
@@ -694,9 +671,8 @@ public class RedisCacheImpl implements CacheInterface {
 						.doOnNext( setnxResponse -> {						
 							if(setnxResponse) {
 								
-								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( logPrefix + "Locked at Tick: " + tick );
-								}
+								cfEngine.log( logPrefix + "Locked at Tick: " + tick );
+								
 								
 								reactiveCommands.expire("cache:scan:lock", 30).subscribe();	
 								// On each tick if the lock was acquired start a scan
@@ -712,18 +688,16 @@ public class RedisCacheImpl implements CacheInterface {
 							}
 						})
 						.doOnError( error -> {
-							if ( cfEngine.thisPlatform != null ) {
-								cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
-							}
+							cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
+							
 						} )
 						.subscribe();
 
 			
 				} )
 				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
-					}
+					cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
+					
 				} )
 				.subscribe();
 	
@@ -734,9 +708,7 @@ public class RedisCacheImpl implements CacheInterface {
 		final String logPrefix = getName() + ":" + region + ":" + server + " => runScan";		
 		
 		/*
-		if ( cfEngine.thisPlatform != null ) {
-			cfEngine.log( logPrefix + " ScanCursor = " + cursor.getCursor() );
-		}
+		cfEngine.log( logPrefix + " ScanCursor = " + cursor.getCursor() );
 		*/
 
 		/*
@@ -750,9 +722,7 @@ public class RedisCacheImpl implements CacheInterface {
 					List<String> keys = next.getKeys();
 					
 					/*
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " regions" );
-					}
+					cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " regions" );
 					*/
 					
 					// For each key representing a region, clean up region
@@ -760,9 +730,7 @@ public class RedisCacheImpl implements CacheInterface {
 							.doOnNext( region -> {
 								
 								/*
-								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( logPrefix + "Command 'filter' returned " + region );
-								}
+								cfEngine.log( logPrefix + "Command 'filter' returned " + region );
 								*/
 								
 								// Clean up the given region
@@ -770,9 +738,8 @@ public class RedisCacheImpl implements CacheInterface {
 							} )
 							.doOnError( error -> {
 								// log error
-								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( logPrefix + " Command 'filter' Failed: " + error.getMessage() );
-								}
+								cfEngine.log( logPrefix + " Command 'filter' Failed: " + error.getMessage() );
+								
 							} )
 							.subscribe();
 
@@ -797,26 +764,25 @@ public class RedisCacheImpl implements CacheInterface {
 							 * These scans could be useless as they would be looking for expired keys in a empty data store.
 							 */
 						
-//							// Check and verify that we still have the lock
-//							reactiveCommands.watch("cache:scan:lock").subscribe();
-//							reactiveCommands
-//								.get("cache:scan:lock")
-//								.filter( lockIdentifier -> lockIdentifier.equals(currentLockIdentifier))
-//								.doOnNext( lockIdentifier -> {
-//									// Release the lock
-//									reactiveCommands.del("cache:scan:lock").subscribe();
-//								})
-//								.subscribe();
-//							reactiveCommands.unwatch().subscribe();
+							// Check and verify that we still have the lock
+/*							reactiveCommands.watch("cache:scan:lock").subscribe();
+							reactiveCommands
+								.get("cache:scan:lock")
+								.filter( lockIdentifier -> lockIdentifier.equals(currentLockIdentifier))
+								.doOnNext( lockIdentifier -> {
+									// Release the lock
+									reactiveCommands.del("cache:scan:lock").subscribe();
+								})
+								.subscribe();
+							reactiveCommands.unwatch().subscribe();*/
 							
 							//---- End Release Lock ----//
 						
 					}
 				} )
 				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( logPrefix + "Command 'scan' Failed: " + error.getMessage() );
-					}
+					cfEngine.log( logPrefix + "Command 'scan' Failed: " + error.getMessage() );
+					
 				} )
 				.subscribe();
 
@@ -829,53 +795,57 @@ public class RedisCacheImpl implements CacheInterface {
 	 */
 	private void cleanUpRegion( String regionName ) {
 
-		final String logPrefix = getName() + ":" + regionName + ":" + server + " => cleanUpRegion";	
-		
-		if ( cfEngine.thisPlatform != null ) {
-			cfEngine.log( logPrefix + ", region = " + regionName );
-		}
+		// Log prefix for the logs within this method
+		final String logPrefix = this.logPrefix + " => cleanUpRegion";	
 		
 		// Determine the name of the TTLS data store for this region
 		final String regionTtls = TTLS_PREFIX + regionName.replaceFirst(REGION_PREFIX, "");
 
+		// Determine the double representation for this time instant
 		long nowSecs = Instant.now().getMillis() / 1000;
 		double nowTtl = getDecimalTtl( nowSecs );
-		reactiveCommands.zrangebyscore( regionTtls, Range.create( 0.0, nowTtl ) )
-				.doOnNext( key -> {
-					
-					/*
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( logPrefix + " Command 'zrangebyscore' Found expired key = " + key );
-					}
-					*/
-					
+		
+		/*
+		 * Get the set of keys in the given region with TTL score falling in [0.0, nowTTl]
+		 * Meaning they have expired
+		 */
+		reactiveCommands
+				.zrangebyscore( regionTtls, Range.create( 0.0, nowTtl ) )
+				.doOnNext( key -> {				
+					/* 
+					 * For each expired key issue a Redis transaction that:
+					 * - Removes the key and its ttl from the TTLs datastore for this region
+					 * - Removes the key and its ttl from the TTLs datastore for this region
+					 * 
+					 * Ref. 
+					 * - https://redis.io/commands/multi
+					 * - https://redis.io/topics/transactions
+					 */
 					reactiveCommands.multi()
-							.doOnSuccess( multiResponse -> {
+							.doOnSuccess( multiResponse -> { // Simple string reply: always OK.
 								
+								// Remove the key and TTL from the TTL data store for this region
 								reactiveCommands.zrem( regionTtls, key ).subscribe();
+								// Remove the key and value from the cache data data store
 								reactiveCommands.hdel( regionName, key ).subscribe();
-								reactiveCommands.exec().subscribe();
 								
-								if ( cfEngine.thisPlatform != null ) {
-									/*
-									cfEngine.log( logPrefix + " Queued Command 'zrem' to Remove expired key from " + regionTtls + ":" + key );
-									cfEngine.log( logPrefix + " Queued Command 'hdel' to Delete expired key from " + regionName + ":" + key );
-									*/
-									cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key + " & "  + regionName + ":" + key );
-								}
+								/*  Execute the commands queued above and restore connection to normal state
+								 *  Ref. https://redis.io/commands/exec
+								 */
+								reactiveCommands.exec().subscribe();
+
+								cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key 
+										+ " & "  + regionName + ":" + key );
 								
 							} )
 							.doOnError( error -> {
-								if ( cfEngine.thisPlatform != null ) {
 									cfEngine.log( logPrefix + "Command 'multi' Failed: " + error.getMessage() );
-								}
+								
 							} )
 							.subscribe();
 				} )
 				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( logPrefix + "Command 'zrangebyscore' Failed: " + error.getMessage() );
-					}
+					cfEngine.log( logPrefix + "Command 'zrangebyscore' Failed: " + error.getMessage() );
 				} )
 				.subscribe();
 
