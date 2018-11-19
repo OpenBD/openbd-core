@@ -651,9 +651,17 @@ public class RedisCacheImpl implements CacheInterface {
 		// Get a unique identifier for the current thread's lock
 		String currentLockIdentifier = logPrefix + UUID.randomUUID().toString();
 		
-		// Emit a tick every 30 seconds
+		/* Emit a tick every 10 seconds 
+		 * An attempt to acquire a lock is issued at each 10 seconds
+		 * The lock itself will last 30 seconds
+		 * The minimum time distance between 2 cleanup scans is therefore 30 seconds
+		 * And hypothetically the maximum time distance between the 2 scans is 40 secs
+		 * */
+		final long lockAttemptIntervalSecs = 10;
+		final long lockDurationSecs = 30;
+		
 		Flux
-				.interval( Duration.ofMillis( 1000 ))
+				.interval( Duration.ofSeconds(lockAttemptIntervalSecs))
 				.doOnNext( tick -> {
 								
 					// System.out.println(tick);
@@ -674,14 +682,14 @@ public class RedisCacheImpl implements CacheInterface {
 								cfEngine.log( logPrefix + "Locked at Tick: " + tick );
 								
 								
-								reactiveCommands.expire("cache:scan:lock", 30).subscribe();	
+								reactiveCommands.expire("cache:scan:lock", lockDurationSecs).subscribe();	
 								// On each tick if the lock was acquired start a scan
 								runScan( ScanCursor.INITIAL, currentLockIdentifier );
 							} else {								
 								reactiveCommands.ttl("cache:scan:lock")
 									.doOnNext( ttl -> {
 										if(ttl < 0 ) {
-											reactiveCommands.expire("cache:scan:lock", 30).subscribe();
+											reactiveCommands.expire("cache:scan:lock", lockDurationSecs).subscribe();
 										}
 									})
 									.subscribe();																	
