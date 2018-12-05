@@ -619,8 +619,8 @@ public class RedisCacheImpl implements CacheInterface {
 		waitTimeSeconds = 0;
 	}
 
-	/* Auxiliary method to connect to ElasticCache Master */
-	private void connectToElastiCacheMaster() {
+	/* Auxiliary method to connect to Master */
+	private void connectToMaster() {
 				
 		DefaultClientResources clientResources = DefaultClientResources.builder() //
 				.dnsResolver( new DirContextDnsResolver() ) // Does not cache DNS lookups (needed for ElasticCache)
@@ -631,8 +631,8 @@ public class RedisCacheImpl implements CacheInterface {
 		
 	}
 	
-	/* Auxiliary method to connect to MasterSlave using ElasticCache Cluster */
-	private void connectToMasterSlaveUsingElastiCacheCluster(String[] servers) {
+	/* Auxiliary method to connect to MasterSlave */
+	private void connectToMasterSlave(String[] servers) {
 				
         redisClient = RedisClient.create();
 
@@ -659,9 +659,9 @@ public class RedisCacheImpl implements CacheInterface {
 		
 		// Create a connection using the most adequate API for the number of servers provided
 		if (serversCount == 1) {
-			connectToElastiCacheMaster();
-		} else if (serversCount >= 1) { 
-			connectToMasterSlaveUsingElastiCacheCluster(servers);
+			connectToMaster();
+		} else if (serversCount > 1) { 
+			connectToMasterSlave(servers);
 		} else {
 			throw new Exception( "'server' must specify at least one server" );
 		}
