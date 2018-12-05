@@ -33,6 +33,7 @@ import java.io.BufferedReader;
 import java.io.StringReader;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -54,8 +55,10 @@ import com.naryx.tagfusion.util.Transcoder;
 
 import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.Range;
+import io.lettuce.core.ReadFrom;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisFuture;
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScanArgs;
 import io.lettuce.core.ScanCursor;
 import io.lettuce.core.StreamScanCursor;
@@ -63,7 +66,10 @@ import io.lettuce.core.ZAddArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
+import io.lettuce.core.codec.Utf8StringCodec;
 import io.lettuce.core.internal.LettuceAssert;
+import io.lettuce.core.masterslave.MasterSlave;
+import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.lettuce.core.output.KeyValueStreamingChannel;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.DirContextDnsResolver;
@@ -613,15 +619,53 @@ public class RedisCacheImpl implements CacheInterface {
 		waitTimeSeconds = 0;
 	}
 
-
-	/* Auxiliary method to start the server */
-	private void start() {
+	/* Auxiliary method to connect to ElasticCache Master */
+	private void connectToElastiCacheMaster() {
+				
 		DefaultClientResources clientResources = DefaultClientResources.builder() //
 				.dnsResolver( new DirContextDnsResolver() ) // Does not cache DNS lookups (needed for ElasticCache)
 				.build();
 
 		redisClient = RedisClient.create( clientResources, server );
 		connection = redisClient.connect();
+		
+	}
+	
+	/* Auxiliary method to connect to MasterSlave using ElasticCache Cluster */
+	private void connectToMasterSlaveUsingElastiCacheCluster(String[] servers) {
+				
+        redisClient = RedisClient.create();
+
+        List<RedisURI> nodes = new ArrayList<>();
+        for(String s: servers) {
+        	RedisURI sRedisURI = RedisURI.create(s);
+        	nodes.add(sRedisURI);
+        }
+
+        StatefulRedisMasterSlaveConnection<String, String> connection = MasterSlave
+                .connect(redisClient, new Utf8StringCodec(), nodes);
+        connection.setReadFrom(ReadFrom.MASTER_PREFERRED);
+		
+	}
+	
+	/* Auxiliary method to start the server */
+	private void start() throws Exception {
+		
+		// Split server property on whitespace character
+		String[] servers = server.split(" ");
+		
+		// The number of Redis servers
+		int serversCount = servers.length;
+		
+		// Create a connection using the most adequate API for the number of servers provided
+		if (serversCount == 1) {
+			connectToElastiCacheMaster();
+		} else if (serversCount >= 1) { 
+			connectToMasterSlaveUsingElastiCacheCluster(servers);
+		} else {
+			throw new Exception( "'server' must specify at least one server" );
+		}
+        
 		asyncCommands = connection.async();
 		reactiveCommands = connection.reactive();
 
