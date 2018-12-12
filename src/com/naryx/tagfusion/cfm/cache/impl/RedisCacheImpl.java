@@ -198,7 +198,7 @@ public class RedisCacheImpl implements CacheInterface {
 			deleteExactFalse( key );
 		}
 		
-		cfEngine.log( getName() + ":" + region +":" + server + " >> delete");
+		// cfEngine.log( getName() + ":" + region +":" + server + " >> delete");
 		
 	}
 
@@ -223,7 +223,7 @@ public class RedisCacheImpl implements CacheInterface {
 			asyncCommands.del( region );
 			asyncCommands.del( ttls );
 			
-			cfEngine.log( getName() + ":" + region +":" + server + " >> deleteAll" );
+			// cfEngine.log( getName() + ":" + region +":" + server + " >> deleteAll" );
 
 		} catch ( Exception e ) {
 			cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));
@@ -361,7 +361,7 @@ public class RedisCacheImpl implements CacheInterface {
 				}
 			}
 			
-			cfEngine.log( logPrefix  + " GET returned " + (base64value == null ? 0 : base64value.length()) );
+			// cfEngine.log( logPrefix  + " GET returned " + (base64value == null ? 0 : base64value.length()) );
 			
 			return base64value == null ? null : (cfData) Transcoder.fromString( base64value );
 
@@ -386,7 +386,7 @@ public class RedisCacheImpl implements CacheInterface {
 			RedisFuture<List<String>> hkeysFuture = asyncCommands.hkeys( region ); // Time complexity: O(N) where N is the size of the hash.
 			List<String> keys = LettuceFutures.awaitOrCancel(hkeysFuture, waitTimeSeconds, TimeUnit.SECONDS);
 			
-			cfEngine.log( logPrefix  + " >> getAllIds returned " + (keys == null ? 0 : keys.size() ) );
+			// cfEngine.log( logPrefix  + " >> getAllIds returned " + (keys == null ? 0 : keys.size() ) );
 
 			return buildCfArrayData( keys );
 
@@ -675,7 +675,7 @@ public class RedisCacheImpl implements CacheInterface {
 		 */
 		runGlobalCleanupScheduler();
 
-		cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
+		// cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
 	}
 
 
@@ -723,7 +723,7 @@ public class RedisCacheImpl implements CacheInterface {
 						.doOnNext( setnxResponse -> {						
 							if(setnxResponse) {
 								
-								cfEngine.log( logPrefix + "Locked at Tick: " + tick );
+								// cfEngine.log( logPrefix + "Locked at Tick: " + tick );
 								
 								
 								reactiveCommands.expire("cache:scan:lock", lockDurationSecs).subscribe();	
@@ -801,7 +801,7 @@ public class RedisCacheImpl implements CacheInterface {
 					if ( !next.isFinished() ) {
 						runScan( ScanCursor.of( next.getCursor() ), currentLockIdentifier );
 					} else {
-						cfEngine.log( logPrefix + " Scan completed" );
+						// cfEngine.log( logPrefix + " Scan completed" );
 						
 							//---- Start Release Lock  ----//
 						
@@ -886,8 +886,8 @@ public class RedisCacheImpl implements CacheInterface {
 								 */
 								reactiveCommands.exec().subscribe();
 
-								cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key 
-										+ " & "  + regionName + ":" + key );
+								// cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key 
+								//		+ " & "  + regionName + ":" + key );
 								
 							} )
 							.doOnError( error -> {
