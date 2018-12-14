@@ -5,6 +5,7 @@ http://openbd.org/
 https://github.com/OpenBD/openbd-core
 __________________________________
 
+- Fixed #84: Avoid confusing a non SELECT sql to be a SELECT sql
 - Updated supported AWS regions to latest
 - Updated AWS sdk jars
 - Added support for PBKDF2 algorithm in Hash() function
