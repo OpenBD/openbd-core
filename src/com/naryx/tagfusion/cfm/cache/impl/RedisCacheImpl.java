@@ -32,10 +32,14 @@ package com.naryx.tagfusion.cfm.cache.impl;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.aw20.util.StringUtil;
 import org.joda.time.Instant;
 
@@ -49,25 +53,30 @@ import com.naryx.tagfusion.cfm.engine.cfmRunTimeException;
 import com.naryx.tagfusion.cfm.engine.dataNotSupportedException;
 import com.naryx.tagfusion.util.Transcoder;
 
+import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.Range;
+import io.lettuce.core.ReadFrom;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisFuture;
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScanArgs;
 import io.lettuce.core.ScanCursor;
 import io.lettuce.core.StreamScanCursor;
-import io.lettuce.core.TransactionResult;
 import io.lettuce.core.ZAddArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
+import io.lettuce.core.codec.Utf8StringCodec;
+import io.lettuce.core.internal.LettuceAssert;
+import io.lettuce.core.masterslave.MasterSlave;
+import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.lettuce.core.output.KeyValueStreamingChannel;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.DirContextDnsResolver;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 
-public class RedisCacheImpl implements CacheInterface {
+public class RedisCacheImpl implements CacheInterface { 
 
 	// One day in milliseconds, used as TTL if one within one day is not provided
 	private static long DAY_MS = 24 * 60 * 60 * 1000;
@@ -83,6 +92,15 @@ public class RedisCacheImpl implements CacheInterface {
 
 	// A structure containing all the properties
 	private cfStructData props;
+	
+	// Region data store prefix
+	private static final String REGION_PREFIX = "cache:region:";
+	
+	// TTLS data store prefix
+	private static final String TTLS_PREFIX = "cache:ttls:";
+	
+	// Logs prefix
+	private String logPrefix = "RedisCache";
 
 	// The region for this cache instance
 	private String region;
@@ -101,6 +119,12 @@ public class RedisCacheImpl implements CacheInterface {
 
 	// A collection of mappings from a cache keys to cache instances.
 	private static HashMap<String, RedisCacheImpl> instances = new HashMap<>();
+	
+	// Controls the logging output
+	@SuppressWarnings("unused")
+	private boolean logStackTraces = true;
+	@SuppressWarnings("unused")
+	private boolean logSuccessCases = true;
 
 
 	/* Returns a cache key representing a mapping from the given region to the given server */
@@ -150,9 +174,7 @@ public class RedisCacheImpl implements CacheInterface {
 			try {
 				data.addElement( new cfStringData( key ) );
 			} catch ( cfmRunTimeException e ) {
-				if ( cfEngine.thisPlatform != null ) {
-					cfEngine.log( getName() + " buildCfArrayData Failed: " + e.getMessage() );
-				}
+				cfEngine.log( logPrefix  + " buildCfArrayData failed:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 
@@ -175,6 +197,9 @@ public class RedisCacheImpl implements CacheInterface {
 		} else {
 			deleteExactFalse( key );
 		}
+		
+		// cfEngine.log( getName() + ":" + region +":" + server + " >> delete");
+		
 	}
 
 
@@ -187,29 +212,21 @@ public class RedisCacheImpl implements CacheInterface {
 	@Override
 	public void deleteAll() {
 
-		RedisFuture<TransactionResult> future = null;
 		try {
 
 			/*
-			 * Atomic transaction (MULTI/EXEC) to delete the data store for the region,
-			 * and the respective ttls data store.
+			 * Delete the data store for the region,
+			 * and the respective ttls data store,
+			 * in a fire&forget fashion.
 			 * 
-			 * (see https://redis.io/commands/multi)
 			 */
-			asyncCommands.multi();
 			asyncCommands.del( region );
 			asyncCommands.del( ttls );
-			future = asyncCommands.exec();
-			future.get( waitTimeSeconds, TimeUnit.SECONDS );
-
+			
+			// cfEngine.log( getName() + ":" + region +":" + server + " >> deleteAll" );
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " deleteAllFailed: " + e.getMessage() );
-			}
-			if ( future != null ) {
-				future.cancel( false );
-			}
+			cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -270,9 +287,7 @@ public class RedisCacheImpl implements CacheInterface {
 
 			}
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " deleteAllFailed: " + e.getMessage() );
-			}
+			cfEngine.log( logPrefix  + " deleteAll failed:\n" + ExceptionUtils.getStackTrace(e));
 			if ( futureScan != null ) {
 				futureScan.cancel( false );
 			}
@@ -292,29 +307,20 @@ public class RedisCacheImpl implements CacheInterface {
 	 */
 	private void deleteExactTrue( String key ) {
 
-		RedisFuture<TransactionResult> futureDel = null;
-
 		try {
 
 			/*
-			 * Atomic transaction (MULTI/EXEC) to delete the key from the region data store,
-			 * and the respective ttl from the ttls data store for this region.
+			 * Delete the key from the region data store,
+			 * and the respective ttl from the ttls data store for this region,
+			 * in a fire&forget fashion.
 			 * 
-			 * (see https://redis.io/commands/multi)
 			 */
-			asyncCommands.multi();
 			asyncCommands.zrem( ttls, key );
 			asyncCommands.hdel( region, key );
-			futureDel = asyncCommands.exec();
-			futureDel.get( waitTimeSeconds, TimeUnit.SECONDS );
+
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " deleteExactFalse: " + e.getMessage() );
-			}
-			if ( futureDel != null ) {
-				futureDel.cancel( false );
-			}
+			cfEngine.log( logPrefix  + " deleteExactFalse failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 	}
@@ -327,49 +333,43 @@ public class RedisCacheImpl implements CacheInterface {
 	 */
 	@Override
 	public cfData get( String key ) {
-
-		// Calculate the time now, represented as a decimal
-		long nowSecs = Instant.now().getMillis() / 1000;
-		double nowTtl = getDecimalTtl( nowSecs );
-
-		RedisFuture<TransactionResult> future = null;
-		TransactionResult transactionResult = null;
 		try {
-			if ( key == null ) {
-				throw new Exception( "'key' cannot be null" );
-			}
+			// Calculate the time now, represented as a decimal
+			long nowSecs = Instant.now().getMillis() / 1000;
+			double nowTtl = getDecimalTtl( nowSecs );
 
-			/*
-			 * Atomic transaction (MULTI/EXEC) to check get the key and its ttl in one round.
-			 * 
-			 * (see https://redis.io/commands/multi)
+			List<RedisFuture<?>> futures = new ArrayList<RedisFuture<?>>();
+
+			RedisFuture<Double> zscoreFuture = asyncCommands.zscore( ttls, key ); // Time complexity: O(1);
+			futures.add(zscoreFuture); 
+			
+			RedisFuture<String> hgetFuture = asyncCommands.hget( region, key ); // Time complexity: O(1);
+			futures.add(hgetFuture); 
+			
+			/* Wait until futures are complete or the supplied timeout is reached. 
+			 * Commands are not cancelled (in contrast to awaitOrCancel(RedisFuture, long, TimeUnit)) when the timeout expires.
 			 */
-			asyncCommands.multi();
-			asyncCommands.zscore( ttls, key ); // Time complexity: O(1)
-			asyncCommands.hget( region, key ); // Time complexity: O(1)
-			future = asyncCommands.exec();
-
-			transactionResult = future.get( waitTimeSeconds, TimeUnit.SECONDS );
-
-			// Get the result of the 'ZSCORE' command, the TTL for the given key
-			Double keyTtl = transactionResult.get( 0 );
+			boolean allDone = LettuceFutures.awaitAll(Duration.ofSeconds(waitTimeSeconds), futures.toArray(new RedisFuture[futures.size()]));
+			
 			String base64value = null;
-			if ( keyTtl > nowTtl ) {
-				// Set the value to be returned, when the TTL is not expired
-				base64value = transactionResult.get( 1 );
+			if(allDone) {
+				// Get the result of the 'ZSCORE' command, the TTL for the given key
+				Double keyTtl = zscoreFuture.get();
+				if ( keyTtl != null && keyTtl > nowTtl ) {
+					// Set the value to be returned, when the TTL is not expired
+					base64value = hgetFuture.get();
+				}
 			}
-
+			
+			// cfEngine.log( logPrefix  + " GET returned " + (base64value == null ? 0 : base64value.length()) );
+			
 			return base64value == null ? null : (cfData) Transcoder.fromString( base64value );
 
+
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " get Failed: " + e.getMessage() );
-			}
-			if ( future != null ) {
-				future.cancel( true );
-			}
+			cfEngine.log( logPrefix  + " get failed:\n" + ExceptionUtils.getStackTrace(e));
+			return null;
 		}
-		return null;
 	}
 
 
@@ -382,14 +382,16 @@ public class RedisCacheImpl implements CacheInterface {
 	public cfArrayData getAllIds() {
 
 		try {
+			
+			RedisFuture<List<String>> hkeysFuture = asyncCommands.hkeys( region ); // Time complexity: O(N) where N is the size of the hash.
+			List<String> keys = LettuceFutures.awaitOrCancel(hkeysFuture, waitTimeSeconds, TimeUnit.SECONDS);
+			
+			// cfEngine.log( logPrefix  + " >> getAllIds returned " + (keys == null ? 0 : keys.size() ) );
 
-			List<String> keys = asyncCommands.hkeys( region ).get( 5, TimeUnit.SECONDS ); // Time complexity: O(N) where N is the size of the hash.
 			return buildCfArrayData( keys );
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " get Failed: " + e.getMessage() );
-			}
+			cfEngine.log( logPrefix  + " >> getAllIds Failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return null;
@@ -407,9 +409,7 @@ public class RedisCacheImpl implements CacheInterface {
 			cfData data = props.getData( "type" );
 			type = data != null ? data.getString() : null;
 		} catch ( dataNotSupportedException e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " getName: " + e.getMessage() );
-			}
+			cfEngine.log( logPrefix  + " getName failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 		return type;
 	}
@@ -457,9 +457,8 @@ public class RedisCacheImpl implements CacheInterface {
 			}
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " getStats Failed: " + e.getMessage() );
-			}
+			cfEngine.log( logPrefix  + " getStats failed:\n" + ExceptionUtils.getStackTrace(e));
+			
 			if ( future != null ) {
 				future.cancel( false );
 			}
@@ -485,62 +484,45 @@ public class RedisCacheImpl implements CacheInterface {
 	 * @param idleTime
 	 *          not used in this implementation.
 	 */
+	@SuppressWarnings("unused")
 	@Override
 	public void set( String key, cfData data, long ageMS, long idleTime ) {
 
-		// Convert the ageMs, tll in milliseconds, to ageSecs, ttl in seconds.
-		long ageSecs;
-		if ( ageMS < 1 || ageMS > DAY_MS ) {
-			ageSecs = DAY_MS / 1000;
-		} else {
-			ageSecs = ageMS / 1000;
-		}
-
-		// Get the time now in seconds plus the ageSecs in seconds
-		long nowSecs = Instant.now().getMillis() / 1000 + ageSecs;
-
-		// Convert the time now in seconds to a decimal
-		double ttl = getDecimalTtl( nowSecs );
-
-		RedisFuture<TransactionResult> future = null;
-		RedisFuture<Boolean> futureHset = null;
-		RedisFuture<Long> futureZadd = null;
-
 		try {
-			if ( key == null ) {
-				throw new Exception( "'key' cannot be null" );
+			
+			// Convert the ageMs, tll in milliseconds, to ageSecs, ttl in seconds.
+			long ageSecs;
+			if ( ageMS < 1 || ageMS > DAY_MS ) {
+				ageSecs = DAY_MS / 1000;
+			} else {
+				ageSecs = ageMS / 1000;
 			}
 
-			if ( data == null ) {
-				throw new Exception( "'data' cannot be null" );
-			}
+			// Get the time now in seconds plus the ageSecs in seconds
+			long nowSecs = Instant.now().getMillis() / 1000 + ageSecs;
+	
+			// Convert the time now in seconds to a decimal
+			double ttl = getDecimalTtl( nowSecs );
+
+			LettuceAssert.notNull(key, "'key' cannot be null");
+			LettuceAssert.notNull(data, "'data' cannot be null" );
 
 			String base64value = Transcoder.toString( data );
+						
+			RedisFuture<Boolean> futureHset = asyncCommands.hset( region, key, base64value ); // Time complexity: O(1)
+			RedisFuture<Long> futureZadd = asyncCommands.zadd( ttls, ttl, key ); // O(log(N)) for each key added, where N is the number of keys in the sorted set.
+			
+			List<RedisFuture<?>> futures = new ArrayList<RedisFuture<?>>();
+			futures.add(futureHset); 
+			futures.add(futureZadd); 
 
-			/*
-			 * Atomic transaction (MULTI/EXEC) to set the key and its ttl.
-			 * 
-			 * (see https://redis.io/commands/multi)
+			/* Wait until futures are complete or the supplied timeout is reached. 
+			 * Commands are not cancelled (in contrast to awaitOrCancel(RedisFuture, long, TimeUnit)) when the timeout expires.
 			 */
-			asyncCommands.multi();
-			futureHset = asyncCommands.hset( region, key, base64value ); // Time complexity: O(1)
-			futureZadd = asyncCommands.zadd( ttls, ttl, key ); // O(log(N)) for each key added, where N is the number of keys in the sorted set.
-			future = asyncCommands.exec();
-			future.get( waitTimeSeconds, TimeUnit.SECONDS );
+			LettuceFutures.awaitAll(Duration.ofSeconds(waitTimeSeconds), futures.toArray(new RedisFuture[futures.size()]));
 
 		} catch ( Exception e ) {
-			if ( cfEngine.thisPlatform != null ) {
-				cfEngine.log( getName() + " set Failed: " + e.getMessage() );
-			}
-			if ( futureHset != null ) {
-				futureHset.cancel( true );
-			}
-			if ( futureZadd != null ) {
-				futureZadd.cancel( true );
-			}
-			if ( future != null ) {
-				future.cancel( true );
-			}
+			cfEngine.log( logPrefix  + " >> set Failed:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -602,8 +584,8 @@ public class RedisCacheImpl implements CacheInterface {
 		if ( region == null ) {
 			throw new Exception( "'region' can not be null" );
 		} else {
-			this.region = "cache:region:" + region;
-			this.ttls = "cache:ttls:" + region;
+			this.region = REGION_PREFIX + region;
+			this.ttls = TTLS_PREFIX + region;
 		}
 
 		this.props = validateAndParseProps( props );
@@ -618,6 +600,7 @@ public class RedisCacheImpl implements CacheInterface {
 	 */
 	@Override
 	public void shutdown() {
+		
 
 		if ( connection != null ) {
 			connection.close();
@@ -636,15 +619,53 @@ public class RedisCacheImpl implements CacheInterface {
 		waitTimeSeconds = 0;
 	}
 
-
-	/* Auxiliary method to start the server */
-	private void start() {
+	/* Auxiliary method to connect to Master */
+	private void connectToMaster() {
+				
 		DefaultClientResources clientResources = DefaultClientResources.builder() //
 				.dnsResolver( new DirContextDnsResolver() ) // Does not cache DNS lookups (needed for ElasticCache)
 				.build();
 
 		redisClient = RedisClient.create( clientResources, server );
 		connection = redisClient.connect();
+		
+	}
+	
+	/* Auxiliary method to connect to MasterSlave */
+	private void connectToMasterSlave(String[] servers) {
+				
+        redisClient = RedisClient.create();
+
+        List<RedisURI> nodes = new ArrayList<>();
+        for(String s: servers) {
+        	RedisURI sRedisURI = RedisURI.create(s);
+        	nodes.add(sRedisURI);
+        }
+
+        StatefulRedisMasterSlaveConnection<String, String> connection = MasterSlave
+                .connect(redisClient, new Utf8StringCodec(), nodes);
+        connection.setReadFrom(ReadFrom.MASTER_PREFERRED);
+		
+	}
+	
+	/* Auxiliary method to start the server */
+	private void start() throws Exception {
+		
+		// Split server property on whitespace character
+		String[] servers = server.split(" ");
+		
+		// The number of Redis servers
+		int serversCount = servers.length;
+		
+		// Create a connection using the most adequate API for the number of servers provided
+		if (serversCount == 1) {
+			connectToMaster();
+		} else if (serversCount > 1) { 
+			connectToMasterSlave(servers);
+		} else {
+			throw new Exception( "'server' must specify at least one server" );
+		}
+        
 		asyncCommands = connection.async();
 		reactiveCommands = connection.reactive();
 
@@ -654,144 +675,7 @@ public class RedisCacheImpl implements CacheInterface {
 		 */
 		runGlobalCleanupScheduler();
 
-		if ( cfEngine.thisPlatform != null )
-			cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
-	}
-
-
-	/*
-	 * Auxiliary method to start a cleanup scheduler in background,
-	 * which operates only in the region for this cache instance.
-	 * 
-	 * For complete documentation on Flux and Lettuce reactive API see:
-	 * https://lettuce.io/core/milestone/reference/
-	 * 
-	 */
-	@SuppressWarnings( "unused" )
-	private void runRegionCleanupScheduler() {
-
-		// Emit a tick each 6 milliseconds
-		Flux
-				.interval( Duration.ofMillis( 6000 ), Schedulers.newParallel( "redisScheduler:" + region + server ) )
-				.doOnNext( tick -> {
-					// System.out.println( "\ntick: " + tick );
-					long nowSecs = Instant.now().getMillis() / 1000;
-					double nowTtl = getDecimalTtl( nowSecs );
-					// On each tick get all the keys with expired ttls
-					reactiveCommands.zrangebyscore( ttls, Range.create( 0.0, nowTtl ) )
-							.doOnNext( key -> {
-								// System.out.println( "\nFound expired key: " + key );
-								reactiveCommands.multi()
-										.doOnSuccess( s -> {
-											// On each expired key atomically delete the key and its ttl
-											reactiveCommands.zrem( ttls, key ).subscribe();
-											reactiveCommands.hdel( region, key ).subscribe();
-											// System.out.println( "\nRemoved expired key from " + ttls + ":" + key );
-											// System.out.println( "\nDeleted expired key from " + region + ": " + key );
-										} ).flatMap( s -> reactiveCommands.exec() )
-										.doOnError( error -> {
-											if ( cfEngine.thisPlatform != null ) {
-												cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-											}
-										} )
-										.subscribe();
-							} )
-							.doOnError( error -> {
-								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-								}
-							} )
-							.subscribeOn( Schedulers.newParallel( "redisScheduler:" + region + server ) )
-							.subscribe();
-				} )
-				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-					}
-				} )
-				.subscribe();
-	}
-
-
-	private void runScan( ScanCursor cursor ) {
-
-		/*
-		 * Scan 500 keys starting from the given cursor,
-		 * triggering a clean up region and the next scan in parallel
-		 */
-		reactiveCommands.scan( cursor, ScanArgs.Builder.matches( "*" ).limit( 500 ) )
-				.doOnNext( next -> {
-					// System.out.println( "Clean up region" );
-
-					// For each key representing a region, clean up region
-					List<String> keys = next.getKeys();
-					Flux.fromIterable( keys ).filter( key -> !key.startsWith( ttls ) && key.startsWith( "cache:" ) )
-							.doOnNext( region -> {
-								// Clean up the given region
-								cleanUpRegion( region );
-							} )
-							.doOnError( error -> {
-								// log error
-								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-								}
-							} )
-							.subscribe();
-
-				} )
-				.doOnNext( next -> {
-					// Trigger next scan
-					// System.out.println( "Scan again" );
-					if ( !next.isFinished() ) {
-						runScan( ScanCursor.of( next.getCursor() ) );
-					} else {
-						// System.out.println( "Scan completed" );
-					}
-				} )
-				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-					}
-				} )
-				.subscribeOn( Schedulers.newParallel( "redisScheduler:" + region + server ) )
-				.subscribe();
-
-	}
-
-
-	/*
-	 * Auxiliary method to clean up a region.
-	 * Gets all the keys that are expired and deletes their ttls and key-value pairs.
-	 */
-	private void cleanUpRegion( String region ) {
-
-		long nowSecs = Instant.now().getMillis() / 1000;
-		double nowTtl = getDecimalTtl( nowSecs );
-		reactiveCommands.zrangebyscore( ttls, Range.create( 0.0, nowTtl ) )
-				.doOnNext( key -> {
-					// System.out.println( "\nFound expired key: " + key );
-					reactiveCommands.multi()
-							.doOnSuccess( s -> {
-								reactiveCommands.zrem( ttls, key ).subscribe();
-								reactiveCommands.hdel( region, key ).subscribe();
-								// System.out.println( "\nRemoved expired key from " + ttls + ":" + key );
-								// System.out.println( "\nDeleted expired key from " + region + ": " + key );
-							} )
-							.flatMap( s -> reactiveCommands.exec() )
-							.doOnError( error -> {
-								if ( cfEngine.thisPlatform != null ) {
-									cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-								}
-							} )
-							.subscribe();
-				} )
-				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
-					}
-				} )
-				.subscribe();
-
+		// cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
 	}
 
 
@@ -804,19 +688,216 @@ public class RedisCacheImpl implements CacheInterface {
 	 * 
 	 */
 	private void runGlobalCleanupScheduler() {
-
-		// Emit a tick every 6 seconds
+		
+		// Log prefix for the logs within this method
+		final String logPrefix = this.logPrefix + " => runGlobalCleanupScheduler";
+		
+		// Get a unique identifier for the current thread's lock
+		String currentLockIdentifier = logPrefix + UUID.randomUUID().toString();
+		
+		/* Emit a tick every 10 seconds 
+		 * An attempt to acquire a lock is issued at each 10 seconds
+		 * The lock itself will last 30 seconds
+		 * The minimum time distance between 2 cleanup scans is therefore 30 seconds
+		 * And hypothetically the maximum time distance between the 2 scans is 40 secs
+		 * */
+		final long lockAttemptIntervalSecs = 10;
+		final long lockDurationSecs = 30;
+		
 		Flux
-				.interval( Duration.ofMillis( 6000 ), Schedulers.newParallel( "redisScheduler:" + region + server ) )
+				.interval( Duration.ofSeconds(lockAttemptIntervalSecs))
 				.doOnNext( tick -> {
-					// System.out.println( "\ntick: " + tick );
-					// On each tick start a scan
-					runScan( ScanCursor.INITIAL );
+								
+					// System.out.println(tick);
+					
+					/* 
+					 * Only one scan per Redis server instance will be executing a clean up of the data store
+					 * If multiple RedisCacheImpl instances map to the same Redis server, only one will run a scan
+					 * This is valid even if such RedisCacheImpl instances are running in different machines
+					 * 
+					 * The logic behind the distributed lock implemented here is described at
+					 * https://redislabs.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-2-distributed-locking/
+					 * 
+					 */
+					reactiveCommands.setnx("cache:scan:lock", currentLockIdentifier)
+						.doOnNext( setnxResponse -> {						
+							if(setnxResponse) {
+								
+								// cfEngine.log( logPrefix + "Locked at Tick: " + tick );
+								
+								
+								reactiveCommands.expire("cache:scan:lock", lockDurationSecs).subscribe();	
+								// On each tick if the lock was acquired start a scan
+								runScan( ScanCursor.INITIAL, currentLockIdentifier );
+							} else {								
+								reactiveCommands.ttl("cache:scan:lock")
+									.doOnNext( ttl -> {
+										if(ttl < 0 ) {
+											reactiveCommands.expire("cache:scan:lock", lockDurationSecs).subscribe();
+										}
+									})
+									.subscribe();																	
+							}
+						})
+						.doOnError( error -> {
+							cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
+							
+						} )
+						.subscribe();
+
+			
 				} )
 				.doOnError( error -> {
-					if ( cfEngine.thisPlatform != null ) {
-						cfEngine.log( getName() + " runCleanupScheduller Failed: " + error.getMessage() );
+					cfEngine.log( logPrefix + "Tick Failed: " + error.getMessage() );
+					
+				} )
+				.subscribe();
+	
+	}
+
+	private void runScan( ScanCursor cursor, String currentLockIdentifier ) {
+		
+		final String logPrefix = getName() + ":" + region + ":" + server + " => runScan";		
+		
+		/*
+		cfEngine.log( logPrefix + " ScanCursor = " + cursor.getCursor() );
+		*/
+
+		/*
+		 * Scan 500 keys starting from the given cursor,
+		 * Matching any key that is a region
+		 * Triggering a clean up region and the next scan in parallel
+		 */
+		reactiveCommands.scan( cursor, ScanArgs.Builder.matches( REGION_PREFIX + "*" ).limit( 500 ) )
+				.doOnNext( next -> {
+					
+					List<String> keys = next.getKeys();
+					
+					/*
+					cfEngine.log( logPrefix + "Command 'scan' returned " + keys.size() + " regions" );
+					*/
+					
+					// For each key representing a region, clean up region
+					Flux.fromIterable( keys )
+							.doOnNext( region -> {
+								
+								/*
+								cfEngine.log( logPrefix + "Command 'filter' returned " + region );
+								*/
+								
+								// Clean up the given region
+								cleanUpRegion( region );
+							} )
+							.doOnError( error -> {
+								// log error
+								cfEngine.log( logPrefix + " Command 'filter' Failed: " + error.getMessage() );
+								
+							} )
+							.subscribe();
+
+				} )
+				.doOnNext( next -> {
+					// Trigger next scan
+					if ( !next.isFinished() ) {
+						runScan( ScanCursor.of( next.getCursor() ), currentLockIdentifier );
+					} else {
+						// cfEngine.log( logPrefix + " Scan completed" );
+						
+							//---- Start Release Lock  ----//
+						
+							/*
+							 * Note: 
+							 * Since we are using a lock with time out we do not have to release the lock after a scan as it will expire anyway.
+							 * We must release the lock if we decide that we want another scan to be able to start immediately after this one
+							 * even in the case where the scan took much less than the timeout.
+							 * For example when the data store is empty the scan can take just a few microseconds to complete. 
+							 * In this case deleting the lock after the scan completes may mean that as many scans as regions will happen at each tick,
+							 * as all clients could unlock before the next tick.
+							 * These scans could be useless as they would be looking for expired keys in a empty data store.
+							 */
+						
+							// Check and verify that we still have the lock
+/*							reactiveCommands.watch("cache:scan:lock").subscribe();
+							reactiveCommands
+								.get("cache:scan:lock")
+								.filter( lockIdentifier -> lockIdentifier.equals(currentLockIdentifier))
+								.doOnNext( lockIdentifier -> {
+									// Release the lock
+									reactiveCommands.del("cache:scan:lock").subscribe();
+								})
+								.subscribe();
+							reactiveCommands.unwatch().subscribe();*/
+							
+							//---- End Release Lock ----//
+						
 					}
+				} )
+				.doOnError( error -> {
+					cfEngine.log( logPrefix + "Command 'scan' Failed: " + error.getMessage() );
+					
+				} )
+				.subscribe();
+
+	}
+
+
+	/*
+	 * Auxiliary method to clean up a region.
+	 * Gets all the keys that are expired and deletes their ttls and key-value pairs.
+	 */
+	private void cleanUpRegion( String regionName ) {
+
+		// Log prefix for the logs within this method
+		final String logPrefix = this.logPrefix + " => cleanUpRegion";	
+		
+		// Determine the name of the TTLS data store for this region
+		final String regionTtls = TTLS_PREFIX + regionName.replaceFirst(REGION_PREFIX, "");
+
+		// Determine the double representation for this time instant
+		long nowSecs = Instant.now().getMillis() / 1000;
+		double nowTtl = getDecimalTtl( nowSecs );
+		
+		/*
+		 * Get the set of keys in the given region with TTL score falling in [0.0, nowTTl]
+		 * Meaning they have expired
+		 */
+		reactiveCommands
+				.zrangebyscore( regionTtls, Range.create( 0.0, nowTtl ) )
+				.doOnNext( key -> {				
+					/* 
+					 * For each expired key issue a Redis transaction that:
+					 * - Removes the key and its ttl from the TTLs datastore for this region
+					 * - Removes the key and its value from the data datastore for this region
+					 * 
+					 * Ref. 
+					 * - https://redis.io/commands/multi
+					 * - https://redis.io/topics/transactions
+					 */
+					reactiveCommands.multi()
+							.doOnSuccess( multiResponse -> { // Simple string reply: always OK.
+								
+								// Remove the key and TTL from the TTL data store for this region
+								reactiveCommands.zrem( regionTtls, key ).subscribe();
+								// Remove the key and value from the cache data data store
+								reactiveCommands.hdel( regionName, key ).subscribe();
+								
+								/*  Execute the commands queued above and restore connection to normal state
+								 *  Ref. https://redis.io/commands/exec
+								 */
+								reactiveCommands.exec().subscribe();
+
+								// cfEngine.log( logPrefix + " Executed 'zrem & hdel' on " + regionTtls + ":" + key 
+								//		+ " & "  + regionName + ":" + key );
+								
+							} )
+							.doOnError( error -> {
+									cfEngine.log( logPrefix + "Command 'multi' Failed: " + error.getMessage() );
+								
+							} )
+							.subscribe();
+				} )
+				.doOnError( error -> {
+					cfEngine.log( logPrefix + "Command 'zrangebyscore' Failed: " + error.getMessage() );
 				} )
 				.subscribe();
 
@@ -842,7 +923,11 @@ public class RedisCacheImpl implements CacheInterface {
 
 		waitTimeSeconds = StringUtil.toInteger( props.getData( "waittimeseconds" ).getInt(), 5 );
 		server = props.getData( "server" ).getString();
+		
+		logPrefix += "." + region + "@" + server.replace("redis://", "");
+
 
 		return props;
 	}
+	
 }
