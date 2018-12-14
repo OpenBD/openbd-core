@@ -155,14 +155,16 @@ public class cfSQLQueryData extends cfQueryResultData implements cfQueryInterfac
 	public void setQueryString(String _queryString) {
 		queryString = _queryString.trim();
 		String lcaseqs = queryString.toLowerCase();
-		if (lcaseqs.indexOf("select") != -1)
-			sql_type = SQL_SELECT;
-		else if (lcaseqs.indexOf("insert") != -1)
+		int max_position = 8; // an arbitrary small number greater than 0
+		 
+		if (lcaseqs.indexOf("insert") < max_position && lcaseqs.indexOf("insert") > -1 )
 			sql_type = SQL_INSERT;
-		else if (lcaseqs.indexOf("delete") != -1)
+		else if (lcaseqs.indexOf("delete") < max_position && lcaseqs.indexOf("delete") > -1)
 			sql_type = SQL_DELETE;
-		else if (lcaseqs.indexOf("update") != -1)
+		else if (lcaseqs.indexOf("update") < max_position && lcaseqs.indexOf("update") > -1)
 			sql_type = SQL_UPDATE;
+		else if (lcaseqs.indexOf("select") <  max_position &&  lcaseqs.indexOf("select") > -1 )
+			sql_type = SQL_SELECT;
 		else
 			sql_type = SQL_UNKNOWN; // assumed to be a stored procedure call
 
