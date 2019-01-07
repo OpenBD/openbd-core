@@ -666,6 +666,8 @@ public class RedisCacheImpl implements CacheInterface {
 			throw new Exception( "'server' must specify at least one server" );
 		}
         
+		cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
+
 		asyncCommands = connection.async();
 		reactiveCommands = connection.reactive();
 
@@ -675,7 +677,6 @@ public class RedisCacheImpl implements CacheInterface {
 		 */
 		runGlobalCleanupScheduler();
 
-		// cfEngine.log( getName() + " server: " + server + "; WaitTimeSeconds: " + waitTimeSeconds );
 	}
 
 
