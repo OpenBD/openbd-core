@@ -198,7 +198,7 @@ public class LogFile extends Object implements SystemClockEvent {
 
 	// -------------------------------------------------------
 
-	private static Hashtable logfiles = new Hashtable();
+	private static Hashtable<String,LogFile> logfiles = new Hashtable<>();
 
 	public static synchronized boolean open(String _Name, String _Path ) {
 		return open( _Name, _Path, Charset.defaultCharset().toString(), true );
@@ -217,9 +217,13 @@ public class LogFile extends Object implements SystemClockEvent {
 	}
 
 	public static void println(File outFile, String _Line) {
+		println( outFile, _Line, true );
+	}
+
+	public static void println(File outFile, String _Line, boolean _PrependTimeStamp ) {
 		if (!logfiles.containsKey(outFile.toString())) {
 			try {
-				logfiles.put(outFile.toString(), new LogFile(outFile.toString(), Charset.defaultCharset().toString(), true));
+				logfiles.put(outFile.toString(), new LogFile(outFile.toString(), Charset.defaultCharset().toString(), _PrependTimeStamp));
 			} catch (Exception E) {
 				return;
 			}
@@ -230,17 +234,17 @@ public class LogFile extends Object implements SystemClockEvent {
 
 	public static void println(String _Name, String _Line) {
 		if (logfiles.containsKey(_Name.toUpperCase()))
-			((LogFile) (logfiles.get(_Name.toUpperCase()))).println(_Line);
+			logfiles.get(_Name.toUpperCase()).println(_Line);
 	}
 
 	public static void println(String _Name, Object _OB) {
 		if (logfiles.containsKey(_Name.toUpperCase()))
-			((LogFile) (logfiles.get(_Name.toUpperCase()))).println(_OB);
+			logfiles.get(_Name.toUpperCase()).println(_OB);
 	}
 
 	public static void setRotationSize(String _Name, long rotationSize) {
 		if (logfiles.containsKey(_Name.toUpperCase()))
-			((LogFile) (logfiles.get(_Name.toUpperCase()))).setMaxLogFileSize(rotationSize);
+			logfiles.get(_Name.toUpperCase()).setMaxLogFileSize(rotationSize);
 	}
 
 	public static void setMaxAge(String _Name, int maxAgeDays) {
@@ -249,9 +253,9 @@ public class LogFile extends Object implements SystemClockEvent {
 	}
 
 	public static void closeAll() {
-		Enumeration E = logfiles.elements();
+		Enumeration<LogFile> E = logfiles.elements();
 		while (E.hasMoreElements())
-			((LogFile) E.nextElement()).close();
+			E.nextElement().close();
 	}
 
 }
