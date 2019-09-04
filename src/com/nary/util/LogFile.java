@@ -98,7 +98,8 @@ public class LogFile extends Object implements SystemClockEvent {
 			@Override
 			public boolean accept( File _file ) {
 				return _file.getName().startsWith( logFile.getName() ) 
-						&& _file.lastModified() > ( System.currentTimeMillis() - maxLogFileAge );
+						&& _file.getName().equals( logFile.getName() )
+						&& _file.lastModified() < ( System.currentTimeMillis() - maxLogFileAge );
 			}} );
 		
 		for ( File nextFile : files ){
@@ -106,6 +107,7 @@ public class LogFile extends Object implements SystemClockEvent {
 		}
 		
 	}
+	
 
 	private void println(String _line) {
 		try {
