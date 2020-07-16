@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Openbd-core by OpenBD</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Openbd-core</h1>
+        <p>The original open source Java powered GPL CFML runtime engine</p>
+
+        <p class="view"><a href="https://github.com/OpenBD/openbd-core">View the Project on GitHub <small>OpenBD/openbd-core</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/OpenBD/openbd-core/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/OpenBD/openbd-core/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/OpenBD/openbd-core">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p align="center">
+  <img src="openBD_logo_788x150px.png">
+</p>
+<p>OpenBD is the worlds first truly open source and free GPLv3.0 Java CFML runtime.   OpenBD has a long legacy, first created in 2000.</p>
+<h3>
+<a id="running-openbd" class="anchor" href="#running-openbd" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running OpenBD</h3>
+<p>You can run OpenBD quickly without all the hassle of setting and configuring a JEE server.   Use the <a href="https://github.com/aw20/jettydesktop">JettyDesktop launcher</a> - instructions on use located at the <a href="https://github.com/aw20/jettydesktop/wiki">JettyDesktop Wiki</a>.   This will run the OpenBD WAR file easily and quickly.</p>
+<h3>
+<a id="community-mailing-list" class="anchor" href="#community-mailing-list" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Community Mailing List</h3>
+<p>An active Google Groups list can be found: <a href="https://groups.google.com/forum/#!forum/openbluedragon">https://groups.google.com/forum/#!forum/openbluedragon</a></p>
+<h3>
+<a id="building-openbd" class="anchor" href="#building-openbd" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building OpenBD</h3>
+<p>You will require the following tools to be able to build OpenBD from source:</p>
+<ul>
+<li>Java Developers Kit Virtual Machine 8</li>
+<li>Apache Ant (<a href="http://ant.apache.org/">http://ant.apache.org/</a>)</li>
+</ul>
+<p>Optional, OpenBD source drop includes an Eclipse project to enable building and debugging under the Eclipse IDE (<a href="http://www.eclipse.org/">http://www.eclipse.org/</a>).   All files required to build the core OpenBD JAR/WAR is contained within this GitHub project.</p>
+<p>All the necessary scripts and resources are in the ./build/ folder.   The build.xml will build the core WAR file, the OpenBlueDragon.jar file as well as popping in the manual if you desire.</p>
+<ul>
+<li>ant compile</li>
+<li>ant war</li>
+<li>ant war-with-manual</li>
+</ul>
+<p>If you are just updating the core OpenBD JAR file in an already existing installation then 'ant compile' will create the file: ./build/targets/OpenBlueDragon.jar.   You can then drop this file over the top of an existing installation if you are say upgrading a minor update.  The ReleaseNotes.txt will indicate if a full /WEB-INF/lib/ folder update is required.</p>
+<p>'ant war' will build a standard JEE WAR file that can be dropped into any JEE application server, such as Jetty, Tomcat or JBoss.  'ant war-with-manual' will build the standard JEE war but will also pull in the latest 'openbd-manual' (<a href="https://github.com/OpenBD/openbd-manual">https://github.com/OpenBD/openbd-manual</a>) and add that as part of the distribution.</p>
+<p>All output from the ant scripts will be in the /build/targets/</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/OpenBD">OpenBD</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
