@@ -10,7 +10,7 @@ The official website for OpenBD is located:
 
 http://openbd.org/
 
-Here you will find the manual for both OpenBD and the CFML tags.   You can obtain the nightly build as well as the established releases http://openbd.org/downloads/
+You can download releases from https://github.com/OpenBD/openbd-core/releases
 
 ### Running OpenBD
 
